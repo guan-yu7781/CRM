@@ -1,8 +1,8 @@
 const entityConfig = {
     customers: {
-        label: "Customer 360",
-        title: "Banking Customer Master",
-        description: "Manage CIF, KYC, onboarding, risk rating, and relationship ownership in one banking workspace.",
+        label: "Customer Management",
+        title: "Banking Customer Management",
+        description: "Manage customer master data, KYC, risk, ownership, and open a dedicated Customer 360 workspace when needed.",
         singular: "Customer",
         path: "/api/customers",
         fields: [
@@ -16,20 +16,14 @@ const entityConfig = {
             ]),
             field("cifNumber", "CIF Number", "text", true),
             field("email", "Email", "email", true),
-            field("phone", "Phone"),
-            field("company", "Legal Entity / Company"),
             field("segment", "Segment", "select", false, ["RETAIL", "SME", "CORPORATE", "WEALTH"]),
             field("status", "Lifecycle Status", "select", false, ["LEAD", "ACTIVE", "INACTIVE"]),
             field("kycStatus", "KYC Status", "select", false, ["PENDING", "IN_REVIEW", "VERIFIED", "EXPIRED", "REJECTED"]),
             field("riskLevel", "Risk Level", "select", false, ["LOW", "MEDIUM", "HIGH"]),
-            field("preferredChannel", "Preferred Channel", "select", false, ["MOBILE_APP", "INTERNET_BANKING", "BRANCH", "CALL_CENTER", "RELATIONSHIP_MANAGER", "EMAIL"]),
-            field("onboardingStage", "Onboarding Stage", "select", false, ["PROSPECT", "DOCUMENT_COLLECTION", "COMPLIANCE_REVIEW", "APPROVED", "ACTIVE"]),
-            field("residencyCountry", "Residency Country"),
-            field("relationshipManager", "Relationship Manager"),
             field("notes", "Relationship Notes", "textarea", false, null, true)
         ],
         getTitle: item => item.name,
-        getDescription: item => `${item.cifNumber} • ${beautify(item.segment)}${item.relationshipManager ? ` • RM ${item.relationshipManager}` : ""}`,
+        getDescription: item => `${item.cifNumber} • ${beautify(item.segment)}`,
         getMeta: item => [item.customerType, item.kycStatus, item.riskLevel]
     },
     contacts: {
@@ -132,6 +126,13 @@ const state = {
     username: localStorage.getItem("crmUsername") || "",
     currentView: "customers",
     search: "",
+    sidebarCollapsed: false,
+    customerTab: "overview",
+    projectFilters: {
+        customerId: "",
+        market: "",
+        status: ""
+    },
     editingId: null,
         selectedId: null,
         data: {
@@ -150,15 +151,37 @@ const loginMessage = document.getElementById("login-message");
 const appMessage = document.getElementById("app-message");
 const modal = document.getElementById("record-modal");
 const modalForm = document.getElementById("record-form");
+const contactInsightModal = document.getElementById("contact-insight-modal");
+const contactInsightBody = document.getElementById("contact-insight-body");
+const contactInsightTitle = document.getElementById("contact-insight-title");
+const projectInsightModal = document.getElementById("project-insight-modal");
+const projectInsightBody = document.getElementById("project-insight-body");
+const projectInsightTitle = document.getElementById("project-insight-title");
 const recordsList = document.getElementById("records-list");
+const projectFilters = document.getElementById("project-filters");
+const workspaceGrid = document.getElementById("workspace-grid");
+const contentShell = document.querySelector(".content");
+const sidebarToggle = document.getElementById("sidebar-toggle");
+const panelTitle = document.getElementById("panel-title");
+const panelSubtitleText = document.getElementById("panel-subtitle-text");
+const recordCount = document.getElementById("record-count");
+const searchInput = document.getElementById("search-input");
+const insightPanel = document.querySelector(".insight-panel");
 
 document.getElementById("login-form").addEventListener("submit", handleLogin);
 document.getElementById("logout-button").addEventListener("click", logout);
 document.getElementById("refresh-button").addEventListener("click", refreshAll);
 document.getElementById("add-record-button").addEventListener("click", () => openModal());
-document.getElementById("search-input").addEventListener("input", handleSearch);
+sidebarToggle.addEventListener("click", toggleSidebar);
+searchInput.addEventListener("input", handleSearch);
+projectFilters.addEventListener("input", handleProjectFilterChange);
+projectFilters.addEventListener("change", handleProjectFilterChange);
 document.getElementById("close-modal-button").addEventListener("click", closeModal);
 document.querySelector(".modal-backdrop").addEventListener("click", closeModal);
+document.getElementById("close-contact-insight-button").addEventListener("click", closeContactInsightModal);
+document.querySelector("[data-contact-close='true']").addEventListener("click", closeContactInsightModal);
+document.getElementById("close-project-insight-button").addEventListener("click", closeProjectInsightModal);
+document.querySelector("[data-project-close='true']").addEventListener("click", closeProjectInsightModal);
 document.querySelectorAll(".menu-item").forEach(button => {
     button.addEventListener("click", () => switchView(button.dataset.view));
 });
@@ -169,6 +192,7 @@ bootstrap();
 function bootstrap() {
     if (state.token) {
         showApp();
+        syncSidebar();
         refreshAll();
     } else {
         showLogin();
@@ -229,7 +253,17 @@ function switchView(view) {
     state.currentView = view;
     state.search = "";
     state.selectedId = null;
-    document.getElementById("search-input").value = "";
+    closeContactInsightModal();
+    closeProjectInsightModal();
+    state.customerTab = "overview";
+    if (view !== "projects") {
+        state.projectFilters = {
+            customerId: "",
+            market: "",
+            status: ""
+        };
+    }
+    searchInput.value = "";
     document.querySelectorAll(".menu-item").forEach(button => {
         button.classList.toggle("active", button.dataset.view === view);
     });
@@ -273,10 +307,45 @@ async function refreshAll() {
 function renderCurrentView() {
     const items = filteredItems();
     const selected = resolveSelectedItem(items);
-    document.getElementById("record-count").textContent = String(items.length);
-    document.getElementById("records-list").innerHTML = items.length
-        ? items.map(item => renderRecord(state.currentView, item, selected && selected.id === item.id)).join("")
-        : renderEmptyState();
+    workspaceGrid.classList.remove("customer-workspace");
+    const tableWorkspace = state.currentView === "contacts" || state.currentView === "projects";
+    workspaceGrid.classList.toggle("contacts-workspace", tableWorkspace);
+    contentShell.classList.toggle("contacts-fullscreen", tableWorkspace);
+    insightPanel.classList.toggle("hidden", tableWorkspace);
+    panelTitle.textContent = state.currentView === "customers" ? "Customers" : "Records";
+    panelSubtitleText.textContent = `${items.length} items in the current module`;
+    searchInput.placeholder = state.currentView === "customers"
+        ? "Search customer name, CIF, or email"
+        : state.currentView === "contacts"
+            ? "Search customer, contact name, email, or role"
+            : state.currentView === "projects"
+                ? "Search customer, project name, market, or status"
+            : "Search records";
+    renderToolbarExtras(items);
+
+    if (state.currentView === "customers") {
+        recordCount.textContent = `${items.length} customer(s)`;
+        document.getElementById("records-list").innerHTML = items.length
+            ? renderCustomerManagementList(items, selected)
+            : renderEmptyState();
+    } else if (state.currentView === "contacts") {
+        const grouped = groupContactsByCustomer(items);
+        recordCount.textContent = `${items.length} contacts across ${grouped.length} customers`;
+        document.getElementById("records-list").innerHTML = items.length
+            ? renderContactCustomerGroups(grouped, selected)
+            : renderContactEmptyState();
+    } else if (state.currentView === "projects") {
+        const grouped = groupProjectsByCustomer(items);
+        recordCount.textContent = `${items.length} projects across ${grouped.length} customers`;
+        document.getElementById("records-list").innerHTML = items.length
+            ? renderProjectCustomerGroups(grouped, selected)
+            : renderProjectEmptyState();
+    } else {
+        recordCount.textContent = String(items.length);
+        document.getElementById("records-list").innerHTML = items.length
+            ? items.map(item => renderRecord(state.currentView, item, selected && selected.id === item.id)).join("")
+            : renderEmptyState();
+    }
 
     renderSummaryCards(state.currentView);
     renderInsightPanel(state.currentView, selected);
@@ -285,11 +354,15 @@ function renderCurrentView() {
 function filteredItems() {
     const items = state.data[state.currentView] || [];
     const keyword = state.search.trim().toLowerCase();
+    const filteredByView = state.currentView === "projects"
+        ? items.filter(item => projectMatchesFilters(item))
+        : items;
+
     if (!keyword) {
-        return items;
+        return filteredByView;
     }
 
-    return items.filter(item => JSON.stringify(item).toLowerCase().includes(keyword));
+    return filteredByView.filter(item => JSON.stringify(item).toLowerCase().includes(keyword));
 }
 
 function renderRecord(view, item, selected) {
@@ -326,7 +399,217 @@ function renderEmptyState() {
     `;
 }
 
+function renderContactEmptyState() {
+    return `
+        <div class="empty-state">
+            <h3>No contacts found</h3>
+            <p>Search by customer or create the first contact to build a customer-linked directory.</p>
+        </div>
+    `;
+}
+
+function renderCustomerFinder(items, selected) {
+    const hasSearch = state.search.trim().length > 0;
+    const matches = hasSearch ? items.slice(0, 8) : [];
+
+    return `
+        <section class="customer-finder compact">
+            ${selected ? `
+                <div class="customer-finder-selected compact">
+                    <div>
+                        <span>Selected Customer</span>
+                        <strong>${escapeHtml(selected.name)}</strong>
+                        <small>${escapeHtml(selected.cifNumber || "CIF pending")} • ${escapeHtml(beautify(selected.customerType))}</small>
+                    </div>
+                    <button class="ghost-button" type="button" data-select-id="${selected.id}">Open 360</button>
+                </div>
+            ` : `
+                <div class="customer-finder-hint">
+                    <span class="eyebrow">Keyword Search</span>
+                    <p>Search by customer name, CIF, or email to open Customer 360.</p>
+                </div>
+            `}
+            ${hasSearch ? `
+                <div class="customer-finder-dropdown">
+                    ${matches.length ? matches.map(item => `
+                        <button class="customer-finder-option compact ${selected && selected.id === item.id ? "active" : ""}" type="button" data-select-id="${item.id}">
+                            <strong>${escapeHtml(item.name)}</strong>
+                            <span>${escapeHtml(item.cifNumber || "CIF pending")} • ${escapeHtml(beautify(item.customerType))}</span>
+                        </button>
+                    `).join("") : `<div class="customer-finder-empty">No customer matched this keyword.</div>`}
+                </div>
+            ` : ""}
+        </section>
+    `;
+}
+
+function renderCustomerManagementList(items, selected) {
+    return items.map(item => {
+        const meta = [
+            item.customerType,
+            item.kycStatus,
+            item.riskLevel
+        ].filter(Boolean).map(value => `<span class="meta-pill">${escapeHtml(beautify(String(value)))}</span>`).join("");
+
+        return `
+            <article class="record-row ${selected && selected.id === item.id ? "selected" : ""}" data-select-id="${item.id}">
+                <div class="record-main">
+                    <div class="record-title-line">
+                        <h3>${escapeHtml(item.name)}</h3>
+                        <span class="record-chevron">${escapeHtml(item.cifNumber || "CIF pending")}</span>
+                    </div>
+                    <div class="record-meta">${meta}</div>
+                    <p>${escapeHtml(item.email || "Email not captured")} • ${escapeHtml(beautify(item.segment || "unassigned"))} • ${escapeHtml(beautify(item.status || "lead"))}</p>
+                </div>
+                <div class="record-actions">
+                    <a class="ghost-button link-button" href="/customer-360.html?customerId=${item.id}">Open 360</a>
+                    <button class="ghost-button" type="button" data-edit-id="${item.id}">Edit</button>
+                    <button class="danger-button" type="button" data-delete-id="${item.id}">Delete</button>
+                </div>
+            </article>
+        `;
+    }).join("");
+}
+
+function groupContactsByCustomer(items) {
+    const groups = new Map();
+
+    items.forEach(item => {
+        const key = item.customerId || `unassigned-${item.id}`;
+        if (!groups.has(key)) {
+            groups.set(key, {
+                customerId: item.customerId || null,
+                customerName: item.customerName || "Unassigned Customer",
+                customerEmail: resolveCustomerEmail(item.customerId),
+                contacts: []
+            });
+        }
+        groups.get(key).contacts.push(item);
+    });
+
+    return Array.from(groups.values())
+        .map(group => ({
+            ...group,
+            contacts: group.contacts.sort((left, right) =>
+                `${left.firstName} ${left.lastName}`.localeCompare(`${right.firstName} ${right.lastName}`)
+            )
+        }))
+        .sort((left, right) => left.customerName.localeCompare(right.customerName));
+}
+
+function renderContactCustomerGroups(groups, selected) {
+    return `
+        ${groups.map(group => {
+        const titled = group.contacts.filter(item => item.jobTitle).length;
+        const reachable = group.contacts.filter(item => item.phone).length;
+
+        return `
+            <section class="customer-contact-group">
+                <header class="customer-contact-header">
+                    <div class="customer-contact-identity">
+                        <span class="eyebrow">Customer Directory</span>
+                        <h3>${escapeHtml(group.customerName)}</h3>
+                        <p>${escapeHtml(group.customerEmail || "Customer email not captured")} • ${group.contacts.length} linked contact(s)</p>
+                    </div>
+                    <div class="customer-contact-summary">
+                        <div class="customer-contact-stat">
+                            <span>Contacts</span>
+                            <strong>${group.contacts.length}</strong>
+                        </div>
+                        <div class="customer-contact-stat">
+                            <span>With Role</span>
+                            <strong>${titled}</strong>
+                        </div>
+                        <div class="customer-contact-stat">
+                            <span>Reachable</span>
+                            <strong>${reachable}</strong>
+                        </div>
+                    </div>
+                </header>
+                ${renderContactDirectoryTable(group.contacts, selected)}
+            </section>
+        `;
+    }).join("")}
+    `;
+}
+
+function toggleSidebar() {
+    state.sidebarCollapsed = !state.sidebarCollapsed;
+    syncSidebar();
+}
+
+function syncSidebar() {
+    appShell.classList.toggle("sidebar-collapsed", state.sidebarCollapsed);
+    sidebarToggle.textContent = state.sidebarCollapsed ? "▶" : "◀";
+    sidebarToggle.title = state.sidebarCollapsed ? "Show menu" : "Collapse menu";
+    sidebarToggle.setAttribute("aria-label", state.sidebarCollapsed ? "Show menu" : "Collapse menu");
+    sidebarToggle.setAttribute("aria-expanded", String(!state.sidebarCollapsed));
+}
+
+function renderContactDirectoryTable(items, selected) {
+    return `
+        <div class="customer-contact-table-shell">
+            <table class="contact-directory-table">
+                <thead>
+                    <tr>
+                        <th>Contact Name</th>
+                        <th>Role</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Customer</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items.map(item => renderContactDirectoryRow(item, selected && selected.id === item.id)).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderContactDirectoryRow(item, selected) {
+    return `
+        <tr class="${selected ? "selected" : ""}" data-select-id="${item.id}">
+            <td data-label="Contact Name">
+                <strong>${escapeHtml(`${item.firstName} ${item.lastName}`)}</strong>
+            </td>
+            <td data-label="Role">${escapeHtml(item.jobTitle || "Role not captured")}</td>
+            <td data-label="Email">${escapeHtml(item.email || "Not captured")}</td>
+            <td data-label="Phone">${escapeHtml(item.phone || "Not captured")}</td>
+            <td data-label="Customer">${escapeHtml(item.customerName || "Unassigned")}</td>
+            <td data-label="Actions">
+                <div class="contact-table-actions">
+                    <button class="ghost-button" type="button" data-contact-insight-id="${item.id}">Insight Details</button>
+                    <button class="ghost-button" type="button" data-edit-id="${item.id}">Edit</button>
+                    <button class="danger-button" type="button" data-delete-id="${item.id}">Delete</button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+function resolveCustomerEmail(customerId) {
+    if (!customerId) {
+        return "";
+    }
+    const customer = state.data.customers.find(item => item.id === customerId);
+    return customer ? customer.email || "" : "";
+}
+
 function handleRecordListClick(event) {
+    const contactInsightButton = event.target.closest("[data-contact-insight-id]");
+    if (contactInsightButton) {
+        openContactInsightModal(Number(contactInsightButton.dataset.contactInsightId));
+        return;
+    }
+
+    const projectInsightButton = event.target.closest("[data-project-insight-id]");
+    if (projectInsightButton) {
+        openProjectInsightModal(Number(projectInsightButton.dataset.projectInsightId));
+        return;
+    }
+
     const editButton = event.target.closest("[data-edit-id]");
     if (editButton) {
         openModal(Number(editButton.dataset.editId));
@@ -342,8 +625,52 @@ function handleRecordListClick(event) {
     const row = event.target.closest("[data-select-id]");
     if (row) {
         state.selectedId = Number(row.dataset.selectId);
+        if (state.currentView === "contacts") {
+            openContactInsightModal(state.selectedId);
+            renderCurrentView();
+            return;
+        }
+        if (state.currentView === "projects") {
+            openProjectInsightModal(state.selectedId);
+            renderCurrentView();
+            return;
+        }
         renderCurrentView();
     }
+}
+
+function openContactInsightModal(contactId) {
+    const item = (state.data.contacts || []).find(contact => contact.id === contactId);
+    if (!item) {
+        return;
+    }
+    state.selectedId = contactId;
+    contactInsightTitle.textContent = `${item.firstName} ${item.lastName}`;
+    contactInsightBody.innerHTML = renderContactInsight(item);
+    contactInsightModal.classList.remove("hidden");
+    contactInsightModal.setAttribute("aria-hidden", "false");
+}
+
+function closeContactInsightModal() {
+    contactInsightModal.classList.add("hidden");
+    contactInsightModal.setAttribute("aria-hidden", "true");
+}
+
+function openProjectInsightModal(projectId) {
+    const item = (state.data.projects || []).find(project => project.id === projectId);
+    if (!item) {
+        return;
+    }
+    state.selectedId = projectId;
+    projectInsightTitle.textContent = item.projectName;
+    projectInsightBody.innerHTML = renderProjectInsight(item);
+    projectInsightModal.classList.remove("hidden");
+    projectInsightModal.setAttribute("aria-hidden", "false");
+}
+
+function closeProjectInsightModal() {
+    projectInsightModal.classList.add("hidden");
+    projectInsightModal.setAttribute("aria-hidden", "true");
 }
 
 function renderSummaryCards(view) {
@@ -453,7 +780,7 @@ function renderInsightPanel(view, item) {
     heading.textContent = `${entityConfig[view].singular} Insight`;
 
     if (view === "customers") {
-        panel.innerHTML = renderCustomerInsight(item);
+        panel.innerHTML = renderCustomerManagementInsight(item);
         return;
     }
 
@@ -481,44 +808,245 @@ function renderInsightPanel(view, item) {
 }
 
 function renderCustomerInsight(item) {
+    const contacts = state.data.contacts.filter(contact => contact.customerId === item.id);
+    const projects = state.data.projects.filter(project => project.customerId === item.id);
+    const deals = state.data.deals.filter(deal => deal.customerId === item.id);
+    const tasks = state.data.tasks.filter(task => task.customerId === item.id);
+    const activities = state.data.activities.filter(activity => activity.customerId === item.id);
+    const openDeals = deals.filter(deal => deal.stage !== "WON" && deal.stage !== "LOST");
+    const nextTask = tasks
+        .filter(task => task.status !== "COMPLETED" && task.status !== "CANCELLED")
+        .sort((a, b) => {
+            if (!a.dueDate) {
+                return 1;
+            }
+            if (!b.dueDate) {
+                return -1;
+            }
+            return new Date(a.dueDate) - new Date(b.dueDate);
+        })[0];
+    const alerts = buildCustomerAlerts(item, openDeals, tasks);
+
+    return `
+        <div class="customer-360-shell">
+            <aside class="customer-360-core">
+                <div class="customer-core-hero">
+                    <div class="customer-core-logo">${escapeHtml((item.name || "C").slice(0, 1))}</div>
+                    <div>
+                        <span class="eyebrow">${escapeHtml(beautify(item.customerType))}</span>
+                        <h3>${escapeHtml(item.name)}</h3>
+                        <p>${escapeHtml(item.cifNumber || "CIF pending")} • ${escapeHtml(beautify(item.status))}</p>
+                    </div>
+                </div>
+                <div class="customer-core-grid">
+                    ${coreMetric("Tier", item.segment || "Unassigned")}
+                    ${coreMetric("Customer Score", customerScore(item))}
+                    ${coreMetric("KYC", beautify(item.kycStatus))}
+                </div>
+                ${detailGroup("Core Details", [
+                    detailItem("Risk", beautify(item.riskLevel)),
+                    detailItem("Lifecycle", beautify(item.status))
+                ])}
+            </aside>
+            <section class="customer-360-main">
+                <div class="customer-tab-bar">
+                    ${renderCustomerTab("overview", "Overview")}
+                    ${renderCustomerTab("contacts", "Contacts")}
+                    ${renderCustomerTab("opportunities", "Opportunities")}
+                    ${renderCustomerTab("projects", "Projects")}
+                    ${renderCustomerTab("products", "Products")}
+                    ${renderCustomerTab("activities", "Activities")}
+                </div>
+                <div class="customer-tab-panel">
+                    ${renderCustomerTabContent(item, contacts, openDeals, projects, activities, tasks)}
+                </div>
+            </section>
+            <aside class="customer-360-actions">
+                ${detailGroup("Next Action", [
+                    detailItem("Upcoming Task", nextTask ? `${nextTask.title}${nextTask.dueDate ? ` • ${nextTask.dueDate}` : ""}` : "No open next action")
+                ])}
+                ${detailGroup("Key Contacts", contacts.length ? contacts.slice(0, 3).map(contact =>
+                    detailItem(contact.firstName + " " + contact.lastName, contact.jobTitle || contact.email || "Key contact")
+                ) : [
+                    detailItem("Coverage", "No key contacts added")
+                ])}
+                ${detailGroup("Open Deals", openDeals.length ? openDeals.slice(0, 3).map(deal =>
+                    detailItem(deal.title, `${formatMoney(deal.amount)} • ${beautify(deal.stage)}`)
+                ) : [
+                    detailItem("Pipeline", "No open deals")
+                ])}
+                ${detailGroup("Alerts", alerts.map(alert => detailItem(alert.label, alert.value)))}
+                <div class="insight-actions">
+                    <a class="primary-button link-button" href="/annual-maintenance.html?customerId=${item.id}">Open Annual Maintenance</a>
+                </div>
+            </aside>
+        </div>
+    `;
+}
+
+function renderCustomerManagementInsight(item) {
     const contacts = state.data.contacts.filter(contact => contact.customerId === item.id).length;
     const projects = state.data.projects.filter(project => project.customerId === item.id).length;
-    const deals = state.data.deals.filter(deal => deal.customerId === item.id).length;
-    const tasks = state.data.tasks.filter(task => task.customerId === item.id).length;
-    const activities = state.data.activities.filter(activity => activity.customerId === item.id).length;
+    const deals = state.data.deals.filter(deal => deal.customerId === item.id && deal.stage !== "WON" && deal.stage !== "LOST").length;
+    const tasks = state.data.tasks.filter(task => task.customerId === item.id && task.status !== "COMPLETED").length;
 
     return `
         <div class="insight-hero">
-            <span class="eyebrow">${escapeHtml(beautify(item.segment))} Customer</span>
+            <span class="eyebrow">Customer Snapshot</span>
             <h3>${escapeHtml(item.name)}</h3>
-            <p>${escapeHtml(item.cifNumber)} • ${escapeHtml(beautify(item.customerType))} • ${escapeHtml(beautify(item.status))}</p>
+            <p>${escapeHtml(item.cifNumber || "CIF pending")} • ${escapeHtml(beautify(item.customerType))}</p>
         </div>
         <div class="insight-grid">
+            ${insightMetric("Tier", beautify(item.segment || "Unassigned"))}
             ${insightMetric("KYC", beautify(item.kycStatus))}
             ${insightMetric("Risk", beautify(item.riskLevel))}
-            ${insightMetric("Stage", beautify(item.onboardingStage))}
-            ${insightMetric("Channel", beautify(item.preferredChannel))}
         </div>
-        ${detailGroup("Relationship", [
-            detailItem("Relationship Manager", item.relationshipManager || "Unassigned"),
-            detailItem("Residency", item.residencyCountry || "Not captured"),
-            detailItem("Email", item.email || "Not captured"),
-            detailItem("Phone", item.phone || "Not captured")
+        ${detailGroup("Relationship Summary", [
+            detailItem("Lifecycle", beautify(item.status)),
+            detailItem("Customer Type", beautify(item.customerType)),
+            detailItem("Email", item.email || "Not captured")
         ])}
-        ${detailGroup("Portfolio Context", [
+        ${detailGroup("Coverage", [
             detailItem("Contacts", String(contacts)),
             detailItem("Projects", String(projects)),
-            detailItem("Opportunities", String(deals)),
-            detailItem("Service Tasks", String(tasks)),
-            detailItem("Interactions", String(activities))
-        ])}
-        ${detailGroup("Relationship Notes", [
-            detailItem("Notes", item.notes || "No notes recorded")
+            detailItem("Open Deals", String(deals)),
+            detailItem("Open Tasks", String(tasks))
         ])}
         <div class="insight-actions">
-            <a class="primary-button link-button" href="/annual-maintenance.html?customerId=${item.id}">Open Annual Maintenance</a>
+            <a class="primary-button link-button" href="/customer-360.html?customerId=${item.id}">Open 360</a>
+            <a class="ghost-button link-button" href="/annual-maintenance.html?customerId=${item.id}">Annual Maintenance</a>
         </div>
     `;
+}
+
+function renderCustomerTab(tab, label) {
+    return `<button class="customer-tab ${state.customerTab === tab ? "active" : ""}" type="button" data-customer-tab="${tab}">${escapeHtml(label)}</button>`;
+}
+
+function renderCustomerTabContent(item, contacts, openDeals, projects, activities, tasks) {
+    if (state.customerTab === "contacts") {
+        return renderCustomerCollection("Contacts", contacts, contact =>
+            `<strong>${escapeHtml(contact.firstName)} ${escapeHtml(contact.lastName)}</strong><span>${escapeHtml(contact.jobTitle || contact.email || "No role captured")}</span>`
+        );
+    }
+
+    if (state.customerTab === "opportunities") {
+        return renderCustomerCollection("Opportunities", openDeals, deal =>
+            `<strong>${escapeHtml(deal.title)}</strong><span>${formatMoney(deal.amount)} • ${escapeHtml(beautify(deal.stage))}</span>`
+        );
+    }
+
+    if (state.customerTab === "projects") {
+        return renderCustomerCollection("Projects", projects, project =>
+            `<strong>${escapeHtml(project.projectName)}</strong><span>${escapeHtml(project.market)} • ${formatMoney(project.amount)} • ${escapeHtml(beautify(project.status))}</span>`
+        );
+    }
+
+    if (state.customerTab === "products") {
+        return `
+            <section class="customer-tab-section">
+                <div class="customer-tab-section-header">
+                    <span class="eyebrow">Products</span>
+                    <h4>Product Holdings</h4>
+                </div>
+                <div class="customer-product-grid">
+                    ${productCard("Projects", String(projects.length), "Mapped from active customer projects")}
+                    ${productCard("Opportunities", String(openDeals.length), "Pipeline that can convert into product revenue")}
+                    ${productCard("Service Tasks", String(tasks.length), "Operational servicing workload")}
+                </div>
+            </section>
+        `;
+    }
+
+    if (state.customerTab === "activities") {
+        return renderCustomerCollection("Activities", activities.slice().sort((a, b) => new Date(b.activityDate) - new Date(a.activityDate)), activity =>
+            `<strong>${escapeHtml(activity.subject)}</strong><span>${escapeHtml(beautify(activity.type))} • ${escapeHtml(formatDateTime(activity.activityDate))}</span>`
+        );
+    }
+
+    return `
+        <section class="customer-tab-section">
+            <div class="customer-tab-section-header">
+                <span class="eyebrow">Overview</span>
+                <h4>Relationship Summary</h4>
+            </div>
+            <div class="customer-overview-grid">
+                ${insightMetric("Contacts", String(contacts.length))}
+                ${insightMetric("Open Deals", String(openDeals.length))}
+                ${insightMetric("Projects", String(projects.length))}
+                ${insightMetric("Activities", String(activities.length))}
+            </div>
+            ${detailGroup("Customer Summary", [
+                detailItem("Email", item.email || "Not captured"),
+                detailItem("Notes", item.notes || "No notes recorded")
+            ])}
+        </section>
+    `;
+}
+
+function renderCustomerCollection(title, items, renderer) {
+    return `
+        <section class="customer-tab-section">
+            <div class="customer-tab-section-header">
+                <span class="eyebrow">${escapeHtml(title)}</span>
+                <h4>${escapeHtml(title)} Workspace</h4>
+            </div>
+            <div class="customer-collection">
+                ${items.length ? items.map(item => `<article class="customer-collection-item">${renderer(item)}</article>`).join("") : `<div class="empty-insight"><p>No ${escapeHtml(title.toLowerCase())} available for this customer.</p></div>`}
+            </div>
+        </section>
+    `;
+}
+
+function productCard(label, value, note) {
+    return `
+        <article class="customer-product-card">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(value)}</strong>
+            <p>${escapeHtml(note)}</p>
+        </article>
+    `;
+}
+
+function coreMetric(label, value) {
+    return `
+        <article class="customer-core-metric">
+            <span>${escapeHtml(label)}</span>
+            <strong>${escapeHtml(typeof value === "string" ? beautify(value) : String(value))}</strong>
+        </article>
+    `;
+}
+
+function customerScore(item) {
+    let score = 55;
+    if (item.kycStatus === "VERIFIED") {
+        score += 15;
+    }
+    if (item.riskLevel === "LOW") {
+        score += 10;
+    }
+    if (item.status === "ACTIVE") {
+        score += 10;
+    }
+    return `${Math.min(score, 95)}/100`;
+}
+
+function buildCustomerAlerts(item, openDeals, tasks) {
+    const alerts = [];
+    if (item.kycStatus !== "VERIFIED") {
+        alerts.push({ label: "KYC", value: `Status ${beautify(item.kycStatus)}` });
+    }
+    if (item.riskLevel === "HIGH") {
+        alerts.push({ label: "Risk", value: "High risk customer" });
+    }
+    const overdueTask = tasks.find(task => task.status !== "COMPLETED" && task.dueDate && new Date(task.dueDate) < startOfToday());
+    if (overdueTask) {
+        alerts.push({ label: "Task", value: `Overdue: ${overdueTask.title}` });
+    }
+    if (openDeals.length > 0) {
+        alerts.push({ label: "Pipeline", value: `${openDeals.length} open opportunity(ies)` });
+    }
+    return alerts.length ? alerts : [{ label: "Status", value: "No immediate risk alerts" }];
 }
 
 function renderContactInsight(item) {
@@ -560,6 +1088,7 @@ function renderDealInsight(item) {
 }
 
 function renderProjectInsight(item) {
+    const customerProjects = state.data.projects.filter(project => project.customerId === item.customerId).length;
     const maintenanceCount = 0;
     return `
         <div class="insight-hero">
@@ -577,12 +1106,185 @@ function renderProjectInsight(item) {
             detailItem("Customer", item.customerName || "Not linked"),
             detailItem("Market", item.market || "Not captured"),
             detailItem("Amount", formatMoney(item.amount)),
-            detailItem("Tax Rate", `${Number(item.taxRate || 0)}%`)
+            detailItem("Tax Rate", `${Number(item.taxRate || 0)}%`),
+            detailItem("Customer Project Count", String(customerProjects))
         ])}
         ${detailGroup("Maintenance Linkage", [
             detailItem("Annual Maintenance", maintenanceCount ? String(maintenanceCount) : "Managed from Annual Maintenance page")
         ])}
     `;
+}
+
+function renderToolbarExtras(items) {
+    if (state.currentView !== "projects") {
+        projectFilters.classList.add("hidden");
+        projectFilters.innerHTML = "";
+        return;
+    }
+
+    const customerOptions = state.data.customers
+        .slice()
+        .sort((a, b) => a.name.localeCompare(b.name))
+        .map(customer => `<option value="${customer.id}" ${String(state.projectFilters.customerId) === String(customer.id) ? "selected" : ""}>${escapeHtml(customer.name)}</option>`)
+        .join("");
+    const marketOptions = [...new Set(state.data.projects.map(item => item.market).filter(Boolean))]
+        .sort((a, b) => a.localeCompare(b))
+        .map(market => `<option value="${escapeHtml(market)}" ${state.projectFilters.market === market ? "selected" : ""}>${escapeHtml(market)}</option>`)
+        .join("");
+
+    projectFilters.classList.remove("hidden");
+    projectFilters.innerHTML = `
+        <div class="project-filter-head">
+            <div>
+                <span class="eyebrow">Project Explorer</span>
+                <strong>Customer-centered project book</strong>
+            </div>
+            <div class="project-filter-note">
+                <span>${items.length} project(s) matched</span>
+                <small>Grouped by customer relationship.</small>
+            </div>
+        </div>
+        <div class="project-filter-grid">
+            <label class="field">
+                <span>Customer</span>
+                <select name="customerId">
+                    <option value="">All Customers</option>
+                    ${customerOptions}
+                </select>
+            </label>
+            <label class="field">
+                <span>Market</span>
+                <select name="market">
+                    <option value="">All Markets</option>
+                    ${marketOptions}
+                </select>
+            </label>
+            <label class="field">
+                <span>Status</span>
+                <select name="status">
+                    <option value="">All Statuses</option>
+                    <option value="LIVE" ${state.projectFilters.status === "LIVE" ? "selected" : ""}>Live</option>
+                    <option value="IN_PROGRESS" ${state.projectFilters.status === "IN_PROGRESS" ? "selected" : ""}>In Progress</option>
+                </select>
+            </label>
+            <label class="field">
+                <span>Keyword</span>
+                <input value="${escapeHtml(state.search)}" disabled placeholder="Use the main search box above">
+            </label>
+        </div>
+    `;
+}
+
+function renderProjectCustomerGroups(groups, selected) {
+    return groups.map(group => `
+        <section class="customer-project-group">
+            <header class="customer-project-header">
+                <div class="customer-project-identity">
+                    <span class="eyebrow">Customer</span>
+                    <h3>${escapeHtml(group.customerName)}</h3>
+                    <p>${group.projects.length} active project record${group.projects.length === 1 ? "" : "s"} in this customer book.</p>
+                </div>
+                <div class="customer-project-summary">
+                    <article class="customer-project-stat">
+                        <span>Projects</span>
+                        <strong>${group.projects.length}</strong>
+                    </article>
+                    <article class="customer-project-stat">
+                        <span>Total Value</span>
+                        <strong>${formatMoney(group.totalAmount)}</strong>
+                    </article>
+                </div>
+            </header>
+            ${renderProjectDirectoryTable(group.projects, selected)}
+        </section>
+    `).join("");
+}
+
+function renderProjectDirectoryTable(items, selected) {
+    return `
+        <div class="customer-contact-table-shell">
+            <table class="contact-directory-table">
+                <thead>
+                    <tr>
+                        <th>Project Name</th>
+                        <th>Market</th>
+                        <th>Amount</th>
+                        <th>Tax Rate</th>
+                        <th>Status</th>
+                        <th>Customer</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${items.map(item => renderProjectDirectoryRow(item, selected && selected.id === item.id)).join("")}
+                </tbody>
+            </table>
+        </div>
+    `;
+}
+
+function renderProjectDirectoryRow(item, selected) {
+    return `
+        <tr class="${selected ? "selected" : ""}" data-select-id="${item.id}">
+            <td data-label="Project Name"><strong>${escapeHtml(item.projectName)}</strong></td>
+            <td data-label="Market">${escapeHtml(item.market || "Not captured")}</td>
+            <td data-label="Amount">${formatMoney(item.amount)}</td>
+            <td data-label="Tax Rate">${Number(item.taxRate || 0)}%</td>
+            <td data-label="Status">${escapeHtml(beautify(item.status || "IN_PROGRESS"))}</td>
+            <td data-label="Customer">${escapeHtml(item.customerName || "Unassigned")}</td>
+            <td data-label="Actions">
+                <div class="contact-table-actions">
+                    <button class="ghost-button" type="button" data-project-insight-id="${item.id}">Insight Details</button>
+                    <a class="ghost-button link-button" href="/annual-maintenance.html?customerId=${item.customerId}&projectId=${item.id}">Maintenance</a>
+                    <button class="ghost-button" type="button" data-edit-id="${item.id}">Edit</button>
+                    <button class="danger-button" type="button" data-delete-id="${item.id}">Delete</button>
+                </div>
+            </td>
+        </tr>
+    `;
+}
+
+function renderProjectEmptyState() {
+    return `
+        <div class="empty-state">
+            <h3>No projects found</h3>
+            <p>Adjust the customer, market, or status filters, or create the first project for a customer.</p>
+        </div>
+    `;
+}
+
+function groupProjectsByCustomer(items) {
+    const groups = new Map();
+    items
+        .slice()
+        .sort((a, b) => a.customerName.localeCompare(b.customerName) || a.projectName.localeCompare(b.projectName))
+        .forEach(item => {
+            if (!groups.has(item.customerId)) {
+                groups.set(item.customerId, {
+                    customerId: item.customerId,
+                    customerName: item.customerName,
+                    projects: [],
+                    totalAmount: 0
+                });
+            }
+            const group = groups.get(item.customerId);
+            group.projects.push(item);
+            group.totalAmount += Number(item.amount || 0);
+        });
+    return Array.from(groups.values());
+}
+
+function projectMatchesFilters(item) {
+    if (state.projectFilters.customerId && String(item.customerId) !== String(state.projectFilters.customerId)) {
+        return false;
+    }
+    if (state.projectFilters.market && item.market !== state.projectFilters.market) {
+        return false;
+    }
+    if (state.projectFilters.status && item.status !== state.projectFilters.status) {
+        return false;
+    }
+    return true;
 }
 
 function renderTaskInsight(item) {
@@ -802,6 +1504,16 @@ function handleSearch(event) {
     renderCurrentView();
 }
 
+function handleProjectFilterChange(event) {
+    const target = event.target;
+    if (!(target instanceof HTMLInputElement || target instanceof HTMLSelectElement)) {
+        return;
+    }
+    state.projectFilters[target.name] = target.value;
+    ensureSelectedRecord();
+    renderCurrentView();
+}
+
 function handleAppError(error) {
     if (error.message === "Unauthorized") {
         logout();
@@ -867,6 +1579,12 @@ function relationField(name, label, source, required = false) {
 document.addEventListener("click", event => {
     if (event.target && event.target.id === "cancel-form-button") {
         closeModal();
+    }
+
+    const customerTab = event.target.closest("[data-customer-tab]");
+    if (customerTab) {
+        state.customerTab = customerTab.dataset.customerTab;
+        renderCurrentView();
     }
 });
 

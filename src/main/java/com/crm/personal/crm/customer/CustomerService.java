@@ -102,16 +102,10 @@ public class CustomerService {
         customer.setCustomerType(request.getCustomerType() == null ? CustomerType.COMMERCIAL_BANK : request.getCustomerType());
         customer.setCifNumber(request.getCifNumber());
         customer.setEmail(request.getEmail());
-        customer.setPhone(request.getPhone());
-        customer.setCompany(request.getCompany());
         customer.setSegment(request.getSegment() == null ? CustomerSegment.RETAIL : request.getSegment());
         customer.setStatus(request.getStatus() == null ? CustomerStatus.LEAD : request.getStatus());
         customer.setKycStatus(request.getKycStatus() == null ? KycStatus.PENDING : request.getKycStatus());
         customer.setRiskLevel(request.getRiskLevel() == null ? RiskLevel.LOW : request.getRiskLevel());
-        customer.setPreferredChannel(request.getPreferredChannel() == null ? PreferredChannel.MOBILE_APP : request.getPreferredChannel());
-        customer.setOnboardingStage(request.getOnboardingStage() == null ? OnboardingStage.PROSPECT : request.getOnboardingStage());
-        customer.setResidencyCountry(request.getResidencyCountry());
-        customer.setRelationshipManager(request.getRelationshipManager());
         customer.setNotes(request.getNotes());
     }
 }

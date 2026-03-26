@@ -89,7 +89,7 @@ async function loadPage() {
 
 function renderPage() {
     document.getElementById("maintenance-page-title").textContent = `${state.customer.name} Annual Maintenance`;
-    document.getElementById("maintenance-page-description").textContent = `Manage maintenance by project for ${state.customer.name}. Each project can contain Year 1, Year 2, Year 3, and status is based on the latest end date across that project.`;
+    document.getElementById("maintenance-page-description").textContent = `Manage maintenance by project for ${state.customer.name}. Each project can contain 1st Year, 2nd Year, 3rd Year and status is based on the latest end date across that project.`;
     document.getElementById("maintenance-total").textContent = String(state.projects.length);
     document.getElementById("maintenance-active").textContent = String(state.projects.filter(item => item.alertLevel === "ACTIVE").length);
     document.getElementById("maintenance-expired").textContent = String(state.projects.filter(item => item.alertLevel === "RED").length);
@@ -105,7 +105,7 @@ function renderPage() {
 function renderProject(project) {
     const selected = project.key === state.selectedProjectKey;
     const years = project.records
-        .map(item => `Year ${item.maintenanceYear}`)
+        .map(item => formatMaintenanceYear(item.maintenanceYear))
         .join(", ");
     return `
         <article class="record-row ${selected ? "selected" : ""} ${project.rowClass}" data-select-key="${escapeHtml(project.key)}">
@@ -185,7 +185,7 @@ function renderYearRecord(record) {
         <article class="timeline-record ${record.id === state.editingId ? "selected" : ""}">
             <div class="timeline-record-main">
                 <div class="record-title-line">
-                    <h3>Year ${escapeHtml(String(record.maintenanceYear))}</h3>
+                    <h3>${escapeHtml(formatMaintenanceYear(record.maintenanceYear))}</h3>
                     <span class="status-pill ${record.paymentStatus === "PAID" ? "status-active" : "status-pending"}">${record.paymentStatus === "PAID" ? "Paid" : "Not Paid"}</span>
                 </div>
                 <div class="record-meta">
@@ -245,7 +245,7 @@ function openModal(id = null, defaults = {}) {
                 <h3>Coverage and Billing</h3>
             </div>
             <div class="form-grid">
-        <label class="field"><span>Maintenance Year</span><input name="maintenanceYear" type="number" min="1" value="${record ? escapeHtml(String(record.maintenanceYear)) : ""}" required></label>
+        ${renderMaintenanceYearField(record ? String(record.maintenanceYear) : "")}
         <label class="field"><span>Amount</span><input name="amount" type="number" min="0.01" step="0.01" value="${record ? escapeHtml(String(record.amount)) : ""}" required></label>
         <label class="field"><span>Start Date</span><input name="startDate" type="date" value="${record ? escapeHtml(record.startDate) : ""}" required></label>
         <label class="field"><span>End Date</span><input name="endDate" type="date" value="${record ? escapeHtml(record.endDate) : ""}" required></label>
@@ -267,7 +267,7 @@ function openModal(id = null, defaults = {}) {
             <div class="batch-header">
                 <div>
                     <span>Maintenance Entries</span>
-                    <small>Add Year 1, Year 2, Year 3 for the selected project in one submission.</small>
+                    <small>Add 1st Year, 2nd Year, 3rd Year for the selected project in one submission.</small>
                 </div>
                 <button class="ghost-button" type="button" id="maintenance-add-row-button">Add Year</button>
             </div>
@@ -387,7 +387,7 @@ function appendBatchRow(defaultYear = "") {
     row.className = "batch-row";
     row.dataset.batchRow = rowId;
     row.innerHTML = `
-        <label class="field"><span>Maintenance Year</span><input name="maintenanceYear" type="number" min="1" value="${escapeHtml(String(defaultYear || ""))}" required></label>
+        ${renderMaintenanceYearField(String(defaultYear || ""))}
         <label class="field"><span>Amount</span><input name="amount" type="number" min="0.01" step="0.01" required></label>
         <label class="field"><span>Start Date</span><input name="startDate" type="date" required></label>
         <label class="field"><span>End Date</span><input name="endDate" type="date" required></label>
@@ -443,6 +443,42 @@ function refreshBatchRowActions() {
         removeButton.disabled = disabled;
         removeButton.textContent = disabled ? "Remove Disabled" : "Remove";
     });
+}
+
+function renderMaintenanceYearField(value) {
+    const options = Array.from({ length: 10 }, (_, index) => {
+        const year = String(index + 1);
+        return `<option value="${year}" ${String(value) === year ? "selected" : ""}>${escapeHtml(formatMaintenanceYear(index + 1))}</option>`;
+    }).join("");
+
+    return `
+        <label class="field">
+            <span>Maintenance Year</span>
+            <select name="maintenanceYear" required>
+                <option value="">Select year</option>
+                ${options}
+            </select>
+        </label>
+    `;
+}
+
+function formatMaintenanceYear(value) {
+    const year = Number(value);
+    if (!Number.isFinite(year) || year <= 0) {
+        return "Unknown Year";
+    }
+
+    const mod10 = year % 10;
+    const mod100 = year % 100;
+    let suffix = "th";
+    if (mod10 === 1 && mod100 !== 11) {
+        suffix = "st";
+    } else if (mod10 === 2 && mod100 !== 12) {
+        suffix = "nd";
+    } else if (mod10 === 3 && mod100 !== 13) {
+        suffix = "rd";
+    }
+    return `${year}${suffix} Year`;
 }
 
 function renderMarketOptions() {

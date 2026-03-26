@@ -37,10 +37,6 @@ public class Customer {
     @Column(nullable = false, unique = true)
     private String email;
 
-    private String phone;
-
-    private String company;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CustomerSegment segment = CustomerSegment.RETAIL;
@@ -56,18 +52,6 @@ public class Customer {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private RiskLevel riskLevel = RiskLevel.LOW;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private PreferredChannel preferredChannel = PreferredChannel.MOBILE_APP;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private OnboardingStage onboardingStage = OnboardingStage.PROSPECT;
-
-    private String residencyCountry;
-
-    private String relationshipManager;
 
     @Column(length = 1000)
     private String notes;
@@ -121,22 +105,6 @@ public class Customer {
         this.email = email;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getCompany() {
-        return company;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
-    }
-
     public CustomerSegment getSegment() {
         return segment;
     }
@@ -167,38 +135,6 @@ public class Customer {
 
     public void setRiskLevel(RiskLevel riskLevel) {
         this.riskLevel = riskLevel;
-    }
-
-    public PreferredChannel getPreferredChannel() {
-        return preferredChannel;
-    }
-
-    public void setPreferredChannel(PreferredChannel preferredChannel) {
-        this.preferredChannel = preferredChannel;
-    }
-
-    public OnboardingStage getOnboardingStage() {
-        return onboardingStage;
-    }
-
-    public void setOnboardingStage(OnboardingStage onboardingStage) {
-        this.onboardingStage = onboardingStage;
-    }
-
-    public String getResidencyCountry() {
-        return residencyCountry;
-    }
-
-    public void setResidencyCountry(String residencyCountry) {
-        this.residencyCountry = residencyCountry;
-    }
-
-    public String getRelationshipManager() {
-        return relationshipManager;
-    }
-
-    public void setRelationshipManager(String relationshipManager) {
-        this.relationshipManager = relationshipManager;
     }
 
     public String getNotes() {

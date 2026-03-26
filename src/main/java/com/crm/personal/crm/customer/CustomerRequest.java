@@ -18,10 +18,6 @@ public class CustomerRequest {
     @Email(message = "Email should be valid")
     private String email;
 
-    private String phone;
-
-    private String company;
-
     private CustomerSegment segment = CustomerSegment.RETAIL;
 
     private CustomerStatus status = CustomerStatus.LEAD;
@@ -29,14 +25,6 @@ public class CustomerRequest {
     private KycStatus kycStatus = KycStatus.PENDING;
 
     private RiskLevel riskLevel = RiskLevel.LOW;
-
-    private PreferredChannel preferredChannel = PreferredChannel.MOBILE_APP;
-
-    private OnboardingStage onboardingStage = OnboardingStage.PROSPECT;
-
-    private String residencyCountry;
-
-    private String relationshipManager;
 
     @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
     private String notes;
@@ -73,22 +61,6 @@ public class CustomerRequest {
         this.email = email;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getCompany() {
-        return company;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
-    }
-
     public CustomerSegment getSegment() {
         return segment;
     }
@@ -119,38 +91,6 @@ public class CustomerRequest {
 
     public void setRiskLevel(RiskLevel riskLevel) {
         this.riskLevel = riskLevel;
-    }
-
-    public PreferredChannel getPreferredChannel() {
-        return preferredChannel;
-    }
-
-    public void setPreferredChannel(PreferredChannel preferredChannel) {
-        this.preferredChannel = preferredChannel;
-    }
-
-    public OnboardingStage getOnboardingStage() {
-        return onboardingStage;
-    }
-
-    public void setOnboardingStage(OnboardingStage onboardingStage) {
-        this.onboardingStage = onboardingStage;
-    }
-
-    public String getResidencyCountry() {
-        return residencyCountry;
-    }
-
-    public void setResidencyCountry(String residencyCountry) {
-        this.residencyCountry = residencyCountry;
-    }
-
-    public String getRelationshipManager() {
-        return relationshipManager;
-    }
-
-    public void setRelationshipManager(String relationshipManager) {
-        this.relationshipManager = relationshipManager;
     }
 
     public String getNotes() {

@@ -41,13 +41,5 @@ public class CustomerDataRepairRunner implements ApplicationRunner {
                 "update customers set risk_level = ? where risk_level is null or trim(risk_level) = ''",
                 RiskLevel.LOW.name()
         );
-        jdbcTemplate.update(
-                "update customers set preferred_channel = ? where preferred_channel is null or trim(preferred_channel) = ''",
-                PreferredChannel.MOBILE_APP.name()
-        );
-        jdbcTemplate.update(
-                "update customers set onboarding_stage = ? where onboarding_stage is null or trim(onboarding_stage) = ''",
-                OnboardingStage.PROSPECT.name()
-        );
     }
 }

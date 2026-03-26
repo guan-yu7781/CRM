@@ -9,16 +9,10 @@ public class CustomerResponse {
     private CustomerType customerType;
     private String cifNumber;
     private String email;
-    private String phone;
-    private String company;
     private CustomerSegment segment;
     private CustomerStatus status;
     private KycStatus kycStatus;
     private RiskLevel riskLevel;
-    private PreferredChannel preferredChannel;
-    private OnboardingStage onboardingStage;
-    private String residencyCountry;
-    private String relationshipManager;
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
@@ -30,16 +24,10 @@ public class CustomerResponse {
         response.setCustomerType(customer.getCustomerType());
         response.setCifNumber(customer.getCifNumber());
         response.setEmail(customer.getEmail());
-        response.setPhone(customer.getPhone());
-        response.setCompany(customer.getCompany());
         response.setSegment(customer.getSegment());
         response.setStatus(customer.getStatus());
         response.setKycStatus(customer.getKycStatus());
         response.setRiskLevel(customer.getRiskLevel());
-        response.setPreferredChannel(customer.getPreferredChannel());
-        response.setOnboardingStage(customer.getOnboardingStage());
-        response.setResidencyCountry(customer.getResidencyCountry());
-        response.setRelationshipManager(customer.getRelationshipManager());
         response.setNotes(customer.getNotes());
         response.setCreatedAt(customer.getCreatedAt());
         response.setUpdatedAt(customer.getUpdatedAt());
@@ -53,16 +41,10 @@ public class CustomerResponse {
         response.setCustomerType(customer.getCustomerType());
         response.setCifNumber(customer.getCifNumber());
         response.setEmail(customer.getEmail());
-        response.setPhone(customer.getPhone());
-        response.setCompany(customer.getCompany());
         response.setSegment(customer.getSegment());
         response.setStatus(customer.getStatus());
         response.setKycStatus(customer.getKycStatus());
         response.setRiskLevel(customer.getRiskLevel());
-        response.setPreferredChannel(customer.getPreferredChannel());
-        response.setOnboardingStage(customer.getOnboardingStage());
-        response.setResidencyCountry(customer.getResidencyCountry());
-        response.setRelationshipManager(customer.getRelationshipManager());
         response.setNotes(customer.getNotes());
         response.setCreatedAt(customer.getCreatedAt());
         response.setUpdatedAt(customer.getUpdatedAt());
@@ -109,22 +91,6 @@ public class CustomerResponse {
         this.email = email;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getCompany() {
-        return company;
-    }
-
-    public void setCompany(String company) {
-        this.company = company;
-    }
-
     public CustomerSegment getSegment() {
         return segment;
     }
@@ -155,38 +121,6 @@ public class CustomerResponse {
 
     public void setRiskLevel(RiskLevel riskLevel) {
         this.riskLevel = riskLevel;
-    }
-
-    public PreferredChannel getPreferredChannel() {
-        return preferredChannel;
-    }
-
-    public void setPreferredChannel(PreferredChannel preferredChannel) {
-        this.preferredChannel = preferredChannel;
-    }
-
-    public OnboardingStage getOnboardingStage() {
-        return onboardingStage;
-    }
-
-    public void setOnboardingStage(OnboardingStage onboardingStage) {
-        this.onboardingStage = onboardingStage;
-    }
-
-    public String getResidencyCountry() {
-        return residencyCountry;
-    }
-
-    public void setResidencyCountry(String residencyCountry) {
-        this.residencyCountry = residencyCountry;
-    }
-
-    public String getRelationshipManager() {
-        return relationshipManager;
-    }
-
-    public void setRelationshipManager(String relationshipManager) {
-        this.relationshipManager = relationshipManager;
     }
 
     public String getNotes() {

@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pulse Customer 360</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css?v=20260326-contact-responsive">
 </head>
 <body>
 <div id="login-panel" class="login-screen">
@@ -32,6 +32,7 @@
 
 <div id="app-shell" class="app-shell hidden">
     <aside class="sidebar">
+        <button id="sidebar-toggle" class="ghost-button sidebar-toggle icon-button" type="button" aria-expanded="true" aria-label="Collapse menu" title="Collapse menu">◀</button>
         <div class="sidebar-brand">
             <span class="eyebrow">Digital Banking CRM</span>
             <h2>Pulse 360</h2>
@@ -39,7 +40,7 @@
         </div>
 
         <nav class="menu">
-            <button class="menu-item active" data-view="customers" type="button">Customer 360</button>
+            <button class="menu-item active" data-view="customers" type="button">Customer Management</button>
             <button class="menu-item" data-view="contacts" type="button">Contacts</button>
             <button class="menu-item" data-view="projects" type="button">Projects</button>
             <button class="menu-item" data-view="deals" type="button">Opportunities</button>
@@ -96,15 +97,16 @@
             </article>
         </section>
 
-        <section class="workspace-grid">
+        <section id="workspace-grid" class="workspace-grid">
             <section class="records-panel">
                 <div class="records-toolbar">
                     <div>
-                        <strong class="panel-title">Records</strong>
-                        <span class="panel-subtitle"><span id="record-count">0</span> items in the current module</span>
+                        <strong id="panel-title" class="panel-title">Records</strong>
+                        <span id="panel-subtitle" class="panel-subtitle"><span id="record-count">0</span> <span id="panel-subtitle-text">items in the current module</span></span>
                     </div>
                     <input id="search-input" class="search-input" type="search" placeholder="Search records">
                 </div>
+                <div id="project-filters" class="project-filters hidden"></div>
                 <div id="records-list" class="records-list"></div>
             </section>
 
@@ -135,6 +137,34 @@
     </section>
 </div>
 
-<script src="/app.js"></script>
+<div id="contact-insight-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-contact-close="true"></div>
+    <section class="modal-card contact-insight-modal-card">
+        <header class="modal-header">
+            <div>
+                <span class="eyebrow">Contact Insight</span>
+                <h2 id="contact-insight-title">Contact Profile</h2>
+            </div>
+            <button id="close-contact-insight-button" class="ghost-button icon-button" type="button">Close</button>
+        </header>
+        <div id="contact-insight-body" class="insight-content"></div>
+    </section>
+</div>
+
+<div id="project-insight-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-project-close="true"></div>
+    <section class="modal-card contact-insight-modal-card">
+        <header class="modal-header">
+            <div>
+                <span class="eyebrow">Project Insight</span>
+                <h2 id="project-insight-title">Project Overview</h2>
+            </div>
+            <button id="close-project-insight-button" class="ghost-button icon-button" type="button">Close</button>
+        </header>
+        <div id="project-insight-body" class="insight-content"></div>
+    </section>
+</div>
+
+<script src="/app.js?v=20260326-contact-responsive"></script>
 </body>
 </html>
