@@ -7,6 +7,7 @@ import java.time.LocalDateTime;
 public class AnnualMaintenanceResponse {
 
     private Long id;
+    private Long projectId;
     private String projectName;
     private String market;
     private Integer maintenanceYear;
@@ -24,6 +25,7 @@ public class AnnualMaintenanceResponse {
     public static AnnualMaintenanceResponse from(AnnualMaintenanceRecord maintenance) {
         AnnualMaintenanceResponse response = new AnnualMaintenanceResponse();
         response.setId(maintenance.getId());
+        response.setProjectId(maintenance.getProjectId());
         response.setProjectName(maintenance.getProjectName());
         response.setMarket(maintenance.getMarket());
         response.setMaintenanceYear(maintenance.getMaintenanceYear());
@@ -47,6 +49,14 @@ public class AnnualMaintenanceResponse {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getProjectId() {
+        return projectId;
+    }
+
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
     }
 
     public String getProjectName() {

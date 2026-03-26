@@ -1,171 +1,243 @@
 # Banking Customer 360 CRM
 
-Spring Boot customer management system for a digital bank or a core banking platform provider. The experience is inspired by enterprise banking CRM patterns such as customer master data, KYC status, risk classification, relationship ownership, service tasks, and interaction history.
+Spring Boot CRM for a digital bank or core banking delivery team. The system focuses on customer master data, relationship management, annual maintenance contracts, follow-up execution, and a banking-style operator UI.
 
-## Stack
+## Architecture
 
-- Java 11
-- Spring Boot 2.7
-- Spring Web
-- Spring Data JPA
-- Bean Validation
-- H2 Database
-- Maven
+- Backend: Java 11, Spring Boot 2.7, Spring Web, Spring Security, Bean Validation
+- Persistence:
+  - MyBatis: `Customer`, `Contact`, `Deal`, `Task`, `Annual Maintenance`
+  - Spring Data JPA: authentication, activity history, and transitional modules
+- Databases: H2, MySQL, PostgreSQL
+- Frontend: built-in static Customer 360 workbench
+- Build: Maven
 
-## Features Included
+## Modules
 
-- JWT login authentication
-- Banking customer master API with CIF, segment, KYC, risk, onboarding, and relationship manager fields
-- Contact management REST API
-- Opportunity management REST API
-- Service task management REST API
-- Interaction and follow-up tracking REST API
-- Validation and global error handling
-- H2, MySQL, and PostgreSQL configuration profiles
-- Banking-style web UI with left navigation, record workbench, and customer insight panel
+### 1. Authentication
 
-## Run
+- JWT login endpoint: `POST /api/auth/login`
+- Default user:
+  - username: `admin`
+  - password: `admin123`
+- Security config allows static pages, while API modules remain protected by JWT
 
-```bash
-mvn -s settings-open-source.xml spring-boot:run
-```
+### 2. Customer
 
-The app runs on `http://localhost:8080`.
-The built-in Customer 360 web page is available at `http://localhost:8080/`.
+- Customer master for banking institutions and regulated clients
+- Key fields:
+  - `cifNumber`
+  - `customerType`
+  - `segment`
+  - `kycStatus`
+  - `riskLevel`
+  - `preferredChannel`
+  - `onboardingStage`
+  - `relationshipManager`
+- API:
+  - `GET /api/customers`
+  - `GET /api/customers/{id}`
+  - `POST /api/customers`
+  - `PUT /api/customers/{id}`
+  - `DELETE /api/customers/{id}`
 
-If your global Maven config points to a private Nexus, you can use the open-source settings file in this project:
+### 3. Contact
+
+- Customer contact persons, decision makers, and operations counterparts
+- Key fields:
+  - `firstName`
+  - `lastName`
+  - `email`
+  - `phone`
+  - `jobTitle`
+  - `customerId`
+- API:
+  - `GET /api/contacts`
+  - `GET /api/contacts?customerId=1`
+  - `POST /api/contacts`
+  - `PUT /api/contacts/{id}`
+  - `DELETE /api/contacts/{id}`
+
+### 4. Deal
+
+- Opportunity and pipeline records linked to a customer
+- Key fields:
+  - `title`
+  - `amount`
+  - `stage`
+  - `expectedCloseDate`
+  - `customerId`
+- API:
+  - `GET /api/deals`
+  - `GET /api/deals?customerId=1`
+  - `POST /api/deals`
+  - `PUT /api/deals/{id}`
+  - `DELETE /api/deals/{id}`
+
+### 5. Task
+
+- Follow-up execution, reminders, internal actions, and owner workload
+- Key fields:
+  - `title`
+  - `description`
+  - `status`
+  - `priority`
+  - `dueDate`
+  - `customerId`
+  - `dealId`
+- API:
+  - `GET /api/tasks`
+  - `GET /api/tasks?customerId=1`
+  - `GET /api/tasks?status=OPEN`
+  - `POST /api/tasks`
+  - `PUT /api/tasks/{id}`
+  - `DELETE /api/tasks/{id}`
+
+### 6. Activity
+
+- Call notes, meetings, follow-up logs, and interaction trail
+- API:
+  - `GET /api/activities`
+  - `GET /api/activities?customerId=1`
+  - `POST /api/activities`
+  - `PUT /api/activities/{id}`
+  - `DELETE /api/activities/{id}`
+
+### 7. Annual Maintenance
+
+- Dedicated maintenance contract page from the Customer Insight area
+- Each project is stored as one complete record
+- Key fields:
+  - `projectName`
+  - `market`
+  - `maintenanceYear`
+  - `amount`
+  - `paymentStatus`
+  - `startDate`
+  - `endDate`
+  - `customerId`
+- Payment status enum:
+  - `PAID`
+  - `NOT_PAID`
+- Expired end dates are highlighted in red in the UI
+- API:
+  - `GET /api/annual-maintenance?customerId=1`
+  - `GET /api/annual-maintenance/{id}`
+  - `POST /api/annual-maintenance`
+  - `PUT /api/annual-maintenance/{id}`
+
+## UI Pages
+
+- Customer 360 main page: `http://localhost:8080/`
+- Annual Maintenance page: `http://localhost:8080/annual-maintenance.html`
+
+The UI is organized as:
+
+- left navigation for module switching
+- right work area for records
+- add, edit, and delete actions from buttons
+- customer insight panel with deep-link entry to Annual Maintenance
+
+## Profiles And Run Commands
+
+Use the included open-source Maven settings if your machine has a private Nexus configured globally:
 
 ```bash
 mvn -s settings-open-source.xml test
 ```
 
-or
+Default H2 run:
 
 ```bash
 mvn -s settings-open-source.xml spring-boot:run
 ```
 
-Default login credentials:
+MySQL run:
 
-- username: `admin`
-- password: `admin123`
+```bash
+mvn -s settings-open-source.xml spring-boot:run -Dspring-boot.run.profiles=mysql
+```
 
-Login to get a JWT:
+PostgreSQL run:
+
+```bash
+mvn -s settings-open-source.xml spring-boot:run -Dspring-boot.run.profiles=postgres
+```
+
+## MySQL Notes
+
+Current local MySQL profile points to:
+
+- database: `crm_system`
+- host: `localhost`
+- port: `3306`
+
+See:
+
+- `src/main/resources/application-mysql.properties`
+- `settings-open-source.xml`
+
+## Seed Data
+
+- Default login user: `admin / admin123`
+- Annual Maintenance sample records are auto-seeded for the first available customer:
+  - `NCBA Kenya MSL`
+  - market: `Kenya`
+  - payment statuses: `PAID`, `NOT_PAID`
+
+## Quick API Examples
+
+Login:
 
 ```bash
 curl -X POST http://localhost:8080/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{
-    "username": "admin",
-    "password": "admin123"
-  }'
+  -d '{"username":"admin","password":"admin123"}'
 ```
 
-Use the returned token in protected requests:
-
-```bash
-curl http://localhost:8080/api/customers \
-  -H "Authorization: Bearer <your-jwt-token>"
-```
-
-Database profiles:
-
-- H2 default: `mvn -s settings-open-source.xml spring-boot:run`
-- MySQL: `mvn -s settings-open-source.xml spring-boot:run -Dspring-boot.run.profiles=mysql`
-- PostgreSQL: `mvn -s settings-open-source.xml spring-boot:run -Dspring-boot.run.profiles=postgres`
-
-## Example Endpoints
-
-### Create a banking customer
+Create a customer:
 
 ```bash
 curl -X POST http://localhost:8080/api/customers \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Apex Manufacturing Ltd",
-    "customerType": "BUSINESS",
+    "name": "NCBA Kenya",
+    "customerType": "COMMERCIAL_BANK",
     "cifNumber": "CIF-100001",
-    "email": "ops@apex.example.com",
+    "email": "ops@ncba.example.com",
     "phone": "+254700000001",
-    "company": "Apex Manufacturing Ltd",
+    "company": "NCBA Kenya",
     "segment": "CORPORATE",
     "status": "ACTIVE",
     "kycStatus": "VERIFIED",
-    "riskLevel": "MEDIUM",
+    "riskLevel": "LOW",
     "preferredChannel": "RELATIONSHIP_MANAGER",
     "onboardingStage": "ACTIVE",
     "residencyCountry": "Kenya",
-    "relationshipManager": "Grace Njoroge",
-    "notes": "Primary corporate operating account relationship"
+    "relationshipManager": "Grace Njoroge"
   }'
 ```
 
-### Create a deal
+Create annual maintenance:
 
 ```bash
-curl -X POST http://localhost:8080/api/deals \
+curl -X POST http://localhost:8080/api/annual-maintenance \
+  -H "Authorization: Bearer <token>" \
   -H "Content-Type: application/json" \
   -d '{
-    "title": "Annual CRM Subscription",
-    "amount": 12000,
-    "stage": "NEW",
-    "expectedCloseDate": "2026-04-30",
-    "notes": "Follow up next week",
+    "projectName": "NCBA Kenya MSL",
+    "market": "Kenya",
+    "maintenanceYear": 4,
+    "amount": 25000,
+    "paymentStatus": "PAID",
+    "startDate": "2027-03-01",
+    "endDate": "2028-02-29",
     "customerId": 1
   }'
 ```
 
-### Create a task
-
-```bash
-curl -X POST http://localhost:8080/api/tasks \
-  -H "Content-Type: application/json" \
-  -d '{
-    "title": "Call Alice about proposal",
-    "description": "Walk through pricing and implementation timeline",
-    "status": "OPEN",
-    "priority": "HIGH",
-    "dueDate": "2026-04-10",
-    "customerId": 1,
-    "dealId": 1
-  }'
-```
-
-### Create a contact
-
-```bash
-curl -X POST http://localhost:8080/api/contacts \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your-jwt-token>" \
-  -d '{
-    "firstName": "Alice",
-    "lastName": "Johnson",
-    "email": "alice.contact@example.com",
-    "phone": "+254700000001",
-    "jobTitle": "Procurement Manager",
-    "notes": "Primary decision maker",
-    "customerId": 1
-  }'
-```
-
-### Create a follow-up activity
-
-```bash
-curl -X POST http://localhost:8080/api/activities \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer <your-jwt-token>" \
-  -d '{
-    "type": "CALL",
-    "subject": "Introductory sales call",
-    "details": "Discussed needs, timeline, and budget range",
-    "activityDate": "2026-03-26T16:00:00",
-    "customerId": 1,
-    "contactId": 1,
-    "dealId": 1
-  }'
-```
-
-### Useful URLs
+## Useful URLs
 
 - API base: `http://localhost:8080/api`
-- H2 Console: `http://localhost:8080/h2-console`
+- H2 console: `http://localhost:8080/h2-console`

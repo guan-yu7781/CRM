@@ -1,7 +1,9 @@
 package com.crm.personal.crm.maintenance;
 
-import com.crm.personal.crm.customer.Customer;
+import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
+import com.crm.personal.crm.project.ProjectRecord;
+import com.crm.personal.crm.project.ProjectService;
 import com.crm.personal.crm.shared.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,11 +17,14 @@ public class AnnualMaintenanceService {
 
     private final AnnualMaintenanceMapper annualMaintenanceMapper;
     private final CustomerService customerService;
+    private final ProjectService projectService;
 
     public AnnualMaintenanceService(AnnualMaintenanceMapper annualMaintenanceMapper,
-                                    CustomerService customerService) {
+                                    CustomerService customerService,
+                                    ProjectService projectService) {
         this.annualMaintenanceMapper = annualMaintenanceMapper;
         this.customerService = customerService;
+        this.projectService = projectService;
     }
 
     public List<AnnualMaintenanceResponse> getRecords(Long customerId) {
@@ -42,11 +47,13 @@ public class AnnualMaintenanceService {
 
     @Transactional
     public AnnualMaintenanceResponse createRecord(AnnualMaintenanceRequest request) {
-        Customer customer = customerService.findCustomer(request.getCustomerId());
+        CustomerRecord customer = customerService.findCustomerRecord(request.getCustomerId());
+        ProjectRecord project = resolveProject(request.getProjectId(), customer.getId());
         validateDates(request);
+        validateUniqueYear(request, null);
 
         AnnualMaintenanceRecord record = new AnnualMaintenanceRecord();
-        applyRequest(record, request, customer);
+        applyRequest(record, request, customer, project);
         LocalDateTime now = LocalDateTime.now();
         record.setCreatedAt(now);
         record.setUpdatedAt(now);
@@ -56,12 +63,27 @@ public class AnnualMaintenanceService {
     }
 
     @Transactional
+    public List<AnnualMaintenanceResponse> createRecords(List<AnnualMaintenanceRequest> requests) {
+        if (requests == null || requests.isEmpty()) {
+            throw new IllegalArgumentException("At least one annual maintenance record is required");
+        }
+
+        validateBatchYears(requests);
+
+        return requests.stream()
+                .map(this::createRecord)
+                .collect(Collectors.toList());
+    }
+
+    @Transactional
     public AnnualMaintenanceResponse updateRecord(Long id, AnnualMaintenanceRequest request) {
         AnnualMaintenanceRecord record = findRecord(id);
-        Customer customer = customerService.findCustomer(request.getCustomerId());
+        CustomerRecord customer = customerService.findCustomerRecord(request.getCustomerId());
+        ProjectRecord project = resolveProject(request.getProjectId(), customer.getId());
         validateDates(request);
+        validateUniqueYear(request, id);
 
-        applyRequest(record, request, customer);
+        applyRequest(record, request, customer, project);
         record.setUpdatedAt(LocalDateTime.now());
 
         annualMaintenanceMapper.update(record);
@@ -82,9 +104,49 @@ public class AnnualMaintenanceService {
         }
     }
 
-    private void applyRequest(AnnualMaintenanceRecord record, AnnualMaintenanceRequest request, Customer customer) {
-        record.setProjectName(request.getProjectName());
-        record.setMarket(request.getMarket());
+    private void validateBatchYears(List<AnnualMaintenanceRequest> requests) {
+        for (int i = 0; i < requests.size(); i++) {
+            AnnualMaintenanceRequest current = requests.get(i);
+            for (int j = i + 1; j < requests.size(); j++) {
+                AnnualMaintenanceRequest next = requests.get(j);
+                if (current.getProjectId().equals(next.getProjectId())
+                        && current.getMaintenanceYear().equals(next.getMaintenanceYear())) {
+                    throw new IllegalArgumentException(
+                            "Duplicate maintenance year " + current.getMaintenanceYear() + " for the selected project"
+                    );
+                }
+            }
+        }
+    }
+
+    private void validateUniqueYear(AnnualMaintenanceRequest request, Long currentRecordId) {
+        AnnualMaintenanceRecord existing = annualMaintenanceMapper.findByCustomerIdAndProjectIdAndMaintenanceYear(
+                request.getCustomerId(),
+                request.getProjectId(),
+                request.getMaintenanceYear()
+        );
+        if (existing != null && (currentRecordId == null || !existing.getId().equals(currentRecordId))) {
+            throw new IllegalArgumentException(
+                    "Maintenance year " + request.getMaintenanceYear() + " already exists for the selected project"
+            );
+        }
+    }
+
+    private ProjectRecord resolveProject(Long projectId, Long customerId) {
+        ProjectRecord project = projectService.findProjectRecord(projectId);
+        if (!project.getCustomerId().equals(customerId)) {
+            throw new IllegalArgumentException("Selected project does not belong to the provided customer");
+        }
+        return project;
+    }
+
+    private void applyRequest(AnnualMaintenanceRecord record,
+                              AnnualMaintenanceRequest request,
+                              CustomerRecord customer,
+                              ProjectRecord project) {
+        record.setProjectId(project.getId());
+        record.setProjectName(project.getProjectName());
+        record.setMarket(project.getMarket());
         record.setMaintenanceYear(request.getMaintenanceYear());
         record.setAmount(request.getAmount());
         record.setStartDate(request.getStartDate());

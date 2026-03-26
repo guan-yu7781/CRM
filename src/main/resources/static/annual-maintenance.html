@@ -25,17 +25,17 @@
         <article class="summary-card">
             <span>Total Projects</span>
             <strong id="maintenance-total">0</strong>
-            <small>Project-level maintenance records</small>
+            <small>Grouped by project dimension</small>
         </article>
         <article class="summary-card">
             <span>Active</span>
             <strong id="maintenance-active">0</strong>
-            <small>Records not yet expired</small>
+            <small>Projects whose latest end date is still valid</small>
         </article>
         <article class="summary-card">
             <span>Expired</span>
             <strong id="maintenance-expired">0</strong>
-            <small>Contracts past end date</small>
+            <small>Projects whose latest end date has passed</small>
         </article>
         <article class="summary-card">
             <span>Customer</span>
@@ -49,7 +49,7 @@
             <div class="records-toolbar">
                 <div>
                     <strong class="panel-title">Maintenance Projects</strong>
-                    <span class="panel-subtitle">Each project is managed as one annual maintenance record.</span>
+                    <span class="panel-subtitle">Each project can include Year 1, Year 2, Year 3 and uses the final end date for status.</span>
                 </div>
             </div>
             <div id="maintenance-list" class="records-list"></div>
@@ -58,7 +58,7 @@
 
         <aside class="insight-panel">
             <div class="insight-header">
-                <span class="eyebrow">Record Detail</span>
+                <span class="eyebrow">Project Detail</span>
                 <h2 id="maintenance-detail-title">Select a project</h2>
             </div>
             <div id="maintenance-detail-content" class="insight-content"></div>
@@ -79,6 +79,27 @@
         <form id="maintenance-form" class="record-form"></form>
     </section>
 </div>
+
+<div id="maintenance-feedback-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-feedback-close="true"></div>
+    <section class="modal-card feedback-card">
+        <header class="modal-header">
+            <div>
+                <span id="maintenance-feedback-label" class="eyebrow">System Message</span>
+                <h2 id="maintenance-feedback-title">Notice</h2>
+            </div>
+            <button id="maintenance-feedback-close-button" class="ghost-button icon-button" type="button">Close</button>
+        </header>
+        <div class="feedback-body">
+            <p id="maintenance-feedback-message"></p>
+        </div>
+        <div class="form-footer">
+            <button id="maintenance-feedback-confirm-button" class="primary-button" type="button">OK</button>
+        </div>
+    </section>
+</div>
+
+<datalist id="annual-maintenance-market-options"></datalist>
 
 <script src="/annual-maintenance.js"></script>
 </body>

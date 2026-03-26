@@ -3,7 +3,7 @@ package com.crm.personal.crm.task;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class TaskResponse {
+public class TaskRecord {
 
     private Long id;
     private String title;
@@ -17,42 +17,6 @@ public class TaskResponse {
     private String dealTitle;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public static TaskResponse from(CrmTask task) {
-        TaskResponse response = new TaskResponse();
-        response.setId(task.getId());
-        response.setTitle(task.getTitle());
-        response.setDescription(task.getDescription());
-        response.setStatus(task.getStatus());
-        response.setPriority(task.getPriority());
-        response.setDueDate(task.getDueDate());
-        response.setCustomerId(task.getCustomer().getId());
-        response.setCustomerName(task.getCustomer().getName());
-        if (task.getDeal() != null) {
-            response.setDealId(task.getDeal().getId());
-            response.setDealTitle(task.getDeal().getTitle());
-        }
-        response.setCreatedAt(task.getCreatedAt());
-        response.setUpdatedAt(task.getUpdatedAt());
-        return response;
-    }
-
-    public static TaskResponse from(TaskRecord task) {
-        TaskResponse response = new TaskResponse();
-        response.setId(task.getId());
-        response.setTitle(task.getTitle());
-        response.setDescription(task.getDescription());
-        response.setStatus(task.getStatus());
-        response.setPriority(task.getPriority());
-        response.setDueDate(task.getDueDate());
-        response.setCustomerId(task.getCustomerId());
-        response.setCustomerName(task.getCustomerName());
-        response.setDealId(task.getDealId());
-        response.setDealTitle(task.getDealTitle());
-        response.setCreatedAt(task.getCreatedAt());
-        response.setUpdatedAt(task.getUpdatedAt());
-        return response;
-    }
 
     public Long getId() {
         return id;

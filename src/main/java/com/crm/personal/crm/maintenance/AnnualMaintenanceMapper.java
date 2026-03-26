@@ -17,6 +17,7 @@ public interface AnnualMaintenanceMapper {
 
     @Select("select " +
             "am.id, " +
+            "am.project_id, " +
             "am.project_name, " +
             "am.market, " +
             "am.maintenance_year, " +
@@ -29,10 +30,12 @@ public interface AnnualMaintenanceMapper {
             "am.created_at, " +
             "am.updated_at " +
             "from annual_maintenance am " +
+            "join projects p on p.id = am.project_id " +
             "join customers c on c.id = am.customer_id " +
             "where am.customer_id = #{customerId} " +
             "order by am.project_name asc, am.maintenance_year asc")
     @Results(id = "annualMaintenanceRecordMap", value = {
+            @Result(property = "projectId", column = "project_id"),
             @Result(property = "projectName", column = "project_name"),
             @Result(property = "maintenanceYear", column = "maintenance_year"),
             @Result(property = "startDate", column = "start_date"),
@@ -47,6 +50,37 @@ public interface AnnualMaintenanceMapper {
 
     @Select("select " +
             "am.id, " +
+            "am.project_id, " +
+            "am.project_name, " +
+            "am.market, " +
+            "am.maintenance_year, " +
+            "am.amount, " +
+            "am.start_date, " +
+            "am.end_date, " +
+            "am.payment_status, " +
+            "am.customer_id, " +
+            "c.name as customer_name, " +
+            "am.created_at, " +
+            "am.updated_at " +
+            "from annual_maintenance am " +
+            "join projects p on p.id = am.project_id " +
+            "join customers c on c.id = am.customer_id " +
+            "where am.id = #{id}")
+    @ResultMap("annualMaintenanceRecordMap")
+    AnnualMaintenanceRecord findById(Long id);
+
+    @Select("select count(1) " +
+            "from annual_maintenance " +
+            "where customer_id = #{customerId} " +
+            "and project_id = #{projectId} " +
+            "and maintenance_year = #{maintenanceYear}")
+    int countByCustomerIdAndProjectIdAndMaintenanceYear(@Param("customerId") Long customerId,
+                                                          @Param("projectId") Long projectId,
+                                                          @Param("maintenanceYear") Integer maintenanceYear);
+
+    @Select("select " +
+            "am.id, " +
+            "am.project_id, " +
             "am.project_name, " +
             "am.market, " +
             "am.maintenance_year, " +
@@ -60,27 +94,24 @@ public interface AnnualMaintenanceMapper {
             "am.updated_at " +
             "from annual_maintenance am " +
             "join customers c on c.id = am.customer_id " +
-            "where am.id = #{id}")
+            "where am.customer_id = #{customerId} " +
+            "and am.project_id = #{projectId} " +
+            "and am.maintenance_year = #{maintenanceYear} " +
+            "limit 1")
     @ResultMap("annualMaintenanceRecordMap")
-    AnnualMaintenanceRecord findById(Long id);
-
-    @Select("select count(1) " +
-            "from annual_maintenance " +
-            "where customer_id = #{customerId} " +
-            "and project_name = #{projectName} " +
-            "and maintenance_year = #{maintenanceYear}")
-    int countByCustomerIdAndProjectNameAndMaintenanceYear(@Param("customerId") Long customerId,
-                                                          @Param("projectName") String projectName,
-                                                          @Param("maintenanceYear") Integer maintenanceYear);
+    AnnualMaintenanceRecord findByCustomerIdAndProjectIdAndMaintenanceYear(@Param("customerId") Long customerId,
+                                                                           @Param("projectId") Long projectId,
+                                                                           @Param("maintenanceYear") Integer maintenanceYear);
 
     @Insert("insert into annual_maintenance " +
-            "(project_name, market, maintenance_year, amount, start_date, end_date, payment_status, customer_id, created_at, updated_at) " +
+            "(project_id, project_name, market, maintenance_year, amount, start_date, end_date, payment_status, customer_id, created_at, updated_at) " +
             "values " +
-            "(#{projectName}, #{market}, #{maintenanceYear}, #{amount}, #{startDate}, #{endDate}, #{paymentStatus}, #{customerId}, #{createdAt}, #{updatedAt})")
+            "(#{projectId}, #{projectName}, #{market}, #{maintenanceYear}, #{amount}, #{startDate}, #{endDate}, #{paymentStatus}, #{customerId}, #{createdAt}, #{updatedAt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(AnnualMaintenanceRecord record);
 
     @Update("update annual_maintenance set " +
+            "project_id = #{projectId}, " +
             "project_name = #{projectName}, " +
             "market = #{market}, " +
             "maintenance_year = #{maintenanceYear}, " +

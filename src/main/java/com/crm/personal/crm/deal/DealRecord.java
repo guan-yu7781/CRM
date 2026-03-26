@@ -4,7 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class DealResponse {
+public class DealRecord {
 
     private Long id;
     private String title;
@@ -16,36 +16,6 @@ public class DealResponse {
     private String customerName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public static DealResponse from(Deal deal) {
-        DealResponse response = new DealResponse();
-        response.setId(deal.getId());
-        response.setTitle(deal.getTitle());
-        response.setAmount(deal.getAmount());
-        response.setStage(deal.getStage());
-        response.setExpectedCloseDate(deal.getExpectedCloseDate());
-        response.setNotes(deal.getNotes());
-        response.setCustomerId(deal.getCustomer().getId());
-        response.setCustomerName(deal.getCustomer().getName());
-        response.setCreatedAt(deal.getCreatedAt());
-        response.setUpdatedAt(deal.getUpdatedAt());
-        return response;
-    }
-
-    public static DealResponse from(DealRecord deal) {
-        DealResponse response = new DealResponse();
-        response.setId(deal.getId());
-        response.setTitle(deal.getTitle());
-        response.setAmount(deal.getAmount());
-        response.setStage(deal.getStage());
-        response.setExpectedCloseDate(deal.getExpectedCloseDate());
-        response.setNotes(deal.getNotes());
-        response.setCustomerId(deal.getCustomerId());
-        response.setCustomerName(deal.getCustomerName());
-        response.setCreatedAt(deal.getCreatedAt());
-        response.setUpdatedAt(deal.getUpdatedAt());
-        return response;
-    }
 
     public Long getId() {
         return id;

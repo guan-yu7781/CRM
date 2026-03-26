@@ -11,71 +11,81 @@ import java.util.stream.Collectors;
 @Service
 public class CustomerService {
 
+    private final CustomerMapper customerMapper;
     private final CustomerRepository customerRepository;
 
-    public CustomerService(CustomerRepository customerRepository) {
+    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository) {
+        this.customerMapper = customerMapper;
         this.customerRepository = customerRepository;
     }
 
     public List<CustomerResponse> getAllCustomers() {
-        return customerRepository.findAll()
+        return customerMapper.findAll()
                 .stream()
                 .map(CustomerResponse::from)
                 .collect(Collectors.toList());
     }
 
     public CustomerResponse getCustomer(Long id) {
-        return CustomerResponse.from(findCustomer(id));
+        return CustomerResponse.from(findCustomerRecord(id));
     }
 
     @Transactional
     public CustomerResponse createCustomer(CustomerRequest request) {
-        customerRepository.findByEmail(request.getEmail())
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("A customer with this email already exists");
-                });
+        CustomerRecord existingByEmail = customerMapper.findByEmail(request.getEmail());
+        if (existingByEmail != null) {
+            throw new IllegalArgumentException("A customer with this email already exists");
+        }
 
-        customerRepository.findByCifNumberIgnoreCase(request.getCifNumber())
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("A customer with this CIF number already exists");
-                });
+        CustomerRecord existingByCif = customerMapper.findByCifNumberIgnoreCase(request.getCifNumber());
+        if (existingByCif != null) {
+            throw new IllegalArgumentException("A customer with this CIF number already exists");
+        }
 
-        Customer customer = new Customer();
+        CustomerRecord customer = new CustomerRecord();
         applyRequest(customer, request);
 
         LocalDateTime now = LocalDateTime.now();
         customer.setCreatedAt(now);
         customer.setUpdatedAt(now);
 
-        return CustomerResponse.from(customerRepository.save(customer));
+        customerMapper.insert(customer);
+        return CustomerResponse.from(findCustomerRecord(customer.getId()));
     }
 
     @Transactional
     public CustomerResponse updateCustomer(Long id, CustomerRequest request) {
-        Customer customer = findCustomer(id);
+        CustomerRecord customer = findCustomerRecord(id);
 
-        customerRepository.findByEmail(request.getEmail())
-                .filter(existing -> !existing.getId().equals(id))
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("A customer with this email already exists");
-                });
+        CustomerRecord existingByEmail = customerMapper.findByEmail(request.getEmail());
+        if (existingByEmail != null && !existingByEmail.getId().equals(id)) {
+            throw new IllegalArgumentException("A customer with this email already exists");
+        }
 
-        customerRepository.findByCifNumberIgnoreCase(request.getCifNumber())
-                .filter(existing -> !existing.getId().equals(id))
-                .ifPresent(existing -> {
-                    throw new IllegalArgumentException("A customer with this CIF number already exists");
-                });
+        CustomerRecord existingByCif = customerMapper.findByCifNumberIgnoreCase(request.getCifNumber());
+        if (existingByCif != null && !existingByCif.getId().equals(id)) {
+            throw new IllegalArgumentException("A customer with this CIF number already exists");
+        }
 
         applyRequest(customer, request);
         customer.setUpdatedAt(LocalDateTime.now());
 
-        return CustomerResponse.from(customerRepository.save(customer));
+        customerMapper.update(customer);
+        return CustomerResponse.from(findCustomerRecord(id));
     }
 
     @Transactional
     public void deleteCustomer(Long id) {
-        Customer customer = findCustomer(id);
-        customerRepository.delete(customer);
+        findCustomerRecord(id);
+        customerMapper.deleteById(id);
+    }
+
+    public CustomerRecord findCustomerRecord(Long id) {
+        CustomerRecord customer = customerMapper.findById(id);
+        if (customer == null) {
+            throw new ResourceNotFoundException("Customer not found with id " + id);
+        }
+        return customer;
     }
 
     public Customer findCustomer(Long id) {
@@ -83,7 +93,11 @@ public class CustomerService {
                 .orElseThrow(() -> new ResourceNotFoundException("Customer not found with id " + id));
     }
 
-    private void applyRequest(Customer customer, CustomerRequest request) {
+    public CustomerRecord findFirstCustomerRecord() {
+        return customerMapper.findFirst();
+    }
+
+    private void applyRequest(CustomerRecord customer, CustomerRequest request) {
         customer.setName(request.getName());
         customer.setCustomerType(request.getCustomerType() == null ? CustomerType.COMMERCIAL_BANK : request.getCustomerType());
         customer.setCifNumber(request.getCifNumber());

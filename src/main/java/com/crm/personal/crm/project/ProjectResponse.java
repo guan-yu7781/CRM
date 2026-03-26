@@ -1,24 +1,35 @@
-package com.crm.personal.crm.maintenance;
+package com.crm.personal.crm.project;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-public class AnnualMaintenanceRecord {
+public class ProjectResponse {
 
     private Long id;
-    private Long projectId;
     private String projectName;
     private String market;
-    private Integer maintenanceYear;
     private BigDecimal amount;
-    private LocalDate startDate;
-    private LocalDate endDate;
-    private PaymentStatus paymentStatus;
+    private BigDecimal taxRate;
+    private ProjectStatus status;
     private Long customerId;
     private String customerName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+
+    public static ProjectResponse from(ProjectRecord project) {
+        ProjectResponse response = new ProjectResponse();
+        response.setId(project.getId());
+        response.setProjectName(project.getProjectName());
+        response.setMarket(project.getMarket());
+        response.setAmount(project.getAmount());
+        response.setTaxRate(project.getTaxRate());
+        response.setStatus(project.getStatus());
+        response.setCustomerId(project.getCustomerId());
+        response.setCustomerName(project.getCustomerName());
+        response.setCreatedAt(project.getCreatedAt());
+        response.setUpdatedAt(project.getUpdatedAt());
+        return response;
+    }
 
     public Long getId() {
         return id;
@@ -26,14 +37,6 @@ public class AnnualMaintenanceRecord {
 
     public void setId(Long id) {
         this.id = id;
-    }
-
-    public Long getProjectId() {
-        return projectId;
-    }
-
-    public void setProjectId(Long projectId) {
-        this.projectId = projectId;
     }
 
     public String getProjectName() {
@@ -52,14 +55,6 @@ public class AnnualMaintenanceRecord {
         this.market = market;
     }
 
-    public Integer getMaintenanceYear() {
-        return maintenanceYear;
-    }
-
-    public void setMaintenanceYear(Integer maintenanceYear) {
-        this.maintenanceYear = maintenanceYear;
-    }
-
     public BigDecimal getAmount() {
         return amount;
     }
@@ -68,28 +63,20 @@ public class AnnualMaintenanceRecord {
         this.amount = amount;
     }
 
-    public LocalDate getStartDate() {
-        return startDate;
+    public BigDecimal getTaxRate() {
+        return taxRate;
     }
 
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
+    public void setTaxRate(BigDecimal taxRate) {
+        this.taxRate = taxRate;
     }
 
-    public LocalDate getEndDate() {
-        return endDate;
+    public ProjectStatus getStatus() {
+        return status;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public PaymentStatus getPaymentStatus() {
-        return paymentStatus;
-    }
-
-    public void setPaymentStatus(PaymentStatus paymentStatus) {
-        this.paymentStatus = paymentStatus;
+    public void setStatus(ProjectStatus status) {
+        this.status = status;
     }
 
     public Long getCustomerId() {

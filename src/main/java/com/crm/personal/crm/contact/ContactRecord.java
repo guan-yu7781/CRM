@@ -2,7 +2,7 @@ package com.crm.personal.crm.contact;
 
 import java.time.LocalDateTime;
 
-public class ContactResponse {
+public class ContactRecord {
 
     private Long id;
     private String firstName;
@@ -15,38 +15,6 @@ public class ContactResponse {
     private String customerName;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public static ContactResponse from(Contact contact) {
-        ContactResponse response = new ContactResponse();
-        response.setId(contact.getId());
-        response.setFirstName(contact.getFirstName());
-        response.setLastName(contact.getLastName());
-        response.setEmail(contact.getEmail());
-        response.setPhone(contact.getPhone());
-        response.setJobTitle(contact.getJobTitle());
-        response.setNotes(contact.getNotes());
-        response.setCustomerId(contact.getCustomer().getId());
-        response.setCustomerName(contact.getCustomer().getName());
-        response.setCreatedAt(contact.getCreatedAt());
-        response.setUpdatedAt(contact.getUpdatedAt());
-        return response;
-    }
-
-    public static ContactResponse from(ContactRecord contact) {
-        ContactResponse response = new ContactResponse();
-        response.setId(contact.getId());
-        response.setFirstName(contact.getFirstName());
-        response.setLastName(contact.getLastName());
-        response.setEmail(contact.getEmail());
-        response.setPhone(contact.getPhone());
-        response.setJobTitle(contact.getJobTitle());
-        response.setNotes(contact.getNotes());
-        response.setCustomerId(contact.getCustomerId());
-        response.setCustomerName(contact.getCustomerName());
-        response.setCreatedAt(contact.getCreatedAt());
-        response.setUpdatedAt(contact.getUpdatedAt());
-        return response;
-    }
 
     public Long getId() {
         return id;

@@ -1,6 +1,5 @@
 package com.crm.personal.crm.maintenance;
 
-import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.DecimalMin;
 import java.math.BigDecimal;
@@ -8,14 +7,11 @@ import java.time.LocalDate;
 
 public class AnnualMaintenanceRequest {
 
-    @NotBlank(message = "Project name is required")
-    private String projectName;
+    @NotNull(message = "Project id is required")
+    private Long projectId;
 
     @NotNull(message = "Maintenance year is required")
     private Integer maintenanceYear;
-
-    @NotBlank(message = "Market is required")
-    private String market;
 
     @NotNull(message = "Amount is required")
     @DecimalMin(value = "0.0", inclusive = false, message = "Amount must be greater than 0")
@@ -33,12 +29,12 @@ public class AnnualMaintenanceRequest {
     @NotNull(message = "Customer id is required")
     private Long customerId;
 
-    public String getProjectName() {
-        return projectName;
+    public Long getProjectId() {
+        return projectId;
     }
 
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
+    public void setProjectId(Long projectId) {
+        this.projectId = projectId;
     }
 
     public Integer getMaintenanceYear() {
@@ -47,14 +43,6 @@ public class AnnualMaintenanceRequest {
 
     public void setMaintenanceYear(Integer maintenanceYear) {
         this.maintenanceYear = maintenanceYear;
-    }
-
-    public String getMarket() {
-        return market;
-    }
-
-    public void setMarket(String market) {
-        this.market = market;
     }
 
     public BigDecimal getAmount() {

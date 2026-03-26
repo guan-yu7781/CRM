@@ -40,6 +40,12 @@ public class AnnualMaintenanceController {
         return annualMaintenanceService.createRecord(request);
     }
 
+    @PostMapping("/batch")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<AnnualMaintenanceResponse> createRecords(@Valid @RequestBody List<@Valid AnnualMaintenanceRequest> requests) {
+        return annualMaintenanceService.createRecords(requests);
+    }
+
     @PutMapping("/{id}")
     public AnnualMaintenanceResponse updateRecord(@PathVariable Long id, @Valid @RequestBody AnnualMaintenanceRequest request) {
         return annualMaintenanceService.updateRecord(id, request);

@@ -8,8 +8,9 @@ const entityConfig = {
         fields: [
             field("name", "Customer Name", "text", true),
             field("customerType", "Customer Type", "select", false, [
-                option("COMMERCIAL_BANK", "商业银行客户"),
-                option("PAYMENT_CUSTOMER", "支付客户"),
+                option("COMMERCIAL_BANK", "Commercial Bank"),
+                option("PAYMENT_INSTITUTION", "Payment Institution"),
+                option("CENTRAL_BANK", "Central Bank"),
                 option("MICROFINANCE_BANK", "Microfinance Bank"),
                 option("SACCO", "SACCO")
             ]),
@@ -49,6 +50,24 @@ const entityConfig = {
         getTitle: item => `${item.firstName} ${item.lastName}`,
         getDescription: item => `${item.customerName} • ${item.email}${item.jobTitle ? ` • ${item.jobTitle}` : ""}`,
         getMeta: item => [item.phone || "No phone"]
+    },
+    projects: {
+        label: "Projects",
+        title: "Customer Project Management",
+        description: "Manage customer projects by market, commercial value, tax rate, and delivery status.",
+        singular: "Project",
+        path: "/api/projects",
+        fields: [
+            field("projectName", "Project Name", "text", true),
+            field("market", "Market", "text", true),
+            field("amount", "Amount", "number", true),
+            field("taxRate", "Tax Rate", "number", true),
+            field("status", "Status", "select", false, ["LIVE", "IN_PROGRESS"]),
+            relationField("customerId", "Customer", "customers", true)
+        ],
+        getTitle: item => item.projectName,
+        getDescription: item => `${item.customerName} • ${item.market} • ${formatMoney(item.amount)}`,
+        getMeta: item => [item.status, `${Number(item.taxRate || 0)}%`]
     },
     deals: {
         label: "Opportunities",
@@ -114,13 +133,14 @@ const state = {
     currentView: "customers",
     search: "",
     editingId: null,
-    selectedId: null,
-    data: {
-        customers: [],
-        contacts: [],
-        deals: [],
-        tasks: [],
-        activities: []
+        selectedId: null,
+        data: {
+            customers: [],
+            contacts: [],
+            projects: [],
+            deals: [],
+            tasks: [],
+            activities: []
     }
 };
 
@@ -227,9 +247,10 @@ function updateHeader() {
 
 async function refreshAll() {
     try {
-        const [customers, contacts, deals, tasks, activities] = await Promise.all([
+        const [customers, contacts, projects, deals, tasks, activities] = await Promise.all([
             api("/api/customers"),
             api("/api/contacts"),
+            api("/api/projects"),
             api("/api/deals"),
             api("/api/tasks"),
             api("/api/activities")
@@ -237,6 +258,7 @@ async function refreshAll() {
 
         state.data.customers = customers;
         state.data.contacts = contacts;
+        state.data.projects = projects;
         state.data.deals = deals;
         state.data.tasks = tasks;
         state.data.activities = activities;
@@ -375,6 +397,19 @@ function buildSummary(view) {
         ];
     }
 
+    if (view === "projects") {
+        const projects = state.data.projects;
+        const live = projects.filter(item => item.status === "LIVE").length;
+        const inProgress = projects.filter(item => item.status === "IN_PROGRESS").length;
+        const totalValue = projects.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+        return [
+            { label: "Projects", value: String(projects.length), note: "Total managed customer projects" },
+            { label: "Live", value: String(live), note: "Projects currently in production" },
+            { label: "In Progress", value: String(inProgress), note: "Projects still being delivered" },
+            { label: "Total Value", value: formatMoney(totalValue), note: "Combined project contract value" }
+        ];
+    }
+
     if (view === "tasks") {
         const tasks = state.data.tasks;
         const overdue = tasks.filter(item => item.status !== "COMPLETED" && item.dueDate && new Date(item.dueDate) < startOfToday()).length;
@@ -432,6 +467,11 @@ function renderInsightPanel(view, item) {
         return;
     }
 
+    if (view === "projects") {
+        panel.innerHTML = renderProjectInsight(item);
+        return;
+    }
+
     if (view === "tasks") {
         panel.innerHTML = renderTaskInsight(item);
         return;
@@ -442,6 +482,7 @@ function renderInsightPanel(view, item) {
 
 function renderCustomerInsight(item) {
     const contacts = state.data.contacts.filter(contact => contact.customerId === item.id).length;
+    const projects = state.data.projects.filter(project => project.customerId === item.id).length;
     const deals = state.data.deals.filter(deal => deal.customerId === item.id).length;
     const tasks = state.data.tasks.filter(task => task.customerId === item.id).length;
     const activities = state.data.activities.filter(activity => activity.customerId === item.id).length;
@@ -466,6 +507,7 @@ function renderCustomerInsight(item) {
         ])}
         ${detailGroup("Portfolio Context", [
             detailItem("Contacts", String(contacts)),
+            detailItem("Projects", String(projects)),
             detailItem("Opportunities", String(deals)),
             detailItem("Service Tasks", String(tasks)),
             detailItem("Interactions", String(activities))
@@ -513,6 +555,32 @@ function renderDealInsight(item) {
         </div>
         ${detailGroup("Notes", [
             detailItem("Opportunity Notes", item.notes || "No notes recorded")
+        ])}
+    `;
+}
+
+function renderProjectInsight(item) {
+    const maintenanceCount = 0;
+    return `
+        <div class="insight-hero">
+            <span class="eyebrow">Project Overview</span>
+            <h3>${escapeHtml(item.projectName)}</h3>
+            <p>${escapeHtml(item.customerName)} • ${escapeHtml(item.market)}</p>
+        </div>
+        <div class="insight-grid">
+            ${insightMetric("Status", beautify(item.status))}
+            ${insightMetric("Amount", formatMoney(item.amount))}
+            ${insightMetric("Tax Rate", `${Number(item.taxRate || 0)}%`)}
+            ${insightMetric("Market", item.market)}
+        </div>
+        ${detailGroup("Project Detail", [
+            detailItem("Customer", item.customerName || "Not linked"),
+            detailItem("Market", item.market || "Not captured"),
+            detailItem("Amount", formatMoney(item.amount)),
+            detailItem("Tax Rate", `${Number(item.taxRate || 0)}%`)
+        ])}
+        ${detailGroup("Maintenance Linkage", [
+            detailItem("Annual Maintenance", maintenanceCount ? String(maintenanceCount) : "Managed from Annual Maintenance page")
         ])}
     `;
 }
@@ -791,7 +859,7 @@ function relationField(name, label, source, required = false) {
         full: false,
         options: () => (state.data[source] || []).map(item => ({
             value: item.id,
-            label: item.name || item.title || `${item.firstName} ${item.lastName}`
+            label: item.name || item.projectName || item.title || `${item.firstName} ${item.lastName}`
         }))
     };
 }

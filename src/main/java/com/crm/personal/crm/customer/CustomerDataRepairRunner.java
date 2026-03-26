@@ -17,6 +17,11 @@ public class CustomerDataRepairRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         jdbcTemplate.update(
+                "update customers set customer_type = ? where customer_type = ?",
+                CustomerType.PAYMENT_INSTITUTION.name(),
+                "PAYMENT_CUSTOMER"
+        );
+        jdbcTemplate.update(
                 "update customers set customer_type = ? where customer_type is null or trim(customer_type) = ''",
                 CustomerType.COMMERCIAL_BANK.name()
         );

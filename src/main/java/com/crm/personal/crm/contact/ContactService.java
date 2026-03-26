@@ -1,6 +1,6 @@
 package com.crm.personal.crm.contact;
 
-import com.crm.personal.crm.customer.Customer;
+import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
 import com.crm.personal.crm.shared.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -13,18 +13,22 @@ import java.util.stream.Collectors;
 @Service
 public class ContactService {
 
-    private final ContactRepository contactRepository;
+    private final ContactMapper contactMapper;
     private final CustomerService customerService;
 
-    public ContactService(ContactRepository contactRepository, CustomerService customerService) {
-        this.contactRepository = contactRepository;
+    public ContactService(ContactMapper contactMapper, CustomerService customerService) {
+        this.contactMapper = contactMapper;
         this.customerService = customerService;
     }
 
     public List<ContactResponse> getContacts(Long customerId) {
-        List<Contact> contacts = customerId == null
-                ? contactRepository.findAll()
-                : contactRepository.findByCustomerId(customerId);
+        List<ContactRecord> contacts = customerId == null
+                ? contactMapper.findAll()
+                : contactMapper.findByCustomerId(customerId);
+
+        if (customerId != null) {
+            customerService.findCustomerRecord(customerId);
+        }
 
         return contacts.stream()
                 .map(ContactResponse::from)
@@ -37,45 +41,52 @@ public class ContactService {
 
     @Transactional
     public ContactResponse createContact(ContactRequest request) {
-        Customer customer = customerService.findCustomer(request.getCustomerId());
+        CustomerRecord customer = customerService.findCustomerRecord(request.getCustomerId());
 
-        Contact contact = new Contact();
+        ContactRecord contact = new ContactRecord();
         applyRequest(contact, request, customer);
         LocalDateTime now = LocalDateTime.now();
         contact.setCreatedAt(now);
         contact.setUpdatedAt(now);
 
-        return ContactResponse.from(contactRepository.save(contact));
+        contactMapper.insert(contact);
+        return ContactResponse.from(findContact(contact.getId()));
     }
 
     @Transactional
     public ContactResponse updateContact(Long id, ContactRequest request) {
-        Contact contact = findContact(id);
-        Customer customer = customerService.findCustomer(request.getCustomerId());
+        ContactRecord contact = findContact(id);
+        CustomerRecord customer = customerService.findCustomerRecord(request.getCustomerId());
 
         applyRequest(contact, request, customer);
         contact.setUpdatedAt(LocalDateTime.now());
 
-        return ContactResponse.from(contactRepository.save(contact));
+        contactMapper.update(contact);
+        return ContactResponse.from(findContact(id));
     }
 
     @Transactional
     public void deleteContact(Long id) {
-        contactRepository.delete(findContact(id));
+        findContact(id);
+        contactMapper.deleteById(id);
     }
 
-    private Contact findContact(Long id) {
-        return contactRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Contact not found with id " + id));
+    private ContactRecord findContact(Long id) {
+        ContactRecord contact = contactMapper.findById(id);
+        if (contact == null) {
+            throw new ResourceNotFoundException("Contact not found with id " + id);
+        }
+        return contact;
     }
 
-    private void applyRequest(Contact contact, ContactRequest request, Customer customer) {
+    private void applyRequest(ContactRecord contact, ContactRequest request, CustomerRecord customer) {
         contact.setFirstName(request.getFirstName());
         contact.setLastName(request.getLastName());
         contact.setEmail(request.getEmail());
         contact.setPhone(request.getPhone());
         contact.setJobTitle(request.getJobTitle());
         contact.setNotes(request.getNotes());
-        contact.setCustomer(customer);
+        contact.setCustomerId(customer.getId());
+        contact.setCustomerName(customer.getName());
     }
 }

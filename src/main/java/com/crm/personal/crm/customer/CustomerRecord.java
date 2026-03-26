@@ -2,7 +2,7 @@ package com.crm.personal.crm.customer;
 
 import java.time.LocalDateTime;
 
-public class CustomerResponse {
+public class CustomerRecord {
 
     private Long id;
     private String name;
@@ -22,52 +22,6 @@ public class CustomerResponse {
     private String notes;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
-
-    public static CustomerResponse from(Customer customer) {
-        CustomerResponse response = new CustomerResponse();
-        response.setId(customer.getId());
-        response.setName(customer.getName());
-        response.setCustomerType(customer.getCustomerType());
-        response.setCifNumber(customer.getCifNumber());
-        response.setEmail(customer.getEmail());
-        response.setPhone(customer.getPhone());
-        response.setCompany(customer.getCompany());
-        response.setSegment(customer.getSegment());
-        response.setStatus(customer.getStatus());
-        response.setKycStatus(customer.getKycStatus());
-        response.setRiskLevel(customer.getRiskLevel());
-        response.setPreferredChannel(customer.getPreferredChannel());
-        response.setOnboardingStage(customer.getOnboardingStage());
-        response.setResidencyCountry(customer.getResidencyCountry());
-        response.setRelationshipManager(customer.getRelationshipManager());
-        response.setNotes(customer.getNotes());
-        response.setCreatedAt(customer.getCreatedAt());
-        response.setUpdatedAt(customer.getUpdatedAt());
-        return response;
-    }
-
-    public static CustomerResponse from(CustomerRecord customer) {
-        CustomerResponse response = new CustomerResponse();
-        response.setId(customer.getId());
-        response.setName(customer.getName());
-        response.setCustomerType(customer.getCustomerType());
-        response.setCifNumber(customer.getCifNumber());
-        response.setEmail(customer.getEmail());
-        response.setPhone(customer.getPhone());
-        response.setCompany(customer.getCompany());
-        response.setSegment(customer.getSegment());
-        response.setStatus(customer.getStatus());
-        response.setKycStatus(customer.getKycStatus());
-        response.setRiskLevel(customer.getRiskLevel());
-        response.setPreferredChannel(customer.getPreferredChannel());
-        response.setOnboardingStage(customer.getOnboardingStage());
-        response.setResidencyCountry(customer.getResidencyCountry());
-        response.setRelationshipManager(customer.getRelationshipManager());
-        response.setNotes(customer.getNotes());
-        response.setCreatedAt(customer.getCreatedAt());
-        response.setUpdatedAt(customer.getUpdatedAt());
-        return response;
-    }
 
     public Long getId() {
         return id;

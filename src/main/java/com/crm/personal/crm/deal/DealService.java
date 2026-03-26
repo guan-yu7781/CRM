@@ -1,6 +1,6 @@
 package com.crm.personal.crm.deal;
 
-import com.crm.personal.crm.customer.Customer;
+import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
 import com.crm.personal.crm.shared.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
@@ -13,24 +13,24 @@ import java.util.stream.Collectors;
 @Service
 public class DealService {
 
-    private final DealRepository dealRepository;
+    private final DealMapper dealMapper;
     private final CustomerService customerService;
 
-    public DealService(DealRepository dealRepository, CustomerService customerService) {
-        this.dealRepository = dealRepository;
+    public DealService(DealMapper dealMapper, CustomerService customerService) {
+        this.dealMapper = dealMapper;
         this.customerService = customerService;
     }
 
     public List<DealResponse> getAllDeals() {
-        return dealRepository.findAll()
+        return dealMapper.findAll()
                 .stream()
                 .map(DealResponse::from)
                 .collect(Collectors.toList());
     }
 
     public List<DealResponse> getDealsForCustomer(Long customerId) {
-        customerService.findCustomer(customerId);
-        return dealRepository.findByCustomerId(customerId)
+        customerService.findCustomerRecord(customerId);
+        return dealMapper.findByCustomerId(customerId)
                 .stream()
                 .map(DealResponse::from)
                 .collect(Collectors.toList());
@@ -42,46 +42,56 @@ public class DealService {
 
     @Transactional
     public DealResponse createDeal(DealRequest request) {
-        Customer customer = customerService.findCustomer(request.getCustomerId());
+        CustomerRecord customer = customerService.findCustomerRecord(request.getCustomerId());
 
-        Deal deal = new Deal();
+        DealRecord deal = new DealRecord();
         applyRequest(deal, request, customer);
 
         LocalDateTime now = LocalDateTime.now();
         deal.setCreatedAt(now);
         deal.setUpdatedAt(now);
 
-        return DealResponse.from(dealRepository.save(deal));
+        dealMapper.insert(deal);
+        return DealResponse.from(findDeal(deal.getId()));
     }
 
     @Transactional
     public DealResponse updateDeal(Long id, DealRequest request) {
-        Deal deal = findDeal(id);
-        Customer customer = customerService.findCustomer(request.getCustomerId());
+        DealRecord deal = findDeal(id);
+        CustomerRecord customer = customerService.findCustomerRecord(request.getCustomerId());
 
         applyRequest(deal, request, customer);
         deal.setUpdatedAt(LocalDateTime.now());
 
-        return DealResponse.from(dealRepository.save(deal));
+        dealMapper.update(deal);
+        return DealResponse.from(findDeal(id));
     }
 
     @Transactional
     public void deleteDeal(Long id) {
-        Deal deal = findDeal(id);
-        dealRepository.delete(deal);
+        findDeal(id);
+        dealMapper.deleteById(id);
     }
 
-    private Deal findDeal(Long id) {
-        return dealRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Deal not found with id " + id));
+    public DealRecord findDealRecord(Long id) {
+        return findDeal(id);
     }
 
-    private void applyRequest(Deal deal, DealRequest request, Customer customer) {
+    private DealRecord findDeal(Long id) {
+        DealRecord deal = dealMapper.findById(id);
+        if (deal == null) {
+            throw new ResourceNotFoundException("Deal not found with id " + id);
+        }
+        return deal;
+    }
+
+    private void applyRequest(DealRecord deal, DealRequest request, CustomerRecord customer) {
         deal.setTitle(request.getTitle());
         deal.setAmount(request.getAmount());
         deal.setStage(request.getStage() == null ? DealStage.NEW : request.getStage());
         deal.setExpectedCloseDate(request.getExpectedCloseDate());
         deal.setNotes(request.getNotes());
-        deal.setCustomer(customer);
+        deal.setCustomerId(customer.getId());
+        deal.setCustomerName(customer.getName());
     }
 }

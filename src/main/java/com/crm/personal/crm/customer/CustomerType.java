@@ -6,7 +6,8 @@ import java.util.Locale;
 
 public enum CustomerType {
     COMMERCIAL_BANK,
-    PAYMENT_CUSTOMER,
+    PAYMENT_INSTITUTION,
+    CENTRAL_BANK,
     MICROFINANCE_BANK,
     SACCO,
     INDIVIDUAL,
@@ -24,14 +25,16 @@ public enum CustomerType {
                 .toUpperCase(Locale.ROOT);
 
         switch (normalized) {
-            case "商业银行客户":
             case "COMMERCIAL_BANK_CUSTOMER":
             case "COMMERCIAL_BANK":
                 return COMMERCIAL_BANK;
-            case "支付客户":
-            case "PAYMENT_CLIENT":
             case "PAYMENT_CUSTOMER":
-                return PAYMENT_CUSTOMER;
+            case "PAYMENT_INSTITUTION":
+            case "PAYMENT_CLIENT":
+            case "PAYMENT_SERVICE_PROVIDER":
+                return PAYMENT_INSTITUTION;
+            case "CENTRAL_BANK":
+                return CENTRAL_BANK;
             case "MICROFINANCE_BANK":
             case "MICRO_FINANCE_BANK":
                 return MICROFINANCE_BANK;

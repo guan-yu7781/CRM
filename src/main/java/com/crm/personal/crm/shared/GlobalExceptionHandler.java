@@ -49,7 +49,7 @@ public class GlobalExceptionHandler {
                 : exception.getMessage();
 
         if (message != null && message.contains("CustomerType")) {
-            message = "Invalid customerType. Use COMMERCIAL_BANK, PAYMENT_CUSTOMER, MICROFINANCE_BANK, or SACCO.";
+            message = "Invalid customerType. Use COMMERCIAL_BANK, PAYMENT_INSTITUTION, CENTRAL_BANK, MICROFINANCE_BANK, or SACCO.";
         }
 
         return buildResponse(HttpStatus.BAD_REQUEST, message == null ? "Request body could not be parsed" : message);
