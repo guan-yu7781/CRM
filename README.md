@@ -1,6 +1,6 @@
-# CRM System
+# Banking Customer 360 CRM
 
-Starter Spring Boot project for building a CRM system.
+Spring Boot customer management system for a digital bank or a core banking platform provider. The experience is inspired by enterprise banking CRM patterns such as customer master data, KYC status, risk classification, relationship ownership, service tasks, and interaction history.
 
 ## Stack
 
@@ -15,13 +15,14 @@ Starter Spring Boot project for building a CRM system.
 ## Features Included
 
 - JWT login authentication
-- Customer management REST API
+- Banking customer master API with CIF, segment, KYC, risk, onboarding, and relationship manager fields
 - Contact management REST API
-- Deal management REST API
-- Task management REST API
-- Activity/follow-up tracking REST API
+- Opportunity management REST API
+- Service task management REST API
+- Interaction and follow-up tracking REST API
 - Validation and global error handling
 - H2, MySQL, and PostgreSQL configuration profiles
+- Banking-style web UI with left navigation, record workbench, and customer insight panel
 
 ## Run
 
@@ -30,7 +31,7 @@ mvn -s settings-open-source.xml spring-boot:run
 ```
 
 The app runs on `http://localhost:8080`.
-The built-in CRM web page is available at `http://localhost:8080/`.
+The built-in Customer 360 web page is available at `http://localhost:8080/`.
 
 If your global Maven config points to a private Nexus, you can use the open-source settings file in this project:
 
@@ -75,18 +76,27 @@ Database profiles:
 
 ## Example Endpoints
 
-### Create a customer
+### Create a banking customer
 
 ```bash
 curl -X POST http://localhost:8080/api/customers \
   -H "Content-Type: application/json" \
   -d '{
-    "name": "Alice Johnson",
-    "email": "alice@example.com",
+    "name": "Apex Manufacturing Ltd",
+    "customerType": "BUSINESS",
+    "cifNumber": "CIF-100001",
+    "email": "ops@apex.example.com",
     "phone": "+254700000001",
-    "company": "Acme Ltd",
-    "status": "LEAD",
-    "notes": "Interested in premium support"
+    "company": "Apex Manufacturing Ltd",
+    "segment": "CORPORATE",
+    "status": "ACTIVE",
+    "kycStatus": "VERIFIED",
+    "riskLevel": "MEDIUM",
+    "preferredChannel": "RELATIONSHIP_MANAGER",
+    "onboardingStage": "ACTIVE",
+    "residencyCountry": "Kenya",
+    "relationshipManager": "Grace Njoroge",
+    "notes": "Primary corporate operating account relationship"
   }'
 ```
 

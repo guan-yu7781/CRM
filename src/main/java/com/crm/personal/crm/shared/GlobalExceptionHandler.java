@@ -3,6 +3,7 @@ package com.crm.personal.crm.shared;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -39,6 +40,19 @@ public class GlobalExceptionHandler {
                 details
         );
         return ResponseEntity.badRequest().body(response);
+    }
+
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnreadableMessage(HttpMessageNotReadableException exception) {
+        String message = exception.getMostSpecificCause() != null
+                ? exception.getMostSpecificCause().getMessage()
+                : exception.getMessage();
+
+        if (message != null && message.contains("CustomerType")) {
+            message = "Invalid customerType. Use COMMERCIAL_BANK, PAYMENT_CUSTOMER, MICROFINANCE_BANK, or SACCO.";
+        }
+
+        return buildResponse(HttpStatus.BAD_REQUEST, message == null ? "Request body could not be parsed" : message);
     }
 
     private ResponseEntity<ApiErrorResponse> buildResponse(HttpStatus status, String message) {

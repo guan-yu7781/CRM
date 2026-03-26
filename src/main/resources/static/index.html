@@ -3,253 +3,137 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pulse CRM</title>
+    <title>Pulse Customer 360</title>
     <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-<div class="shell">
-    <aside class="brand-panel">
-        <div class="brand-badge">Pulse CRM</div>
-        <h1>Turn customer momentum into a daily operating rhythm.</h1>
-        <p class="brand-copy">
-            Log in to manage customers, contacts, deals, tasks, and follow-up activity from one workspace.
-        </p>
-        <div class="brand-metrics">
-            <div class="metric-card">
-                <span class="metric-label">Focus</span>
-                <strong>Sales follow-up</strong>
+<div id="login-panel" class="login-screen">
+    <section class="login-card">
+        <div class="login-copy">
+            <span class="eyebrow">Digital Banking CRM</span>
+            <h1>Customer 360 for a digital bank</h1>
+            <p>Sign in to manage banking customers, KYC journeys, relationships, opportunities, and service interactions.</p>
+        </div>
+
+        <form id="login-form" class="login-form">
+            <label>
+                <span>Username</span>
+                <input name="username" value="admin" required>
+            </label>
+            <label>
+                <span>Password</span>
+                <input name="password" type="password" value="admin123" required>
+            </label>
+            <button type="submit" class="primary-button">Sign In</button>
+            <p id="login-message" class="status-text"></p>
+        </form>
+    </section>
+</div>
+
+<div id="app-shell" class="app-shell hidden">
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="eyebrow">Digital Banking CRM</span>
+            <h2>Pulse 360</h2>
+            <p>Customer management inspired by enterprise banking operating models.</p>
+        </div>
+
+        <nav class="menu">
+            <button class="menu-item active" data-view="customers" type="button">Customer 360</button>
+            <button class="menu-item" data-view="contacts" type="button">Contacts</button>
+            <button class="menu-item" data-view="deals" type="button">Opportunities</button>
+            <button class="menu-item" data-view="tasks" type="button">Service Tasks</button>
+            <button class="menu-item" data-view="activities" type="button">Interactions</button>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="sidebar-note">
+                <span class="eyebrow">Operating Focus</span>
+                <strong>KYC, Risk, RM, Service</strong>
             </div>
-            <div class="metric-card">
-                <span class="metric-label">Flow</span>
-                <strong>Pipeline visibility</strong>
+            <div class="user-box">
+                <span>Signed in as</span>
+                <strong id="current-user">admin</strong>
             </div>
-            <div class="metric-card">
-                <span class="metric-label">Mode</span>
-                <strong>Secure JWT access</strong>
-            </div>
+            <button id="logout-button" class="ghost-button block-button" type="button">Log Out</button>
         </div>
     </aside>
 
-    <main class="workspace">
-        <section id="login-panel" class="panel panel-login">
-            <div class="panel-header">
-                <div>
-                    <span class="eyebrow">Welcome back</span>
-                    <h2>Sign in to your CRM</h2>
-                </div>
-                <span class="chip">Default user: admin</span>
+    <main class="content">
+        <header class="page-header">
+            <div>
+                <span id="view-label" class="eyebrow">Customer 360</span>
+                <h1 id="view-title">Banking Customer Records</h1>
+                <p id="view-description">Manage CIF, KYC, risk, segmentation, and relationship ownership in one workspace.</p>
             </div>
+            <div class="header-actions">
+                <button id="refresh-button" class="ghost-button" type="button">Refresh</button>
+                <button id="add-record-button" class="primary-button" type="button">Add Record</button>
+            </div>
+        </header>
 
-            <form id="login-form" class="form-grid form-compact">
-                <label>
-                    <span>Username</span>
-                    <input id="username" name="username" value="admin" required>
-                </label>
-                <label>
-                    <span>Password</span>
-                    <input id="password" name="password" type="password" value="admin123" required>
-                </label>
-                <button type="submit" class="primary-button">Get Access Token</button>
-            </form>
-
-            <p id="login-message" class="status-text"></p>
+        <section class="summary-bar">
+            <article class="summary-card">
+                <span id="summary-label-1">Total Records</span>
+                <strong id="summary-value-1">0</strong>
+                <small id="summary-note-1">Current module volume</small>
+            </article>
+            <article class="summary-card">
+                <span id="summary-label-2">Platform</span>
+                <strong id="summary-value-2">MySQL</strong>
+                <small id="summary-note-2">Primary operational datastore</small>
+            </article>
+            <article class="summary-card">
+                <span id="summary-label-3">Operating Model</span>
+                <strong id="summary-value-3">Customer 360</strong>
+                <small id="summary-note-3">Customer and servicing context</small>
+            </article>
+            <article class="summary-card">
+                <span id="summary-label-4">Workbench</span>
+                <strong id="summary-value-4">Live</strong>
+                <small id="summary-note-4">Actionable customer operations</small>
+            </article>
         </section>
 
-        <section id="dashboard" class="dashboard hidden">
-            <header class="topbar">
-                <div>
-                    <span class="eyebrow">Dashboard</span>
-                    <h2>CRM Command Center</h2>
+        <section class="workspace-grid">
+            <section class="records-panel">
+                <div class="records-toolbar">
+                    <div>
+                        <strong class="panel-title">Records</strong>
+                        <span class="panel-subtitle"><span id="record-count">0</span> items in the current module</span>
+                    </div>
+                    <input id="search-input" class="search-input" type="search" placeholder="Search records">
                 </div>
-                <div class="topbar-actions">
-                    <div class="token-pill">
-                        <span>Signed in as</span>
-                        <strong id="current-user">admin</strong>
-                    </div>
-                    <button id="logout-button" class="ghost-button" type="button">Log Out</button>
+                <div id="records-list" class="records-list"></div>
+            </section>
+
+            <aside class="insight-panel">
+                <div class="insight-header">
+                    <span class="eyebrow">Selected Record</span>
+                    <h2 id="insight-title">Record Insight</h2>
                 </div>
-            </header>
-
-            <section class="stats-grid">
-                <article class="stat-card">
-                    <span>Customers</span>
-                    <strong id="customer-count">0</strong>
-                </article>
-                <article class="stat-card">
-                    <span>Contacts</span>
-                    <strong id="contact-count">0</strong>
-                </article>
-                <article class="stat-card">
-                    <span>Open Tasks</span>
-                    <strong id="task-count">0</strong>
-                </article>
-                <article class="stat-card">
-                    <span>Activities</span>
-                    <strong id="activity-count">0</strong>
-                </article>
-            </section>
-
-            <section class="content-grid">
-                <article class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="eyebrow">Customers</span>
-                            <h3>Create customer</h3>
-                        </div>
-                    </div>
-                    <form id="customer-form" class="form-grid">
-                        <label><span>Name</span><input name="name" required></label>
-                        <label><span>Email</span><input name="email" type="email" required></label>
-                        <label><span>Phone</span><input name="phone"></label>
-                        <label><span>Company</span><input name="company"></label>
-                        <label>
-                            <span>Status</span>
-                            <select name="status">
-                                <option>LEAD</option>
-                                <option>ACTIVE</option>
-                                <option>INACTIVE</option>
-                            </select>
-                        </label>
-                        <label class="full-width"><span>Notes</span><textarea name="notes" rows="3"></textarea></label>
-                        <button type="submit" class="primary-button">Save Customer</button>
-                    </form>
-                </article>
-
-                <article class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="eyebrow">Contacts</span>
-                            <h3>Create contact</h3>
-                        </div>
-                    </div>
-                    <form id="contact-form" class="form-grid">
-                        <label><span>First name</span><input name="firstName" required></label>
-                        <label><span>Last name</span><input name="lastName" required></label>
-                        <label><span>Email</span><input name="email" type="email" required></label>
-                        <label><span>Phone</span><input name="phone"></label>
-                        <label><span>Job title</span><input name="jobTitle"></label>
-                        <label>
-                            <span>Customer</span>
-                            <select id="contact-customer-id" name="customerId" required></select>
-                        </label>
-                        <label class="full-width"><span>Notes</span><textarea name="notes" rows="3"></textarea></label>
-                        <button type="submit" class="primary-button">Save Contact</button>
-                    </form>
-                </article>
-
-                <article class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="eyebrow">Tasks</span>
-                            <h3>Create task</h3>
-                        </div>
-                    </div>
-                    <form id="task-form" class="form-grid">
-                        <label><span>Title</span><input name="title" required></label>
-                        <label>
-                            <span>Priority</span>
-                            <select name="priority">
-                                <option>LOW</option>
-                                <option selected>MEDIUM</option>
-                                <option>HIGH</option>
-                            </select>
-                        </label>
-                        <label>
-                            <span>Status</span>
-                            <select name="status">
-                                <option selected>OPEN</option>
-                                <option>IN_PROGRESS</option>
-                                <option>COMPLETED</option>
-                                <option>CANCELLED</option>
-                            </select>
-                        </label>
-                        <label><span>Due date</span><input name="dueDate" type="date"></label>
-                        <label>
-                            <span>Customer</span>
-                            <select id="task-customer-id" name="customerId" required></select>
-                        </label>
-                        <label class="full-width"><span>Description</span><textarea name="description" rows="3"></textarea></label>
-                        <button type="submit" class="primary-button">Save Task</button>
-                    </form>
-                </article>
-
-                <article class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="eyebrow">Activities</span>
-                            <h3>Log follow-up</h3>
-                        </div>
-                    </div>
-                    <form id="activity-form" class="form-grid">
-                        <label>
-                            <span>Type</span>
-                            <select name="type">
-                                <option>CALL</option>
-                                <option>EMAIL</option>
-                                <option>MEETING</option>
-                                <option>NOTE</option>
-                                <option>FOLLOW_UP</option>
-                            </select>
-                        </label>
-                        <label><span>Subject</span><input name="subject" required></label>
-                        <label><span>Activity date</span><input name="activityDate" type="datetime-local" required></label>
-                        <label>
-                            <span>Customer</span>
-                            <select id="activity-customer-id" name="customerId" required></select>
-                        </label>
-                        <label class="full-width"><span>Details</span><textarea name="details" rows="3"></textarea></label>
-                        <button type="submit" class="primary-button">Save Activity</button>
-                    </form>
-                </article>
-            </section>
-
-            <section class="lists-grid">
-                <article class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="eyebrow">Pipeline</span>
-                            <h3>Customers</h3>
-                        </div>
-                        <button id="refresh-button" class="ghost-button" type="button">Refresh</button>
-                    </div>
-                    <div id="customers-list" class="list-stack"></div>
-                </article>
-
-                <article class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="eyebrow">Network</span>
-                            <h3>Contacts</h3>
-                        </div>
-                    </div>
-                    <div id="contacts-list" class="list-stack"></div>
-                </article>
-
-                <article class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="eyebrow">Execution</span>
-                            <h3>Tasks</h3>
-                        </div>
-                    </div>
-                    <div id="tasks-list" class="list-stack"></div>
-                </article>
-
-                <article class="panel">
-                    <div class="panel-header">
-                        <div>
-                            <span class="eyebrow">Timeline</span>
-                            <h3>Recent Activities</h3>
-                        </div>
-                    </div>
-                    <div id="activities-list" class="list-stack"></div>
-                </article>
-            </section>
-
-            <p id="app-message" class="status-text"></p>
+                <div id="insight-content" class="insight-content"></div>
+            </aside>
         </section>
+
+        <p id="app-message" class="status-text status-inline"></p>
     </main>
 </div>
+
+<div id="record-modal" class="modal hidden" aria-hidden="true">
+    <div class="modal-backdrop" data-close="true"></div>
+    <section class="modal-card">
+        <header class="modal-header">
+            <div>
+                <span id="modal-label" class="eyebrow">Add</span>
+                <h2 id="modal-title">Record</h2>
+            </div>
+            <button id="close-modal-button" class="ghost-button icon-button" type="button">Close</button>
+        </header>
+        <form id="record-form" class="record-form"></form>
+    </section>
+</div>
+
 <script src="/app.js"></script>
 </body>
 </html>

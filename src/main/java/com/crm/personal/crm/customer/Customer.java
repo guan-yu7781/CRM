@@ -27,6 +27,13 @@ public class Customer {
     @Column(nullable = false)
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private CustomerType customerType = CustomerType.COMMERCIAL_BANK;
+
+    @Column(nullable = false, unique = true)
+    private String cifNumber;
+
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -36,7 +43,31 @@ public class Customer {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
+    private CustomerSegment segment = CustomerSegment.RETAIL;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private CustomerStatus status = CustomerStatus.LEAD;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private KycStatus kycStatus = KycStatus.PENDING;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RiskLevel riskLevel = RiskLevel.LOW;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private PreferredChannel preferredChannel = PreferredChannel.MOBILE_APP;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OnboardingStage onboardingStage = OnboardingStage.PROSPECT;
+
+    private String residencyCountry;
+
+    private String relationshipManager;
 
     @Column(length = 1000)
     private String notes;
@@ -66,6 +97,22 @@ public class Customer {
         this.name = name;
     }
 
+    public CustomerType getCustomerType() {
+        return customerType;
+    }
+
+    public void setCustomerType(CustomerType customerType) {
+        this.customerType = customerType;
+    }
+
+    public String getCifNumber() {
+        return cifNumber;
+    }
+
+    public void setCifNumber(String cifNumber) {
+        this.cifNumber = cifNumber;
+    }
+
     public String getEmail() {
         return email;
     }
@@ -90,12 +137,68 @@ public class Customer {
         this.company = company;
     }
 
+    public CustomerSegment getSegment() {
+        return segment;
+    }
+
+    public void setSegment(CustomerSegment segment) {
+        this.segment = segment;
+    }
+
     public CustomerStatus getStatus() {
         return status;
     }
 
     public void setStatus(CustomerStatus status) {
         this.status = status;
+    }
+
+    public KycStatus getKycStatus() {
+        return kycStatus;
+    }
+
+    public void setKycStatus(KycStatus kycStatus) {
+        this.kycStatus = kycStatus;
+    }
+
+    public RiskLevel getRiskLevel() {
+        return riskLevel;
+    }
+
+    public void setRiskLevel(RiskLevel riskLevel) {
+        this.riskLevel = riskLevel;
+    }
+
+    public PreferredChannel getPreferredChannel() {
+        return preferredChannel;
+    }
+
+    public void setPreferredChannel(PreferredChannel preferredChannel) {
+        this.preferredChannel = preferredChannel;
+    }
+
+    public OnboardingStage getOnboardingStage() {
+        return onboardingStage;
+    }
+
+    public void setOnboardingStage(OnboardingStage onboardingStage) {
+        this.onboardingStage = onboardingStage;
+    }
+
+    public String getResidencyCountry() {
+        return residencyCountry;
+    }
+
+    public void setResidencyCountry(String residencyCountry) {
+        this.residencyCountry = residencyCountry;
+    }
+
+    public String getRelationshipManager() {
+        return relationshipManager;
+    }
+
+    public void setRelationshipManager(String relationshipManager) {
+        this.relationshipManager = relationshipManager;
     }
 
     public String getNotes() {

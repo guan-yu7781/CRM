@@ -74,6 +74,32 @@ public class ActivityService {
         return ActivityResponse.from(activityRepository.save(activity));
     }
 
+    @Transactional
+    public ActivityResponse updateActivity(Long id, ActivityRequest request, Authentication authentication) {
+        Activity activity = findActivity(id);
+        Customer customer = customerService.findCustomer(request.getCustomerId());
+        Contact contact = resolveContact(request.getContactId(), customer.getId());
+        Deal deal = resolveDeal(request.getDealId(), customer.getId());
+        AppUser user = appUserRepository.findByUsername(authentication.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("Authenticated user not found"));
+
+        activity.setType(request.getType());
+        activity.setSubject(request.getSubject());
+        activity.setDetails(request.getDetails());
+        activity.setActivityDate(request.getActivityDate());
+        activity.setCustomer(customer);
+        activity.setContact(contact);
+        activity.setDeal(deal);
+        activity.setCreatedBy(user);
+
+        return ActivityResponse.from(activityRepository.save(activity));
+    }
+
+    @Transactional
+    public void deleteActivity(Long id) {
+        activityRepository.delete(findActivity(id));
+    }
+
     private Activity findActivity(Long id) {
         return activityRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Activity not found with id " + id));

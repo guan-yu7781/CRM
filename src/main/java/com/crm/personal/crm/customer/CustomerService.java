@@ -35,6 +35,11 @@ public class CustomerService {
                     throw new IllegalArgumentException("A customer with this email already exists");
                 });
 
+        customerRepository.findByCifNumberIgnoreCase(request.getCifNumber())
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("A customer with this CIF number already exists");
+                });
+
         Customer customer = new Customer();
         applyRequest(customer, request);
 
@@ -53,6 +58,12 @@ public class CustomerService {
                 .filter(existing -> !existing.getId().equals(id))
                 .ifPresent(existing -> {
                     throw new IllegalArgumentException("A customer with this email already exists");
+                });
+
+        customerRepository.findByCifNumberIgnoreCase(request.getCifNumber())
+                .filter(existing -> !existing.getId().equals(id))
+                .ifPresent(existing -> {
+                    throw new IllegalArgumentException("A customer with this CIF number already exists");
                 });
 
         applyRequest(customer, request);
@@ -74,10 +85,19 @@ public class CustomerService {
 
     private void applyRequest(Customer customer, CustomerRequest request) {
         customer.setName(request.getName());
+        customer.setCustomerType(request.getCustomerType() == null ? CustomerType.COMMERCIAL_BANK : request.getCustomerType());
+        customer.setCifNumber(request.getCifNumber());
         customer.setEmail(request.getEmail());
         customer.setPhone(request.getPhone());
         customer.setCompany(request.getCompany());
+        customer.setSegment(request.getSegment() == null ? CustomerSegment.RETAIL : request.getSegment());
         customer.setStatus(request.getStatus() == null ? CustomerStatus.LEAD : request.getStatus());
+        customer.setKycStatus(request.getKycStatus() == null ? KycStatus.PENDING : request.getKycStatus());
+        customer.setRiskLevel(request.getRiskLevel() == null ? RiskLevel.LOW : request.getRiskLevel());
+        customer.setPreferredChannel(request.getPreferredChannel() == null ? PreferredChannel.MOBILE_APP : request.getPreferredChannel());
+        customer.setOnboardingStage(request.getOnboardingStage() == null ? OnboardingStage.PROSPECT : request.getOnboardingStage());
+        customer.setResidencyCountry(request.getResidencyCountry());
+        customer.setRelationshipManager(request.getRelationshipManager());
         customer.setNotes(request.getNotes());
     }
 }
