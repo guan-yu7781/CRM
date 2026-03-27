@@ -26,6 +26,7 @@ public class CustomerController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('CUSTOMER_VIEW')")
     public List<CustomerResponse> getCustomers(
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
             @org.springframework.web.bind.annotation.RequestParam(defaultValue = "500") int size) {
@@ -33,24 +34,27 @@ public class CustomerController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('CUSTOMER_VIEW')")
     public CustomerResponse getCustomer(@PathVariable Long id) {
         return customerService.getCustomer(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('CUSTOMER_CREATE')")
     public CustomerResponse createCustomer(@Valid @RequestBody CustomerRequest request) {
         return customerService.createCustomer(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('CUSTOMER_EDIT')")
     public CustomerResponse updateCustomer(@PathVariable Long id, @Valid @RequestBody CustomerRequest request) {
         return customerService.updateCustomer(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CUSTOMER_DELETE')")
     public void deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);
     }

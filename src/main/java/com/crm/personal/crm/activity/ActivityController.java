@@ -28,22 +28,26 @@ public class ActivityController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('ACTIVITY_VIEW')")
     public List<ActivityResponse> getActivities(@RequestParam(required = false) Long customerId) {
         return activityService.getActivities(customerId);
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('ACTIVITY_VIEW')")
     public ActivityResponse getActivity(@PathVariable Long id) {
         return activityService.getActivity(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('ACTIVITY_CREATE')")
     public ActivityResponse createActivity(@Valid @RequestBody ActivityRequest request, Authentication authentication) {
         return activityService.createActivity(request, authentication);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('ACTIVITY_EDIT')")
     public ActivityResponse updateActivity(@PathVariable Long id,
                                            @Valid @RequestBody ActivityRequest request,
                                            Authentication authentication) {
@@ -52,7 +56,7 @@ public class ActivityController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('ACTIVITY_DELETE')")
     public void deleteActivity(@PathVariable Long id) {
         activityService.deleteActivity(id);
     }

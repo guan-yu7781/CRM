@@ -42,13 +42,16 @@ public class ProjectSchemaMigrationRunner implements ApplicationRunner {
     }
 
     private void ensureColumn(String columnName, String ddl) {
-        Integer count = jdbcTemplate.queryForObject(
-                "select count(1) from information_schema.columns where table_schema = database() and table_name = 'projects' and column_name = ?",
-                Integer.class,
-                columnName
-        );
-        if (count != null && count == 0) {
-            jdbcTemplate.execute(ddl);
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "select count(1) from information_schema.columns where upper(table_name) = 'PROJECTS' and upper(column_name) = upper(?)",
+                    Integer.class,
+                    columnName
+            );
+            if (count != null && count == 0) {
+                jdbcTemplate.execute(ddl);
+            }
+        } catch (Exception ignored) {
         }
     }
 }

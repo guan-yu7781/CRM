@@ -9,18 +9,119 @@ Spring Boot CRM for a digital bank, payment institution, microfinance bank, SACC
   - MyBatis: `Customer`, `Contact`, `Deal`, `Project`, `Task`, `Annual Maintenance`
   - Spring Data JPA: authentication, activity history, and remaining transitional modules
 - Databases: H2, MySQL, PostgreSQL
-- Frontend: built-in static CRM workspace with Customer 360 and Annual Maintenance pages
+- Frontend:
+  - Default entry: Vue 3 SPA served by Spring Boot static resources
+  - Dev mode: Vite development server under [`frontend`](/Users/gary/Downloads/CRM-Personal/frontend)
 - Build: Maven
+
+## Role And Access Control Design
+
+The CRM now includes a first-release role and access control model designed for banking and fintech operating teams.
+
+### Design Intent
+
+The access model follows four principles:
+
+- Role-led access:
+  users receive a business role that reflects their operational responsibility
+- Permission-led enforcement:
+  every major CRUD and conversion action is protected by a named permission
+- Business-friendly roles:
+  roles are aligned to operating teams rather than technical labels
+- Progressive security:
+  this release enforces module and action permissions now, while the next phase can extend into record ownership and market-level data scope filtering
+
+### Supported Business Roles
+
+- `SUPER_ADMIN`
+  - full system and access-control ownership
+- `CRM_ADMIN`
+  - manages customer, contact, project, deal, maintenance, task, and activity data
+- `SALES_MANAGER`
+  - manages team pipeline, won opportunity conversion, and commercial visibility
+- `RELATIONSHIP_MANAGER`
+  - manages day-to-day customer, contact, opportunity, project, maintenance, task, and activity updates
+- `FINANCE_OFFICER`
+  - focuses on project financial visibility plus maintenance payment and renewal controls
+
+Legacy roles `ADMIN` and `SALES` are still recognized so older seeded data keeps working. They are normalized to `SUPER_ADMIN` and `RELATIONSHIP_MANAGER`.
+
+### Current Data Scope Model
+
+The current role catalog also carries a scope design:
+
+- `ALL`
+- `TEAM`
+- `OWN`
+
+This release returns scope metadata in the API and UI so the operating model is visible. Fine-grained record filtering by team ownership and assigned relationship manager is the next implementation step.
+
+### Permission Model
+
+The following permission families are enforced:
+
+- `CUSTOMER_*`
+- `CONTACT_*`
+- `DEAL_*`
+- `PROJECT_*`
+- `MAINTENANCE_*`
+- `TASK_*`
+- `ACTIVITY_*`
+- `ACCESS_CONTROL_*`
+
+Examples:
+
+- `DEAL_CONVERT_TO_PROJECT`
+- `PROJECT_VIEW_FINANCIALS`
+- `MAINTENANCE_UPDATE_PAYMENT`
+- `MAINTENANCE_UPDATE_RENEW`
+- `ACCESS_CONTROL_MANAGE`
+
+### What Is Implemented In This Release
+
+- JWT login now returns:
+  - effective role
+  - role label
+  - data scope
+  - permission list
+- all primary CRM APIs are protected with permission checks
+- a new `Access Control` module is available in the main workspace for authorized users
+- super admins can:
+  - view the role catalog
+  - list CRM users
+  - create CRM users
+  - update user roles and passwords
+- the main workspace now adjusts visible modules and action buttons based on the signed-in user's permissions
+
+### Access Control API
+
+- `GET /api/auth/me`
+- `GET /api/admin/access-control/roles`
+- `GET /api/admin/access-control/users`
+- `POST /api/admin/access-control/users`
+- `PUT /api/admin/access-control/users/{id}`
+
+### Seeded Users
+
+The system seeds these demo accounts if they do not already exist:
+
+- `admin / admin123` -> `SUPER_ADMIN`
+- `crmadmin / admin123` -> `CRM_ADMIN`
+- `sales.manager / admin123` -> `SALES_MANAGER`
+- `rm.gary / admin123` -> `RELATIONSHIP_MANAGER`
+- `finance.officer / admin123` -> `FINANCE_OFFICER`
 
 ## Solution Architecture
 
 The application follows a layered architecture:
 
 1. Presentation layer
-   - Static pages under [`src/main/resources/static`](/Users/gary/Downloads/CRM-Personal/src/main/resources/static)
-   - Main workspace: [`index.html`](/Users/gary/Downloads/CRM-Personal/src/main/resources/static/index.html)
-   - Customer 360 page: [`customer-360.html`](/Users/gary/Downloads/CRM-Personal/src/main/resources/static/customer-360.html)
-   - Annual Maintenance page: [`annual-maintenance.html`](/Users/gary/Downloads/CRM-Personal/src/main/resources/static/annual-maintenance.html)
+   - Vue 3 SPA under [`frontend`](/Users/gary/Downloads/CRM-Personal/frontend)
+   - Main application shell: [`App.vue`](/Users/gary/Downloads/CRM-Personal/frontend/src/App.vue)
+   - Workspace: [`WorkspaceView.vue`](/Users/gary/Downloads/CRM-Personal/frontend/src/views/WorkspaceView.vue)
+   - Customer 360 page: [`Customer360View.vue`](/Users/gary/Downloads/CRM-Personal/frontend/src/views/Customer360View.vue)
+   - Annual Maintenance page: [`MaintenanceView.vue`](/Users/gary/Downloads/CRM-Personal/frontend/src/views/MaintenanceView.vue)
+   - Built assets are emitted into [`src/main/resources/static`](/Users/gary/Downloads/CRM-Personal/src/main/resources/static) so Spring Boot serves Vue by default
 
 2. API layer
    - REST controllers under [`src/main/java/com/crm/personal/crm`](/Users/gary/Downloads/CRM-Personal/src/main/java/com/crm/personal/crm)
@@ -38,14 +139,64 @@ The application follows a layered architecture:
    - Schema migration runners add missing columns and normalize old data
    - Seed runners create default admin user and demo relationship data
 
+## Frontend Delivery Model
+
+- Vue is now the default frontend entry point
+- Spring Boot serves the Vue production build directly from [`src/main/resources/static`](/Users/gary/Downloads/CRM-Personal/src/main/resources/static)
+- SPA routes are forwarded to `index.html` by [`SpaForwardController.java`](/Users/gary/Downloads/CRM-Personal/src/main/java/com/crm/personal/crm/shared/SpaForwardController.java#L1)
+- Security allows the SPA entry routes and static assets through [`SecurityConfig.java`](/Users/gary/Downloads/CRM-Personal/src/main/java/com/crm/personal/crm/security/SecurityConfig.java#L1)
+- Vite build output is configured in [`frontend/vite.config.js`](/Users/gary/Downloads/CRM-Personal/frontend/vite.config.js#L1)
+
+### Vue Routes
+
+- `/login`
+- `/app/:module`
+- `/customer-360/:customerId`
+- `/maintenance`
+
+### Local Frontend Development
+
+- Start backend on `http://localhost:8080`
+- Start Vue dev server from [`frontend`](/Users/gary/Downloads/CRM-Personal/frontend)
+- Vite proxy forwards `/api/*` to Spring Boot
+
+Commands:
+
+```bash
+cd /Users/gary/Downloads/CRM-Personal/frontend
+npm install
+npm run dev
+```
+
+Vue dev URL:
+
+- `http://127.0.0.1:5173`
+
+### Production-Like Local Run
+
+To rebuild the Vue frontend into Spring Boot static resources:
+
+```bash
+cd /Users/gary/Downloads/CRM-Personal/frontend
+npm run build
+```
+
+Then start Spring Boot normally and open:
+
+- `http://localhost:8080`
+
 ## Functional Modules
 
 ### 1. Authentication
 
 - JWT login endpoint: `POST /api/auth/login`
-- Default user:
-  - username: `admin`
-  - password: `admin123`
+- Current user endpoint: `GET /api/auth/me`
+- Default seeded users:
+  - `admin / admin123`
+  - `crmadmin / admin123`
+  - `sales.manager / admin123`
+  - `rm.gary / admin123`
+  - `finance.officer / admin123`
 
 ### 2. Customer Management
 
@@ -64,6 +215,11 @@ The application follows a layered architecture:
   - `status`
   - `riskLevel`
   - `notes`
+- Protected by:
+  - `CUSTOMER_VIEW`
+  - `CUSTOMER_CREATE`
+  - `CUSTOMER_EDIT`
+  - `CUSTOMER_DELETE`
 
 ### 3. Contact Directory
 
@@ -76,6 +232,11 @@ The application follows a layered architecture:
   - `jobTitle`
   - `customerId`
   - `notes`
+- Protected by:
+  - `CONTACT_VIEW`
+  - `CONTACT_CREATE`
+  - `CONTACT_EDIT`
+  - `CONTACT_DELETE`
 
 ### 4. Opportunities
 
@@ -94,6 +255,12 @@ The application follows a layered architecture:
   - `NEGOTIATION`
   - `WON`
   - `LOST`
+- Protected by:
+  - `DEAL_VIEW`
+  - `DEAL_CREATE`
+  - `DEAL_EDIT`
+  - `DEAL_DELETE`
+  - `DEAL_CONVERT_TO_PROJECT`
 
 ### 5. Won To Project Conversion
 
@@ -127,6 +294,12 @@ The application follows a layered architecture:
 - Contract statuses:
   - `SIGNED_CONTRACT`
   - `UNSIGNED_CONTRACT`
+- Protected by:
+  - `PROJECT_VIEW`
+  - `PROJECT_CREATE`
+  - `PROJECT_EDIT`
+  - `PROJECT_DELETE`
+  - `PROJECT_VIEW_FINANCIALS`
 
 ### 7. Annual Maintenance
 
@@ -156,7 +329,14 @@ The application follows a layered architecture:
   - `POST /api/annual-maintenance`
   - `POST /api/annual-maintenance/batch`
   - `PUT /api/annual-maintenance/{id}`
-  - `DELETE /api/annual-maintenance/{id}` (ADMIN only)
+  - `DELETE /api/annual-maintenance/{id}`
+- Protected by:
+  - `MAINTENANCE_VIEW`
+  - `MAINTENANCE_CREATE`
+  - `MAINTENANCE_EDIT`
+  - `MAINTENANCE_DELETE`
+  - `MAINTENANCE_UPDATE_PAYMENT`
+  - `MAINTENANCE_UPDATE_RENEW`
 
 ### 8. Service Tasks
 
@@ -169,6 +349,11 @@ The application follows a layered architecture:
   - `dueDate`
   - `customerId`
   - `dealId`
+- Protected by:
+  - `TASK_VIEW`
+  - `TASK_CREATE`
+  - `TASK_EDIT`
+  - `TASK_DELETE`
 
 ### 9. Activities
 
@@ -178,6 +363,23 @@ The application follows a layered architecture:
   - meetings
   - notes
   - follow-up logs
+- Protected by:
+  - `ACTIVITY_VIEW`
+  - `ACTIVITY_CREATE`
+  - `ACTIVITY_EDIT`
+  - `ACTIVITY_DELETE`
+
+### 10. Access Control
+
+- New workspace module for authorized users
+- Purpose:
+  - view CRM users
+  - review role catalog
+  - create users
+  - update user roles
+- Protected by:
+  - `ACCESS_CONTROL_VIEW`
+  - `ACCESS_CONTROL_MANAGE`
 
 ## Frontend Pages
 
@@ -185,11 +387,57 @@ The application follows a layered architecture:
 - Customer 360 page: [http://localhost:8080/customer-360.html](http://localhost:8080/customer-360.html)
 - Annual Maintenance page: [http://localhost:8080/annual-maintenance.html](http://localhost:8080/annual-maintenance.html)
 
+## Vue Frontend Upgrade
+
+The repository now also includes a Vue 3 frontend upgrade under [frontend/](/Users/gary/Downloads/CRM-Personal/frontend).
+
+### Frontend Stack
+
+- Vue 3
+- Vite
+- Pinia
+- Vue Router
+- Axios
+
+### Frontend Scope In This Upgrade
+
+The Vue app introduces a modern SPA shell for:
+
+- login
+- branded navigation shell
+- customer management workspace
+- contact, project, opportunity, task, and interaction modules
+- access control module
+- dedicated Customer 360 route
+- dedicated Annual Maintenance route
+
+The existing Spring Boot static frontend is still present for backward compatibility during migration.
+
+### Run The Vue Frontend
+
+1. Start the Spring Boot backend on port `8080`
+2. In a separate terminal:
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+3. Open:
+
+```text
+http://localhost:5173
+```
+
+Vite proxies `/api/*` requests to the Spring Boot backend on `http://localhost:8080`.
+
 Main UI patterns:
 
 - Left collapsible navigation
 - Module-specific record workspace
 - Table-based `Contacts` and `Projects`
+- Role-aware `Access Control` workspace
 - Dedicated `Customer 360`
 - Dedicated `Annual Maintenance`
 - Modal-based add/edit flows
@@ -270,6 +518,32 @@ The project uses MySQL locally by default, with support for H2 and PostgreSQL pr
 - `customer_id`
 - `created_at`
 - `updated_at`
+
+#### `app_users`
+
+- `id`
+- `full_name`
+- `username`
+- `password`
+- `role`
+- `created_at`
+
+### Access Control Model Tables
+
+The first release keeps role metadata in application code for fast delivery and simple deployment:
+
+- `UserRole`
+  - business role catalog
+  - data scope metadata
+  - permission bundles
+- `UserPermission`
+  - system action codes enforced by Spring Security method rules
+
+This means:
+
+- user-role assignment is stored in the database
+- role-to-permission mapping is versioned in code
+- the next phase can externalize role and permission mapping into relational tables if business administration needs become more dynamic
 
 #### `tasks`
 

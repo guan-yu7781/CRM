@@ -27,6 +27,7 @@ public class TaskController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('TASK_VIEW')")
     public List<TaskResponse> getTasks(
             @RequestParam(required = false) Long customerId,
             @RequestParam(required = false) TaskStatus status,
@@ -36,24 +37,27 @@ public class TaskController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('TASK_VIEW')")
     public TaskResponse getTask(@PathVariable Long id) {
         return taskService.getTask(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('TASK_CREATE')")
     public TaskResponse createTask(@Valid @RequestBody TaskRequest request) {
         return taskService.createTask(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('TASK_EDIT')")
     public TaskResponse updateTask(@PathVariable Long id, @Valid @RequestBody TaskRequest request) {
         return taskService.updateTask(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('TASK_DELETE')")
     public void deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
     }

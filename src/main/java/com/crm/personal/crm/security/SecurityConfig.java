@@ -38,12 +38,11 @@ public class SecurityConfig {
                 .antMatchers(
                         "/",
                         "/index.html",
-                        "/customer-360.html",
-                        "/annual-maintenance.html",
-                        "/styles.css",
-                        "/app.js",
-                        "/customer-360.js",
-                        "/annual-maintenance.js"
+                        "/login",
+                        "/app/**",
+                        "/customer-360/**",
+                        "/maintenance/**",
+                        "/assets/**"
                 ).permitAll()
                 .antMatchers("/api/auth/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/favicon.ico").permitAll()

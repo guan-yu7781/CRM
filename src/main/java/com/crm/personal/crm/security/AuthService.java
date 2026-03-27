@@ -7,6 +7,9 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.PostConstruct;
 import java.time.LocalDateTime;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class AuthService {
@@ -34,21 +37,51 @@ public class AuthService {
         AppUser user = appUserRepository.findByUsername(request.getUsername())
                 .orElseThrow(() -> new IllegalArgumentException("User not found"));
 
-        return new AuthResponse(jwtService.generateToken(user), user.getUsername(), user.getRole().name());
+        return toAuthResponse(user);
+    }
+
+    public AuthResponse currentUser(String username) {
+        AppUser user = appUserRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("User not found"));
+        return toAuthResponse(user);
     }
 
     @PostConstruct
     public void seedDefaultUser() {
-        if (appUserRepository.findByUsername("admin").isPresent()) {
+        seedUserIfMissing("admin", "System Administrator", UserRole.SUPER_ADMIN);
+        seedUserIfMissing("crmadmin", "CRM Administrator", UserRole.CRM_ADMIN);
+        seedUserIfMissing("sales.manager", "Sales Manager", UserRole.SALES_MANAGER);
+        seedUserIfMissing("rm.gary", "Relationship Manager", UserRole.RELATIONSHIP_MANAGER);
+        seedUserIfMissing("finance.officer", "Finance Officer", UserRole.FINANCE_OFFICER);
+    }
+
+    private void seedUserIfMissing(String username, String fullName, UserRole role) {
+        if (appUserRepository.findByUsername(username).isPresent()) {
             return;
         }
+        AppUser user = new AppUser();
+        user.setFullName(fullName);
+        user.setUsername(username);
+        user.setPassword(passwordEncoder.encode("admin123"));
+        user.setRole(role);
+        user.setCreatedAt(LocalDateTime.now());
+        appUserRepository.save(user);
+    }
 
-        AppUser admin = new AppUser();
-        admin.setFullName("System Administrator");
-        admin.setUsername("admin");
-        admin.setPassword(passwordEncoder.encode("admin123"));
-        admin.setRole(UserRole.ADMIN);
-        admin.setCreatedAt(LocalDateTime.now());
-        appUserRepository.save(admin);
+    private AuthResponse toAuthResponse(AppUser user) {
+        UserRole effectiveRole = user.getRole().getEffectiveRole();
+        List<String> permissions = effectiveRole.getPermissions().stream()
+                .map(Enum::name)
+                .sorted(Comparator.naturalOrder())
+                .collect(Collectors.toList());
+
+        return new AuthResponse(
+                jwtService.generateToken(user),
+                user.getUsername(),
+                effectiveRole.name(),
+                effectiveRole.getLabel(),
+                effectiveRole.getDataScope().name(),
+                permissions
+        );
     }
 }

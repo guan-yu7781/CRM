@@ -100,13 +100,16 @@ public class AnnualMaintenanceSeedRunner implements ApplicationRunner {
     }
 
     private void ensureRenewStatusColumn() {
-        Integer count = jdbcTemplate.queryForObject(
-                "select count(1) from information_schema.columns " +
-                        "where table_schema = database() and table_name = 'annual_maintenance' and column_name = 'renew_status'",
-                Integer.class
-        );
-        if (count != null && count == 0) {
-            jdbcTemplate.execute("alter table annual_maintenance add column renew_status varchar(32) default 'NOT_RENEWED'");
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "select count(1) from information_schema.columns " +
+                            "where upper(table_name) = 'ANNUAL_MAINTENANCE' and upper(column_name) = 'RENEW_STATUS'",
+                    Integer.class
+            );
+            if (count != null && count == 0) {
+                jdbcTemplate.execute("alter table annual_maintenance add column renew_status varchar(32) default 'NOT_RENEWED'");
+            }
+        } catch (Exception ignored) {
         }
         jdbcTemplate.update("update annual_maintenance set renew_status = 'NOT_RENEWED' where renew_status is null");
     }
