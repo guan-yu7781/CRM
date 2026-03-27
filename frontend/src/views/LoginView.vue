@@ -14,7 +14,7 @@ async function submit() {
   error.value = '';
   try {
     await auth.login(form);
-    router.push({ name: 'workspace', params: { module: 'customers' } });
+    router.push({ name: 'dashboard' });
   } catch (exception) {
     error.value = exception.response?.data?.details?.[0] || exception.message || 'Unable to sign in.';
   } finally {

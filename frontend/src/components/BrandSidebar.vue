@@ -53,6 +53,15 @@ const menuIconMap = {
     </div>
 
     <nav class="menu">
+      <div class="menu-section-label" v-if="!collapsed">Menu</div>
+      <router-link
+        class="menu-item"
+        :class="{ active: currentModule === 'dashboard' }"
+        :to="{ name: 'dashboard' }"
+      >
+        <span class="menu-item-icon">DB</span>
+        <span class="menu-item-label">Dashboard</span>
+      </router-link>
       <div class="menu-section-label" v-if="!collapsed">Workspace</div>
       <router-link
         v-for="module in visibleModules"
