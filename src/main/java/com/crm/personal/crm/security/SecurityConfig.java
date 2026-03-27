@@ -43,7 +43,8 @@ public class SecurityConfig {
                         "/styles.css",
                         "/app.js",
                         "/customer-360.js",
-                        "/annual-maintenance.js"
+                        "/annual-maintenance.js",
+                        "/assets/**"
                 ).permitAll()
                 .antMatchers("/api/auth/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/favicon.ico").permitAll()

@@ -47,13 +47,16 @@ public class ProjectMaintenanceSyncRunner implements ApplicationRunner {
     }
 
     private void ensureProjectIdColumn() {
-        Integer count = jdbcTemplate.queryForObject(
-                "select count(1) from information_schema.columns " +
-                        "where table_schema = database() and table_name = 'annual_maintenance' and column_name = 'project_id'",
-                Integer.class
-        );
-        if (count != null && count == 0) {
-            jdbcTemplate.execute("alter table annual_maintenance add column project_id bigint");
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "select count(1) from information_schema.columns " +
+                            "where upper(table_name) = 'ANNUAL_MAINTENANCE' and upper(column_name) = 'PROJECT_ID'",
+                    Integer.class
+            );
+            if (count != null && count == 0) {
+                jdbcTemplate.execute("alter table annual_maintenance add column project_id bigint");
+            }
+        } catch (Exception ignored) {
         }
     }
 
