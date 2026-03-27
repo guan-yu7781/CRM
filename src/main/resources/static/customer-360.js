@@ -72,7 +72,7 @@ function renderCustomer360Page() {
 
     customer360Title.textContent = `${customer.name} Customer 360`;
     customer360Subtitle.textContent = `${customer.cifNumber || "CIF pending"} • ${beautify(customer.customerType)} • Strategic Relationship View`;
-    customer360MaintenanceLink.href = `/annual-maintenance.html?customerId=${customer.id}`;
+    customer360MaintenanceLink.href = `/annual-maintenance.html?customerId=${customer.id}&source=customer360`;
     customer360Content.innerHTML = renderCustomerInsight(customer);
 }
 
@@ -83,7 +83,10 @@ function renderCustomerInsight(item) {
     const tasks = customer360State.data.tasks.filter(task => task.customerId === item.id);
     const openDeals = deals.filter(deal => deal.stage !== "WON" && deal.stage !== "LOST");
     const totalPipeline = openDeals.reduce((sum, deal) => sum + Number(deal.amount || 0), 0);
-    const totalProjectValue = projects.reduce((sum, project) => sum + Number(project.amount || 0), 0);
+    const totalProjectValue = projects.reduce(
+        (sum, project) => sum + Number(project.licenseAmount || 0) + Number(project.implementationAmount || 0),
+        0
+    );
     const nextTask = tasks
         .filter(task => task.status !== "COMPLETED" && task.status !== "CANCELLED")
         .sort((a, b) => {
@@ -112,7 +115,7 @@ function renderCustomerInsight(item) {
                 <div class="customer-core-grid">
                     ${coreMetric("Tier", item.segment || "Unassigned")}
                     ${coreMetric("Customer Score", customerScore(item))}
-                    ${coreMetric("KYC", beautify(item.kycStatus))}
+                    ${coreMetric("Lifecycle", beautify(item.status))}
                     ${coreMetric("Open Pipeline", formatMoney(totalPipeline))}
                 </div>
                 ${detailGroup("Core Details", [
@@ -155,7 +158,7 @@ function renderCustomerInsight(item) {
                 ])}
                 ${detailGroup("Alerts", alerts.map(alert => detailItem(alert.label, alert.value)))}
                 <div class="insight-actions">
-                    <a class="primary-button link-button" href="/annual-maintenance.html?customerId=${item.id}">Open Annual Maintenance</a>
+                    <a class="primary-button link-button" href="/annual-maintenance.html?customerId=${item.id}&source=customer360">Open Annual Maintenance</a>
                 </div>
             </aside>
         </div>
@@ -181,7 +184,7 @@ function renderCustomerTabContent(item, contacts, openDeals, projects, tasks) {
 
     if (customer360State.customerTab === "projects") {
         return renderCustomerCollection("Projects", projects, project =>
-            `<strong>${escapeHtml(project.projectName)}</strong><span>${escapeHtml(project.market)} • ${formatMoney(project.amount)} • ${escapeHtml(beautify(project.status))}</span>`
+            `<strong>${escapeHtml(project.projectName)}</strong><span>${escapeHtml(project.market)} • License ${formatMoney(project.licenseAmount)} • Implementation ${formatMoney(project.implementationAmount)} • ${escapeHtml(beautify(project.status))}</span>`
         );
     }
 
@@ -219,7 +222,7 @@ function renderCustomerTabContent(item, contacts, openDeals, projects, tasks) {
                 detailItem("Engagement Depth", contacts.length ? `${contacts.length} known stakeholder contact(s)` : "Stakeholder coverage still light")
             ])}
             ${detailGroup("Customer Summary", [
-                detailItem("Email", item.email || "Not captured"),
+                detailItem("CIF", item.cifNumber || "Not captured"),
                 detailItem("Notes", item.notes || "No notes recorded")
             ])}
         </section>
@@ -262,7 +265,7 @@ function narrativeGroup(title, text) {
 function buildExecutiveBrief(item, contacts, projects, openDeals, tasks) {
     const parts = [];
     parts.push(`${beautify(item.customerType)} relationship`);
-    parts.push(`${beautify(item.kycStatus)} KYC status`);
+    parts.push(`${beautify(item.status)} lifecycle`);
     parts.push(`${openDeals.length} open opportunity(ies)`);
     parts.push(`${projects.length} active project(s)`);
     if (tasks.length) {
@@ -312,9 +315,6 @@ function detailItem(label, value) {
 
 function customerScore(item) {
     let score = 55;
-    if (item.kycStatus === "VERIFIED") {
-        score += 15;
-    }
     if (item.riskLevel === "LOW") {
         score += 10;
     }
@@ -326,9 +326,6 @@ function customerScore(item) {
 
 function buildCustomerAlerts(item, openDeals, tasks) {
     const alerts = [];
-    if (item.kycStatus !== "VERIFIED") {
-        alerts.push({ label: "KYC", value: `Status ${beautify(item.kycStatus)}` });
-    }
     if (item.riskLevel === "HIGH") {
         alerts.push({ label: "Risk", value: "High risk customer" });
     }

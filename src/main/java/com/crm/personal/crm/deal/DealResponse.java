@@ -14,6 +14,8 @@ public class DealResponse {
     private String notes;
     private Long customerId;
     private String customerName;
+    private Long convertedProjectId;
+    private LocalDateTime convertedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -27,6 +29,8 @@ public class DealResponse {
         response.setNotes(deal.getNotes());
         response.setCustomerId(deal.getCustomer().getId());
         response.setCustomerName(deal.getCustomer().getName());
+        response.setConvertedProjectId(null);
+        response.setConvertedAt(null);
         response.setCreatedAt(deal.getCreatedAt());
         response.setUpdatedAt(deal.getUpdatedAt());
         return response;
@@ -42,6 +46,8 @@ public class DealResponse {
         response.setNotes(deal.getNotes());
         response.setCustomerId(deal.getCustomerId());
         response.setCustomerName(deal.getCustomerName());
+        response.setConvertedProjectId(deal.getConvertedProjectId());
+        response.setConvertedAt(deal.getConvertedAt());
         response.setCreatedAt(deal.getCreatedAt());
         response.setUpdatedAt(deal.getUpdatedAt());
         return response;
@@ -109,6 +115,22 @@ public class DealResponse {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public Long getConvertedProjectId() {
+        return convertedProjectId;
+    }
+
+    public void setConvertedProjectId(Long convertedProjectId) {
+        this.convertedProjectId = convertedProjectId;
+    }
+
+    public LocalDateTime getConvertedAt() {
+        return convertedAt;
+    }
+
+    public void setConvertedAt(LocalDateTime convertedAt) {
+        this.convertedAt = convertedAt;
     }
 
     public LocalDateTime getCreatedAt() {

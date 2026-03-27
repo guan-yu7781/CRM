@@ -34,10 +34,6 @@ public class CustomerDataRepairRunner implements ApplicationRunner {
                 CustomerStatus.LEAD.name()
         );
         jdbcTemplate.update(
-                "update customers set kyc_status = ? where kyc_status is null or trim(kyc_status) = ''",
-                KycStatus.PENDING.name()
-        );
-        jdbcTemplate.update(
                 "update customers set risk_level = ? where risk_level is null or trim(risk_level) = ''",
                 RiskLevel.LOW.name()
         );

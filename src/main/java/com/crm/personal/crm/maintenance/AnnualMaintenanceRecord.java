@@ -15,6 +15,7 @@ public class AnnualMaintenanceRecord {
     private LocalDate startDate;
     private LocalDate endDate;
     private PaymentStatus paymentStatus;
+    private RenewStatus renewStatus;
     private Long customerId;
     private String customerName;
     private LocalDateTime createdAt;
@@ -90,6 +91,14 @@ public class AnnualMaintenanceRecord {
 
     public void setPaymentStatus(PaymentStatus paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public RenewStatus getRenewStatus() {
+        return renewStatus;
+    }
+
+    public void setRenewStatus(RenewStatus renewStatus) {
+        this.renewStatus = renewStatus;
     }
 
     public Long getCustomerId() {

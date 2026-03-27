@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import javax.validation.Valid;
 import java.util.List;
 
+import com.crm.personal.crm.project.ProjectResponse;
+
 @RestController
 @RequestMapping("/api/deals")
 public class DealController {
@@ -47,6 +49,12 @@ public class DealController {
     @PutMapping("/{id}")
     public DealResponse updateDeal(@PathVariable Long id, @Valid @RequestBody DealRequest request) {
         return dealService.updateDeal(id, request);
+    }
+
+    @PostMapping("/{id}/convert-to-project")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ProjectResponse convertToProject(@PathVariable Long id, @Valid @RequestBody DealConversionRequest request) {
+        return dealService.convertWonDealToProject(id, request);
     }
 
     @DeleteMapping("/{id}")

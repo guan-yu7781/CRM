@@ -16,20 +16,22 @@ import java.util.List;
 public interface DealMapper {
 
     @Select("select d.id, d.title, d.amount, d.stage, d.expected_close_date, d.notes, d.customer_id, " +
-            "c.name as customer_name, d.created_at, d.updated_at " +
+            "c.name as customer_name, d.converted_project_id, d.converted_at, d.created_at, d.updated_at " +
             "from deals d join customers c on c.id = d.customer_id " +
             "order by d.updated_at desc, d.id desc")
     @Results(id = "dealRecordMap", value = {
             @Result(property = "expectedCloseDate", column = "expected_close_date"),
             @Result(property = "customerId", column = "customer_id"),
             @Result(property = "customerName", column = "customer_name"),
+            @Result(property = "convertedProjectId", column = "converted_project_id"),
+            @Result(property = "convertedAt", column = "converted_at"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at")
     })
     List<DealRecord> findAll();
 
     @Select("select d.id, d.title, d.amount, d.stage, d.expected_close_date, d.notes, d.customer_id, " +
-            "c.name as customer_name, d.created_at, d.updated_at " +
+            "c.name as customer_name, d.converted_project_id, d.converted_at, d.created_at, d.updated_at " +
             "from deals d join customers c on c.id = d.customer_id " +
             "where d.customer_id = #{customerId} " +
             "order by d.updated_at desc, d.id desc")
@@ -37,16 +39,19 @@ public interface DealMapper {
     List<DealRecord> findByCustomerId(Long customerId);
 
     @Select("select d.id, d.title, d.amount, d.stage, d.expected_close_date, d.notes, d.customer_id, " +
-            "c.name as customer_name, d.created_at, d.updated_at " +
+            "c.name as customer_name, d.converted_project_id, d.converted_at, d.created_at, d.updated_at " +
             "from deals d join customers c on c.id = d.customer_id " +
             "where d.id = #{id}")
     @org.apache.ibatis.annotations.ResultMap("dealRecordMap")
     DealRecord findById(Long id);
 
+    @Select("select count(1) from deals where converted_project_id = #{projectId}")
+    int countByConvertedProjectId(@Param("projectId") Long projectId);
+
     @Insert("insert into deals " +
-            "(title, amount, stage, expected_close_date, notes, customer_id, created_at, updated_at) " +
+            "(title, amount, stage, expected_close_date, notes, customer_id, converted_project_id, converted_at, created_at, updated_at) " +
             "values " +
-            "(#{title}, #{amount}, #{stage}, #{expectedCloseDate}, #{notes}, #{customerId}, #{createdAt}, #{updatedAt})")
+            "(#{title}, #{amount}, #{stage}, #{expectedCloseDate}, #{notes}, #{customerId}, #{convertedProjectId}, #{convertedAt}, #{createdAt}, #{updatedAt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(DealRecord record);
 
@@ -60,6 +65,16 @@ public interface DealMapper {
             "updated_at = #{updatedAt} " +
             "where id = #{id}")
     int update(DealRecord record);
+
+    @Update("update deals set " +
+            "converted_project_id = #{projectId}, " +
+            "converted_at = #{convertedAt}, " +
+            "updated_at = #{updatedAt} " +
+            "where id = #{dealId}")
+    int updateConversion(@Param("dealId") Long dealId,
+                         @Param("projectId") Long projectId,
+                         @Param("convertedAt") java.time.LocalDateTime convertedAt,
+                         @Param("updatedAt") java.time.LocalDateTime updatedAt);
 
     @Delete("delete from deals where id = #{id}")
     int deleteById(@Param("id") Long id);

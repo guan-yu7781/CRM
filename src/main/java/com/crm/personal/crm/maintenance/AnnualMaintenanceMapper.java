@@ -15,6 +15,13 @@ import java.util.List;
 @Mapper
 public interface AnnualMaintenanceMapper {
 
+    String NORMALIZED_RENEW_STATUS =
+            "case " +
+                    "when am.renew_status is null or trim(am.renew_status) = '' then 'NOT_RENEWED' " +
+                    "when upper(replace(replace(trim(am.renew_status), '-', '_'), ' ', '_')) in ('RENEWED', 'RENEW') then 'RENEWED' " +
+                    "when upper(replace(replace(trim(am.renew_status), '-', '_'), ' ', '_')) in ('NOT_RENEWED', 'NOTRENEWED', 'NOT_RENEW') then 'NOT_RENEWED' " +
+                    "else 'NOT_RENEWED' end as renew_status";
+
     @Select("select " +
             "am.id, " +
             "am.project_id, " +
@@ -25,6 +32,7 @@ public interface AnnualMaintenanceMapper {
             "am.start_date, " +
             "am.end_date, " +
             "am.payment_status, " +
+            NORMALIZED_RENEW_STATUS + ", " +
             "am.customer_id, " +
             "c.name as customer_name, " +
             "am.created_at, " +
@@ -41,6 +49,7 @@ public interface AnnualMaintenanceMapper {
             @Result(property = "startDate", column = "start_date"),
             @Result(property = "endDate", column = "end_date"),
             @Result(property = "paymentStatus", column = "payment_status"),
+            @Result(property = "renewStatus", column = "renew_status"),
             @Result(property = "customerId", column = "customer_id"),
             @Result(property = "customerName", column = "customer_name"),
             @Result(property = "createdAt", column = "created_at"),
@@ -58,6 +67,7 @@ public interface AnnualMaintenanceMapper {
             "am.start_date, " +
             "am.end_date, " +
             "am.payment_status, " +
+            NORMALIZED_RENEW_STATUS + ", " +
             "am.customer_id, " +
             "c.name as customer_name, " +
             "am.created_at, " +
@@ -88,6 +98,7 @@ public interface AnnualMaintenanceMapper {
             "am.start_date, " +
             "am.end_date, " +
             "am.payment_status, " +
+            NORMALIZED_RENEW_STATUS + ", " +
             "am.customer_id, " +
             "c.name as customer_name, " +
             "am.created_at, " +
@@ -103,10 +114,21 @@ public interface AnnualMaintenanceMapper {
                                                                            @Param("projectId") Long projectId,
                                                                            @Param("maintenanceYear") Integer maintenanceYear);
 
+    @Select("select count(1) " +
+            "from annual_maintenance " +
+            "where customer_id = #{customerId} " +
+            "and project_id = #{projectId} " +
+            "and maintenance_year = #{maintenanceYear} " +
+            "and id <> #{excludedId}")
+    int countConflictsExcludingId(@Param("customerId") Long customerId,
+                                  @Param("projectId") Long projectId,
+                                  @Param("maintenanceYear") Integer maintenanceYear,
+                                  @Param("excludedId") Long excludedId);
+
     @Insert("insert into annual_maintenance " +
-            "(project_id, project_name, market, maintenance_year, amount, start_date, end_date, payment_status, customer_id, created_at, updated_at) " +
+            "(project_id, project_name, market, maintenance_year, amount, start_date, end_date, payment_status, renew_status, customer_id, created_at, updated_at) " +
             "values " +
-            "(#{projectId}, #{projectName}, #{market}, #{maintenanceYear}, #{amount}, #{startDate}, #{endDate}, #{paymentStatus}, #{customerId}, #{createdAt}, #{updatedAt})")
+            "(#{projectId}, #{projectName}, #{market}, #{maintenanceYear}, #{amount}, #{startDate}, #{endDate}, #{paymentStatus}, #{renewStatus}, #{customerId}, #{createdAt}, #{updatedAt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(AnnualMaintenanceRecord record);
 
@@ -119,6 +141,7 @@ public interface AnnualMaintenanceMapper {
             "start_date = #{startDate}, " +
             "end_date = #{endDate}, " +
             "payment_status = #{paymentStatus}, " +
+            "renew_status = #{renewStatus}, " +
             "customer_id = #{customerId}, " +
             "updated_at = #{updatedAt} " +
             "where id = #{id}")

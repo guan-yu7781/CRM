@@ -8,10 +8,8 @@ public class CustomerResponse {
     private String name;
     private CustomerType customerType;
     private String cifNumber;
-    private String email;
     private CustomerSegment segment;
     private CustomerStatus status;
-    private KycStatus kycStatus;
     private RiskLevel riskLevel;
     private String notes;
     private LocalDateTime createdAt;
@@ -23,10 +21,8 @@ public class CustomerResponse {
         response.setName(customer.getName());
         response.setCustomerType(customer.getCustomerType());
         response.setCifNumber(customer.getCifNumber());
-        response.setEmail(customer.getEmail());
         response.setSegment(customer.getSegment());
         response.setStatus(customer.getStatus());
-        response.setKycStatus(customer.getKycStatus());
         response.setRiskLevel(customer.getRiskLevel());
         response.setNotes(customer.getNotes());
         response.setCreatedAt(customer.getCreatedAt());
@@ -40,10 +36,8 @@ public class CustomerResponse {
         response.setName(customer.getName());
         response.setCustomerType(customer.getCustomerType());
         response.setCifNumber(customer.getCifNumber());
-        response.setEmail(customer.getEmail());
         response.setSegment(customer.getSegment());
         response.setStatus(customer.getStatus());
-        response.setKycStatus(customer.getKycStatus());
         response.setRiskLevel(customer.getRiskLevel());
         response.setNotes(customer.getNotes());
         response.setCreatedAt(customer.getCreatedAt());
@@ -83,14 +77,6 @@ public class CustomerResponse {
         this.cifNumber = cifNumber;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public CustomerSegment getSegment() {
         return segment;
     }
@@ -105,14 +91,6 @@ public class CustomerResponse {
 
     public void setStatus(CustomerStatus status) {
         this.status = status;
-    }
-
-    public KycStatus getKycStatus() {
-        return kycStatus;
-    }
-
-    public void setKycStatus(KycStatus kycStatus) {
-        this.kycStatus = kycStatus;
     }
 
     public RiskLevel getRiskLevel() {

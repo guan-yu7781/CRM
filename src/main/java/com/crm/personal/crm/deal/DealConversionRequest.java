@@ -1,11 +1,11 @@
-package com.crm.personal.crm.project;
+package com.crm.personal.crm.deal;
 
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import java.math.BigDecimal;
 
-public class ProjectRequest {
+public class DealConversionRequest {
 
     @NotBlank(message = "Project name is required")
     private String projectName;
@@ -24,11 +24,6 @@ public class ProjectRequest {
     @NotNull(message = "Tax rate is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "Tax rate must be zero or greater")
     private BigDecimal taxRate;
-
-    private ProjectStatus status = ProjectStatus.UNSIGNED_CONTRACT;
-
-    @NotNull(message = "Customer id is required")
-    private Long customerId;
 
     public String getProjectName() {
         return projectName;
@@ -68,21 +63,5 @@ public class ProjectRequest {
 
     public void setTaxRate(BigDecimal taxRate) {
         this.taxRate = taxRate;
-    }
-
-    public ProjectStatus getStatus() {
-        return status;
-    }
-
-    public void setStatus(ProjectStatus status) {
-        this.status = status;
-    }
-
-    public Long getCustomerId() {
-        return customerId;
-    }
-
-    public void setCustomerId(Long customerId) {
-        this.customerId = customerId;
     }
 }

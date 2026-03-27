@@ -8,9 +8,11 @@ public class ProjectRecord {
     private Long id;
     private String projectName;
     private String market;
-    private BigDecimal amount;
+    private BigDecimal licenseAmount;
+    private BigDecimal implementationAmount;
     private BigDecimal taxRate;
     private ProjectStatus status;
+    private Long sourceDealId;
     private Long customerId;
     private String customerName;
     private LocalDateTime createdAt;
@@ -40,12 +42,20 @@ public class ProjectRecord {
         this.market = market;
     }
 
-    public BigDecimal getAmount() {
-        return amount;
+    public BigDecimal getLicenseAmount() {
+        return licenseAmount;
     }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+    public void setLicenseAmount(BigDecimal licenseAmount) {
+        this.licenseAmount = licenseAmount;
+    }
+
+    public BigDecimal getImplementationAmount() {
+        return implementationAmount;
+    }
+
+    public void setImplementationAmount(BigDecimal implementationAmount) {
+        this.implementationAmount = implementationAmount;
     }
 
     public BigDecimal getTaxRate() {
@@ -62,6 +72,14 @@ public class ProjectRecord {
 
     public void setStatus(ProjectStatus status) {
         this.status = status;
+    }
+
+    public Long getSourceDealId() {
+        return sourceDealId;
+    }
+
+    public void setSourceDealId(Long sourceDealId) {
+        this.sourceDealId = sourceDealId;
     }
 
     public Long getCustomerId() {

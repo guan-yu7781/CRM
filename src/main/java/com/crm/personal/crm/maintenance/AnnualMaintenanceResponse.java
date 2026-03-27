@@ -15,6 +15,7 @@ public class AnnualMaintenanceResponse {
     private LocalDate startDate;
     private LocalDate endDate;
     private PaymentStatus paymentStatus;
+    private RenewStatus renewStatus;
     private Long customerId;
     private String customerName;
     private boolean expired;
@@ -33,6 +34,7 @@ public class AnnualMaintenanceResponse {
         response.setStartDate(maintenance.getStartDate());
         response.setEndDate(maintenance.getEndDate());
         response.setPaymentStatus(maintenance.getPaymentStatus());
+        response.setRenewStatus(maintenance.getRenewStatus());
         response.setCustomerId(maintenance.getCustomerId());
         response.setCustomerName(maintenance.getCustomerName());
         boolean expired = maintenance.getEndDate().isBefore(LocalDate.now());
@@ -113,6 +115,14 @@ public class AnnualMaintenanceResponse {
 
     public void setPaymentStatus(PaymentStatus paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public RenewStatus getRenewStatus() {
+        return renewStatus;
+    }
+
+    public void setRenewStatus(RenewStatus renewStatus) {
+        this.renewStatus = renewStatus;
     }
 
     public Long getCustomerId() {

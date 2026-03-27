@@ -1,8 +1,29 @@
+const AFRICA_MARKETS = [
+    "Algeria", "Angola", "Benin", "Botswana", "Burkina Faso", "Burundi", "Cabo Verde",
+    "Cameroon", "Central African Republic", "Chad", "Comoros", "Congo", "Cote d'Ivoire",
+    "Democratic Republic of the Congo", "Djibouti", "Egypt", "Equatorial Guinea", "Eritrea",
+    "Eswatini", "Ethiopia", "Gabon", "Gambia", "Ghana", "Guinea", "Guinea-Bissau", "Kenya",
+    "Lesotho", "Liberia", "Libya", "Madagascar", "Malawi", "Mali", "Mauritania", "Mauritius",
+    "Morocco", "Mozambique", "Namibia", "Niger", "Nigeria", "Rwanda", "Sao Tome and Principe",
+    "Senegal", "Seychelles", "Sierra Leone", "Somalia", "South Africa", "South Sudan", "Sudan",
+    "Tanzania", "Togo", "Tunisia", "Uganda", "Zambia", "Zimbabwe"
+];
+const ASIA_MARKETS = [
+    "Afghanistan", "Armenia", "Azerbaijan", "Bahrain", "Bangladesh", "Bhutan", "Brunei Darussalam",
+    "Cambodia", "China", "Cyprus", "Georgia", "India", "Indonesia", "Iran", "Iraq", "Israel",
+    "Japan", "Jordan", "Kazakhstan", "Kuwait", "Kyrgyzstan", "Lao People's Democratic Republic",
+    "Lebanon", "Malaysia", "Maldives", "Mongolia", "Myanmar", "Nepal", "Democratic People's Republic of Korea",
+    "Oman", "Pakistan", "Philippines", "Qatar", "Republic of Korea", "Saudi Arabia", "Singapore",
+    "Sri Lanka", "State of Palestine", "Syrian Arab Republic", "Tajikistan", "Thailand", "Timor-Leste",
+    "Turkiye", "Turkmenistan", "United Arab Emirates", "Uzbekistan", "Viet Nam", "Yemen"
+];
+const MARKET_OPTIONS = [...AFRICA_MARKETS, ...ASIA_MARKETS].sort((a, b) => a.localeCompare(b));
+
 const entityConfig = {
     customers: {
         label: "Customer Management",
         title: "Banking Customer Management",
-        description: "Manage customer master data, KYC, risk, ownership, and open a dedicated Customer 360 workspace when needed.",
+        description: "Manage customer master data, risk, ownership, and open a dedicated Customer 360 workspace when needed.",
         singular: "Customer",
         path: "/api/customers",
         fields: [
@@ -15,16 +36,14 @@ const entityConfig = {
                 option("SACCO", "SACCO")
             ]),
             field("cifNumber", "CIF Number", "text", true),
-            field("email", "Email", "email", true),
             field("segment", "Segment", "select", false, ["RETAIL", "SME", "CORPORATE", "WEALTH"]),
             field("status", "Lifecycle Status", "select", false, ["LEAD", "ACTIVE", "INACTIVE"]),
-            field("kycStatus", "KYC Status", "select", false, ["PENDING", "IN_REVIEW", "VERIFIED", "EXPIRED", "REJECTED"]),
             field("riskLevel", "Risk Level", "select", false, ["LOW", "MEDIUM", "HIGH"]),
             field("notes", "Relationship Notes", "textarea", false, null, true)
         ],
         getTitle: item => item.name,
         getDescription: item => `${item.cifNumber} • ${beautify(item.segment)}`,
-        getMeta: item => [item.customerType, item.kycStatus, item.riskLevel]
+        getMeta: item => [item.customerType, item.status, item.riskLevel]
     },
     contacts: {
         label: "Contacts",
@@ -48,20 +67,21 @@ const entityConfig = {
     projects: {
         label: "Projects",
         title: "Customer Project Management",
-        description: "Manage customer projects by market, commercial value, tax rate, and delivery status.",
+        description: "Manage customer projects by market, license value, implementation value, tax rate, and contract status.",
         singular: "Project",
         path: "/api/projects",
         fields: [
             field("projectName", "Project Name", "text", true),
-            field("market", "Market", "text", true),
-            field("amount", "Amount", "number", true),
+            field("market", "Market", "market-search", true),
+            field("licenseAmount", "License Amount", "number", true),
+            field("implementationAmount", "Implementation Amount", "number", true),
             field("taxRate", "Tax Rate", "number", true),
-            field("status", "Status", "select", false, ["LIVE", "IN_PROGRESS"]),
+            field("status", "Contract Status", "select", false, ["SIGNED_CONTRACT", "UNSIGNED_CONTRACT"]),
             relationField("customerId", "Customer", "customers", true)
         ],
         getTitle: item => item.projectName,
-        getDescription: item => `${item.customerName} • ${item.market} • ${formatMoney(item.amount)}`,
-        getMeta: item => [item.status, `${Number(item.taxRate || 0)}%`]
+        getDescription: item => `${item.customerName} • ${item.market} • License ${formatMoney(item.licenseAmount)}`,
+        getMeta: item => [item.status, `Impl ${formatMoney(item.implementationAmount)}`, `${Number(item.taxRate || 0)}%`]
     },
     deals: {
         label: "Opportunities",
@@ -121,6 +141,8 @@ const entityConfig = {
     }
 };
 
+const initialQuery = new URLSearchParams(window.location.search);
+
 const state = {
     token: localStorage.getItem("crmToken") || "",
     username: localStorage.getItem("crmUsername") || "",
@@ -157,6 +179,10 @@ const contactInsightTitle = document.getElementById("contact-insight-title");
 const projectInsightModal = document.getElementById("project-insight-modal");
 const projectInsightBody = document.getElementById("project-insight-body");
 const projectInsightTitle = document.getElementById("project-insight-title");
+const dealConversionModal = document.getElementById("deal-conversion-modal");
+const dealConversionForm = document.getElementById("deal-conversion-form");
+const dealConversionTitle = document.getElementById("deal-conversion-title");
+const globalMarketOptions = document.getElementById("global-market-options");
 const recordsList = document.getElementById("records-list");
 const projectFilters = document.getElementById("project-filters");
 const workspaceGrid = document.getElementById("workspace-grid");
@@ -182,6 +208,8 @@ document.getElementById("close-contact-insight-button").addEventListener("click"
 document.querySelector("[data-contact-close='true']").addEventListener("click", closeContactInsightModal);
 document.getElementById("close-project-insight-button").addEventListener("click", closeProjectInsightModal);
 document.querySelector("[data-project-close='true']").addEventListener("click", closeProjectInsightModal);
+document.getElementById("close-deal-conversion-button").addEventListener("click", closeDealConversionModal);
+document.querySelector("[data-deal-conversion-close='true']").addEventListener("click", closeDealConversionModal);
 document.querySelectorAll(".menu-item").forEach(button => {
     button.addEventListener("click", () => switchView(button.dataset.view));
 });
@@ -190,7 +218,12 @@ recordsList.addEventListener("click", handleRecordListClick);
 bootstrap();
 
 function bootstrap() {
+    renderGlobalMarketOptions();
     if (state.token) {
+        const requestedView = initialQuery.get("view");
+        if (requestedView && entityConfig[requestedView]) {
+            state.currentView = requestedView;
+        }
         showApp();
         syncSidebar();
         refreshAll();
@@ -315,7 +348,7 @@ function renderCurrentView() {
     panelTitle.textContent = state.currentView === "customers" ? "Customers" : "Records";
     panelSubtitleText.textContent = `${items.length} items in the current module`;
     searchInput.placeholder = state.currentView === "customers"
-        ? "Search customer name, CIF, or email"
+        ? "Search customer name or CIF"
         : state.currentView === "contacts"
             ? "Search customer, contact name, email, or role"
             : state.currentView === "projects"
@@ -382,11 +415,28 @@ function renderRecord(view, item, selected) {
                 <div class="record-meta">${meta}</div>
                 <p>${escapeHtml(config.getDescription(item))}</p>
             </div>
-            <div class="record-actions">
-                <button class="ghost-button" type="button" data-edit-id="${item.id}">Edit</button>
-                <button class="danger-button" type="button" data-delete-id="${item.id}">Delete</button>
-            </div>
+            <div class="record-actions">${renderRecordActions(view, item)}</div>
         </article>
+    `;
+}
+
+function renderRecordActions(view, item) {
+    if (view === "deals") {
+        const conversionAction = item.stage === "WON"
+            ? item.convertedProjectId
+                ? `<button class="ghost-button" type="button" data-open-project-id="${item.convertedProjectId}">Open Project</button>`
+                : `<button class="ghost-button" type="button" data-convert-deal-id="${item.id}">Convert to Project</button>`
+            : "";
+        return `
+            ${conversionAction}
+            <button class="ghost-button" type="button" data-edit-id="${item.id}">Edit</button>
+            <button class="danger-button" type="button" data-delete-id="${item.id}">Delete</button>
+        `;
+    }
+
+    return `
+        <button class="ghost-button" type="button" data-edit-id="${item.id}">Edit</button>
+        <button class="danger-button" type="button" data-delete-id="${item.id}">Delete</button>
     `;
 }
 
@@ -426,7 +476,7 @@ function renderCustomerFinder(items, selected) {
             ` : `
                 <div class="customer-finder-hint">
                     <span class="eyebrow">Keyword Search</span>
-                    <p>Search by customer name, CIF, or email to open Customer 360.</p>
+                    <p>Search by customer name or CIF to open Customer 360.</p>
                 </div>
             `}
             ${hasSearch ? `
@@ -447,7 +497,7 @@ function renderCustomerManagementList(items, selected) {
     return items.map(item => {
         const meta = [
             item.customerType,
-            item.kycStatus,
+            item.status,
             item.riskLevel
         ].filter(Boolean).map(value => `<span class="meta-pill">${escapeHtml(beautify(String(value)))}</span>`).join("");
 
@@ -459,7 +509,7 @@ function renderCustomerManagementList(items, selected) {
                         <span class="record-chevron">${escapeHtml(item.cifNumber || "CIF pending")}</span>
                     </div>
                     <div class="record-meta">${meta}</div>
-                    <p>${escapeHtml(item.email || "Email not captured")} • ${escapeHtml(beautify(item.segment || "unassigned"))} • ${escapeHtml(beautify(item.status || "lead"))}</p>
+                    <p>${escapeHtml(beautify(item.segment || "unassigned"))} • ${escapeHtml(beautify(item.status || "lead"))} • ${escapeHtml(beautify(item.customerType || "commercial_bank"))}</p>
                 </div>
                 <div class="record-actions">
                     <a class="ghost-button link-button" href="/customer-360.html?customerId=${item.id}">Open 360</a>
@@ -480,7 +530,7 @@ function groupContactsByCustomer(items) {
             groups.set(key, {
                 customerId: item.customerId || null,
                 customerName: item.customerName || "Unassigned Customer",
-                customerEmail: resolveCustomerEmail(item.customerId),
+                customerSummary: resolveCustomerSummary(item.customerId),
                 contacts: []
             });
         }
@@ -509,7 +559,7 @@ function renderContactCustomerGroups(groups, selected) {
                     <div class="customer-contact-identity">
                         <span class="eyebrow">Customer Directory</span>
                         <h3>${escapeHtml(group.customerName)}</h3>
-                        <p>${escapeHtml(group.customerEmail || "Customer email not captured")} • ${group.contacts.length} linked contact(s)</p>
+                        <p>${escapeHtml(group.customerSummary || "Customer profile pending")} • ${group.contacts.length} linked contact(s)</p>
                     </div>
                     <div class="customer-contact-summary">
                         <div class="customer-contact-stat">
@@ -580,7 +630,6 @@ function renderContactDirectoryRow(item, selected) {
             <td data-label="Customer">${escapeHtml(item.customerName || "Unassigned")}</td>
             <td data-label="Actions">
                 <div class="contact-table-actions">
-                    <button class="ghost-button" type="button" data-contact-insight-id="${item.id}">Insight Details</button>
                     <button class="ghost-button" type="button" data-edit-id="${item.id}">Edit</button>
                     <button class="danger-button" type="button" data-delete-id="${item.id}">Delete</button>
                 </div>
@@ -589,12 +638,17 @@ function renderContactDirectoryRow(item, selected) {
     `;
 }
 
-function resolveCustomerEmail(customerId) {
+function resolveCustomerSummary(customerId) {
     if (!customerId) {
         return "";
     }
     const customer = state.data.customers.find(item => item.id === customerId);
-    return customer ? customer.email || "" : "";
+    if (!customer) {
+        return "";
+    }
+    return [customer.cifNumber || "CIF pending", beautify(customer.status || "lead")]
+        .filter(Boolean)
+        .join(" • ");
 }
 
 function handleRecordListClick(event) {
@@ -613,6 +667,26 @@ function handleRecordListClick(event) {
     const editButton = event.target.closest("[data-edit-id]");
     if (editButton) {
         openModal(Number(editButton.dataset.editId));
+        return;
+    }
+
+    const convertDealButton = event.target.closest("[data-convert-deal-id]");
+    if (convertDealButton) {
+        openDealConversionModal(Number(convertDealButton.dataset.convertDealId));
+        return;
+    }
+
+    const openProjectButton = event.target.closest("[data-open-project-id]");
+    if (openProjectButton) {
+        state.currentView = "projects";
+        state.selectedId = Number(openProjectButton.dataset.openProjectId);
+        closeProjectInsightModal();
+        closeContactInsightModal();
+        document.querySelectorAll(".menu-item").forEach(button => {
+            button.classList.toggle("active", button.dataset.view === "projects");
+        });
+        updateHeader();
+        renderCurrentView();
         return;
     }
 
@@ -673,6 +747,110 @@ function closeProjectInsightModal() {
     projectInsightModal.setAttribute("aria-hidden", "true");
 }
 
+function openDealConversionModal(dealId) {
+    const deal = (state.data.deals || []).find(item => item.id === dealId);
+    if (!deal) {
+        return;
+    }
+    if (deal.stage !== "WON") {
+        appMessage.textContent = "Only won opportunities can be converted into a project.";
+        return;
+    }
+    if (deal.convertedProjectId) {
+        appMessage.textContent = "This opportunity has already been converted into a project.";
+        return;
+    }
+
+    dealConversionTitle.textContent = `Convert ${deal.title} to Project`;
+    dealConversionForm.innerHTML = buildDealConversionForm(deal);
+    dealConversionForm.onsubmit = submitDealConversionForm;
+    dealConversionModal.dataset.dealId = String(deal.id);
+    dealConversionModal.classList.remove("hidden");
+    dealConversionModal.setAttribute("aria-hidden", "false");
+}
+
+function closeDealConversionModal() {
+    dealConversionModal.classList.add("hidden");
+    dealConversionModal.setAttribute("aria-hidden", "true");
+    dealConversionModal.dataset.dealId = "";
+}
+
+function buildDealConversionForm(deal) {
+    return `
+        <div class="field full">
+            <span>Opportunity</span>
+            <input value="${escapeHtml(deal.title)}" type="text" disabled>
+        </div>
+        <label class="field">
+            <span>Project Name</span>
+            <input name="projectName" type="text" value="${escapeHtml(deal.title)}" required>
+        </label>
+        <label class="field">
+            <span>Market</span>
+            <input name="market" type="text" list="global-market-options" placeholder="Search Africa or Asia market" required>
+        </label>
+        <label class="field">
+            <span>License Amount</span>
+            <input name="licenseAmount" type="number" min="0" step="0.01" value="${escapeHtml(String(Number(deal.amount || 0)))}" required>
+        </label>
+        <label class="field">
+            <span>Implementation Amount</span>
+            <input name="implementationAmount" type="number" min="0" step="0.01" value="0" required>
+        </label>
+        <label class="field">
+            <span>Tax Rate</span>
+            <input name="taxRate" type="number" min="0" step="0.01" value="0" required>
+        </label>
+        <div class="field full">
+            <span>Conversion Rule</span>
+            <input value="Won opportunities convert into signed projects." type="text" disabled>
+        </div>
+        <div class="form-footer">
+            <button class="ghost-button" type="button" id="cancel-deal-conversion-button">Cancel</button>
+            <button class="primary-button" type="submit">Create Project</button>
+        </div>
+    `;
+}
+
+async function submitDealConversionForm(event) {
+    event.preventDefault();
+    const dealId = Number(dealConversionModal.dataset.dealId);
+    if (!dealId) {
+        return;
+    }
+
+    const payload = {
+        projectName: event.target.projectName.value,
+        market: event.target.market.value,
+        licenseAmount: Number(event.target.licenseAmount.value),
+        implementationAmount: Number(event.target.implementationAmount.value),
+        taxRate: Number(event.target.taxRate.value)
+    };
+
+    try {
+        const project = await api(`/api/deals/${dealId}/convert-to-project`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "Authorization": `Bearer ${state.token}`
+            },
+            body: JSON.stringify(payload)
+        });
+        closeDealConversionModal();
+        state.currentView = "projects";
+        state.selectedId = project.id;
+        document.querySelectorAll(".menu-item").forEach(button => {
+            button.classList.toggle("active", button.dataset.view === "projects");
+        });
+        updateHeader();
+        await refreshAll();
+        openProjectInsightModal(project.id);
+        appMessage.textContent = "Opportunity converted into project successfully.";
+    } catch (error) {
+        handleAppError(error);
+    }
+}
+
 function renderSummaryCards(view) {
     const summary = buildSummary(view);
     summary.forEach((card, index) => {
@@ -685,12 +863,12 @@ function renderSummaryCards(view) {
 function buildSummary(view) {
     if (view === "customers") {
         const customers = state.data.customers;
-        const verified = customers.filter(item => item.kycStatus === "VERIFIED").length;
+        const corporate = customers.filter(item => item.segment === "CORPORATE").length;
         const highRisk = customers.filter(item => item.riskLevel === "HIGH").length;
         const active = customers.filter(item => item.status === "ACTIVE").length;
         return [
             { label: "Customers", value: String(customers.length), note: "Total customer master records" },
-            { label: "KYC Verified", value: String(verified), note: "Customers ready for servicing" },
+            { label: "Corporate", value: String(corporate), note: "Customers in the corporate segment" },
             { label: "High Risk", value: String(highRisk), note: "Customers requiring monitoring" },
             { label: "Active", value: String(active), note: "Live customer relationships" }
         ];
@@ -726,14 +904,16 @@ function buildSummary(view) {
 
     if (view === "projects") {
         const projects = state.data.projects;
-        const live = projects.filter(item => item.status === "LIVE").length;
-        const inProgress = projects.filter(item => item.status === "IN_PROGRESS").length;
-        const totalValue = projects.reduce((sum, item) => sum + Number(item.amount || 0), 0);
+        const signed = projects.filter(item => item.status === "SIGNED_CONTRACT").length;
+        const unsigned = projects.filter(item => item.status === "UNSIGNED_CONTRACT").length;
+        const totalLicense = projects.reduce((sum, item) => sum + Number(item.licenseAmount || 0), 0);
+        const totalImplementation = projects.reduce((sum, item) => sum + Number(item.implementationAmount || 0), 0);
         return [
             { label: "Projects", value: String(projects.length), note: "Total managed customer projects" },
-            { label: "Live", value: String(live), note: "Projects currently in production" },
-            { label: "In Progress", value: String(inProgress), note: "Projects still being delivered" },
-            { label: "Total Value", value: formatMoney(totalValue), note: "Combined project contract value" }
+            { label: "Signed", value: String(signed), note: "Projects with signed contract" },
+            { label: "Unsigned", value: String(unsigned), note: "Projects pending contract signature" },
+            { label: "License Value", value: formatMoney(totalLicense), note: "Combined license amount" },
+            { label: "Implementation Value", value: formatMoney(totalImplementation), note: "Combined implementation amount" }
         ];
     }
 
@@ -841,7 +1021,7 @@ function renderCustomerInsight(item) {
                 <div class="customer-core-grid">
                     ${coreMetric("Tier", item.segment || "Unassigned")}
                     ${coreMetric("Customer Score", customerScore(item))}
-                    ${coreMetric("KYC", beautify(item.kycStatus))}
+                    ${coreMetric("Lifecycle", beautify(item.status))}
                 </div>
                 ${detailGroup("Core Details", [
                     detailItem("Risk", beautify(item.riskLevel)),
@@ -877,7 +1057,7 @@ function renderCustomerInsight(item) {
                 ])}
                 ${detailGroup("Alerts", alerts.map(alert => detailItem(alert.label, alert.value)))}
                 <div class="insight-actions">
-                    <a class="primary-button link-button" href="/annual-maintenance.html?customerId=${item.id}">Open Annual Maintenance</a>
+                    <a class="primary-button link-button" href="/annual-maintenance.html?customerId=${item.id}&source=customers">Open Annual Maintenance</a>
                 </div>
             </aside>
         </div>
@@ -898,13 +1078,13 @@ function renderCustomerManagementInsight(item) {
         </div>
         <div class="insight-grid">
             ${insightMetric("Tier", beautify(item.segment || "Unassigned"))}
-            ${insightMetric("KYC", beautify(item.kycStatus))}
+            ${insightMetric("Lifecycle", beautify(item.status))}
             ${insightMetric("Risk", beautify(item.riskLevel))}
         </div>
         ${detailGroup("Relationship Summary", [
             detailItem("Lifecycle", beautify(item.status)),
             detailItem("Customer Type", beautify(item.customerType)),
-            detailItem("Email", item.email || "Not captured")
+            detailItem("CIF", item.cifNumber || "Not captured")
         ])}
         ${detailGroup("Coverage", [
             detailItem("Contacts", String(contacts)),
@@ -914,7 +1094,7 @@ function renderCustomerManagementInsight(item) {
         ])}
         <div class="insight-actions">
             <a class="primary-button link-button" href="/customer-360.html?customerId=${item.id}">Open 360</a>
-            <a class="ghost-button link-button" href="/annual-maintenance.html?customerId=${item.id}">Annual Maintenance</a>
+            <a class="ghost-button link-button" href="/annual-maintenance.html?customerId=${item.id}&source=customers">Annual Maintenance</a>
         </div>
     `;
 }
@@ -938,7 +1118,7 @@ function renderCustomerTabContent(item, contacts, openDeals, projects, activitie
 
     if (state.customerTab === "projects") {
         return renderCustomerCollection("Projects", projects, project =>
-            `<strong>${escapeHtml(project.projectName)}</strong><span>${escapeHtml(project.market)} • ${formatMoney(project.amount)} • ${escapeHtml(beautify(project.status))}</span>`
+            `<strong>${escapeHtml(project.projectName)}</strong><span>${escapeHtml(project.market)} • License ${formatMoney(project.licenseAmount)} • Implementation ${formatMoney(project.implementationAmount)} • ${escapeHtml(beautify(project.status))}</span>`
         );
     }
 
@@ -977,7 +1157,7 @@ function renderCustomerTabContent(item, contacts, openDeals, projects, activitie
                 ${insightMetric("Activities", String(activities.length))}
             </div>
             ${detailGroup("Customer Summary", [
-                detailItem("Email", item.email || "Not captured"),
+                detailItem("CIF", item.cifNumber || "Not captured"),
                 detailItem("Notes", item.notes || "No notes recorded")
             ])}
         </section>
@@ -1019,9 +1199,6 @@ function coreMetric(label, value) {
 
 function customerScore(item) {
     let score = 55;
-    if (item.kycStatus === "VERIFIED") {
-        score += 15;
-    }
     if (item.riskLevel === "LOW") {
         score += 10;
     }
@@ -1033,9 +1210,6 @@ function customerScore(item) {
 
 function buildCustomerAlerts(item, openDeals, tasks) {
     const alerts = [];
-    if (item.kycStatus !== "VERIFIED") {
-        alerts.push({ label: "KYC", value: `Status ${beautify(item.kycStatus)}` });
-    }
     if (item.riskLevel === "HIGH") {
         alerts.push({ label: "Risk", value: "High risk customer" });
     }
@@ -1097,15 +1271,18 @@ function renderProjectInsight(item) {
             <p>${escapeHtml(item.customerName)} • ${escapeHtml(item.market)}</p>
         </div>
         <div class="insight-grid">
-            ${insightMetric("Status", beautify(item.status))}
-            ${insightMetric("Amount", formatMoney(item.amount))}
+            ${insightMetric("Contract Status", beautify(item.status))}
+            ${insightMetric("License Amount", formatMoney(item.licenseAmount))}
+            ${insightMetric("Implementation Amount", formatMoney(item.implementationAmount))}
             ${insightMetric("Tax Rate", `${Number(item.taxRate || 0)}%`)}
             ${insightMetric("Market", item.market)}
         </div>
         ${detailGroup("Project Detail", [
             detailItem("Customer", item.customerName || "Not linked"),
             detailItem("Market", item.market || "Not captured"),
-            detailItem("Amount", formatMoney(item.amount)),
+            detailItem("Contract Status", beautify(item.status)),
+            detailItem("License Amount", formatMoney(item.licenseAmount)),
+            detailItem("Implementation Amount", formatMoney(item.implementationAmount)),
             detailItem("Tax Rate", `${Number(item.taxRate || 0)}%`),
             detailItem("Customer Project Count", String(customerProjects))
         ])}
@@ -1163,8 +1340,8 @@ function renderToolbarExtras(items) {
                 <span>Status</span>
                 <select name="status">
                     <option value="">All Statuses</option>
-                    <option value="LIVE" ${state.projectFilters.status === "LIVE" ? "selected" : ""}>Live</option>
-                    <option value="IN_PROGRESS" ${state.projectFilters.status === "IN_PROGRESS" ? "selected" : ""}>In Progress</option>
+                    <option value="SIGNED_CONTRACT" ${state.projectFilters.status === "SIGNED_CONTRACT" ? "selected" : ""}>Signed Contract</option>
+                    <option value="UNSIGNED_CONTRACT" ${state.projectFilters.status === "UNSIGNED_CONTRACT" ? "selected" : ""}>Unsigned Contract</option>
                 </select>
             </label>
             <label class="field">
@@ -1208,9 +1385,7 @@ function renderProjectDirectoryTable(items, selected) {
                     <tr>
                         <th>Project Name</th>
                         <th>Market</th>
-                        <th>Amount</th>
-                        <th>Tax Rate</th>
-                        <th>Status</th>
+                        <th>Contract Status</th>
                         <th>Customer</th>
                         <th>Action</th>
                     </tr>
@@ -1228,14 +1403,11 @@ function renderProjectDirectoryRow(item, selected) {
         <tr class="${selected ? "selected" : ""}" data-select-id="${item.id}">
             <td data-label="Project Name"><strong>${escapeHtml(item.projectName)}</strong></td>
             <td data-label="Market">${escapeHtml(item.market || "Not captured")}</td>
-            <td data-label="Amount">${formatMoney(item.amount)}</td>
-            <td data-label="Tax Rate">${Number(item.taxRate || 0)}%</td>
-            <td data-label="Status">${escapeHtml(beautify(item.status || "IN_PROGRESS"))}</td>
+            <td data-label="Contract Status">${escapeHtml(beautify(item.status || "UNSIGNED_CONTRACT"))}</td>
             <td data-label="Customer">${escapeHtml(item.customerName || "Unassigned")}</td>
             <td data-label="Actions">
                 <div class="contact-table-actions">
-                    <button class="ghost-button" type="button" data-project-insight-id="${item.id}">Insight Details</button>
-                    <a class="ghost-button link-button" href="/annual-maintenance.html?customerId=${item.customerId}&projectId=${item.id}">Maintenance</a>
+                    <a class="ghost-button link-button" href="/annual-maintenance.html?customerId=${item.customerId}&projectId=${item.id}&source=projects">Maintenance</a>
                     <button class="ghost-button" type="button" data-edit-id="${item.id}">Edit</button>
                     <button class="danger-button" type="button" data-delete-id="${item.id}">Delete</button>
                 </div>
@@ -1248,7 +1420,7 @@ function renderProjectEmptyState() {
     return `
         <div class="empty-state">
             <h3>No projects found</h3>
-            <p>Adjust the customer, market, or status filters, or create the first project for a customer.</p>
+            <p>Adjust the customer, market, or contract status filters, or create the first project for a customer.</p>
         </div>
     `;
 }
@@ -1269,7 +1441,7 @@ function groupProjectsByCustomer(items) {
             }
             const group = groups.get(item.customerId);
             group.projects.push(item);
-            group.totalAmount += Number(item.amount || 0);
+            group.totalAmount += Number(item.licenseAmount || 0) + Number(item.implementationAmount || 0);
         });
     return Array.from(groups.values());
 }
@@ -1445,6 +1617,19 @@ function renderField(fieldConfig, value) {
         return `<select name="${fieldConfig.name}" ${fieldConfig.required ? "required" : ""}>${fieldConfig.required ? "" : `<option value="">None</option>`}${options}</select>`;
     }
 
+    if (fieldConfig.type === "market-search") {
+        return `
+            <input
+                name="${fieldConfig.name}"
+                type="text"
+                list="global-market-options"
+                value="${escapeHtml(value)}"
+                placeholder="Search Africa or Asia market"
+                ${fieldConfig.required ? "required" : ""}
+            >
+        `;
+    }
+
     return `<input name="${fieldConfig.name}" type="${fieldConfig.type}" value="${escapeHtml(value)}" ${fieldConfig.required ? "required" : ""}>`;
 }
 
@@ -1545,6 +1730,15 @@ function countLinkedTasks(dealId) {
     return state.data.tasks.filter(task => task.dealId === dealId).length;
 }
 
+function renderGlobalMarketOptions() {
+    if (!globalMarketOptions) {
+        return;
+    }
+    globalMarketOptions.innerHTML = MARKET_OPTIONS
+        .map(option => `<option value="${escapeHtml(option)}"></option>`)
+        .join("");
+}
+
 function field(name, label, type = "text", required = false, options = null, full = false) {
     return {
         kind: "field",
@@ -1579,6 +1773,9 @@ function relationField(name, label, source, required = false) {
 document.addEventListener("click", event => {
     if (event.target && event.target.id === "cancel-form-button") {
         closeModal();
+    }
+    if (event.target && event.target.id === "cancel-deal-conversion-button") {
+        closeDealConversionModal();
     }
 
     const customerTab = event.target.closest("[data-customer-tab]");

@@ -8,10 +8,8 @@ public class CustomerRecord {
     private String name;
     private CustomerType customerType;
     private String cifNumber;
-    private String email;
     private CustomerSegment segment;
     private CustomerStatus status;
-    private KycStatus kycStatus;
     private RiskLevel riskLevel;
     private String notes;
     private LocalDateTime createdAt;
@@ -49,14 +47,6 @@ public class CustomerRecord {
         this.cifNumber = cifNumber;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public CustomerSegment getSegment() {
         return segment;
     }
@@ -71,14 +61,6 @@ public class CustomerRecord {
 
     public void setStatus(CustomerStatus status) {
         this.status = status;
-    }
-
-    public KycStatus getKycStatus() {
-        return kycStatus;
-    }
-
-    public void setKycStatus(KycStatus kycStatus) {
-        this.kycStatus = kycStatus;
     }
 
     public RiskLevel getRiskLevel() {

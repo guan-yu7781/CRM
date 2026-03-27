@@ -32,11 +32,6 @@ public class CustomerService {
 
     @Transactional
     public CustomerResponse createCustomer(CustomerRequest request) {
-        CustomerRecord existingByEmail = customerMapper.findByEmail(request.getEmail());
-        if (existingByEmail != null) {
-            throw new IllegalArgumentException("A customer with this email already exists");
-        }
-
         CustomerRecord existingByCif = customerMapper.findByCifNumberIgnoreCase(request.getCifNumber());
         if (existingByCif != null) {
             throw new IllegalArgumentException("A customer with this CIF number already exists");
@@ -56,11 +51,6 @@ public class CustomerService {
     @Transactional
     public CustomerResponse updateCustomer(Long id, CustomerRequest request) {
         CustomerRecord customer = findCustomerRecord(id);
-
-        CustomerRecord existingByEmail = customerMapper.findByEmail(request.getEmail());
-        if (existingByEmail != null && !existingByEmail.getId().equals(id)) {
-            throw new IllegalArgumentException("A customer with this email already exists");
-        }
 
         CustomerRecord existingByCif = customerMapper.findByCifNumberIgnoreCase(request.getCifNumber());
         if (existingByCif != null && !existingByCif.getId().equals(id)) {
@@ -101,10 +91,8 @@ public class CustomerService {
         customer.setName(request.getName());
         customer.setCustomerType(request.getCustomerType() == null ? CustomerType.COMMERCIAL_BANK : request.getCustomerType());
         customer.setCifNumber(request.getCifNumber());
-        customer.setEmail(request.getEmail());
         customer.setSegment(request.getSegment() == null ? CustomerSegment.RETAIL : request.getSegment());
         customer.setStatus(request.getStatus() == null ? CustomerStatus.LEAD : request.getStatus());
-        customer.setKycStatus(request.getKycStatus() == null ? KycStatus.PENDING : request.getKycStatus());
         customer.setRiskLevel(request.getRiskLevel() == null ? RiskLevel.LOW : request.getRiskLevel());
         customer.setNotes(request.getNotes());
     }

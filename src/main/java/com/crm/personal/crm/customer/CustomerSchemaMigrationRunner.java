@@ -22,6 +22,8 @@ public class CustomerSchemaMigrationRunner implements ApplicationRunner {
         dropColumnIfExists("residency_country");
         dropColumnIfExists("relationship_manager");
         dropColumnIfExists("onboarding_stage");
+        dropColumnIfExists("email");
+        dropColumnIfExists("kyc_status");
     }
 
     private void dropColumnIfExists(String columnName) {

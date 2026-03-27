@@ -26,6 +26,9 @@ public class AnnualMaintenanceRequest {
     @NotNull(message = "Payment status is required")
     private PaymentStatus paymentStatus;
 
+    @NotNull(message = "Renew status is required")
+    private RenewStatus renewStatus;
+
     @NotNull(message = "Customer id is required")
     private Long customerId;
 
@@ -75,6 +78,14 @@ public class AnnualMaintenanceRequest {
 
     public void setPaymentStatus(PaymentStatus paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public RenewStatus getRenewStatus() {
+        return renewStatus;
+    }
+
+    public void setRenewStatus(RenewStatus renewStatus) {
+        this.renewStatus = renewStatus;
     }
 
     public Long getCustomerId() {

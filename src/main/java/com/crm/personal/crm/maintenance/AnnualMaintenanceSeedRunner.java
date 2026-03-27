@@ -34,6 +34,7 @@ public class AnnualMaintenanceSeedRunner implements ApplicationRunner {
     @Override
     public void run(ApplicationArguments args) {
         ensureProjectIdColumn();
+        ensureRenewStatusColumn();
         CustomerRecord customer = customerService.findFirstCustomerRecord();
         if (customer == null) {
             return;
@@ -67,6 +68,7 @@ public class AnnualMaintenanceSeedRunner implements ApplicationRunner {
         record.setStartDate(startDate);
         record.setEndDate(endDate);
         record.setPaymentStatus(paymentStatus);
+        record.setRenewStatus(year == 2 ? RenewStatus.NOT_RENEWED : RenewStatus.RENEWED);
         LocalDateTime now = LocalDateTime.now();
         record.setCreatedAt(now);
         record.setUpdatedAt(now);
@@ -82,5 +84,17 @@ public class AnnualMaintenanceSeedRunner implements ApplicationRunner {
         if (count != null && count == 0) {
             jdbcTemplate.execute("alter table annual_maintenance add column project_id bigint");
         }
+    }
+
+    private void ensureRenewStatusColumn() {
+        Integer count = jdbcTemplate.queryForObject(
+                "select count(1) from information_schema.columns " +
+                        "where table_schema = database() and table_name = 'annual_maintenance' and column_name = 'renew_status'",
+                Integer.class
+        );
+        if (count != null && count == 0) {
+            jdbcTemplate.execute("alter table annual_maintenance add column renew_status varchar(32) default 'NOT_RENEWED'");
+        }
+        jdbcTemplate.update("update annual_maintenance set renew_status = 'NOT_RENEWED' where renew_status is null");
     }
 }

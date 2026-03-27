@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Annual Maintenance</title>
-    <link rel="stylesheet" href="/styles.css">
+    <link rel="stylesheet" href="/styles.css?v=20260327-maintenance-priority">
 </head>
 <body class="maintenance-page">
 <main class="maintenance-shell">
     <header class="maintenance-header">
         <div>
-            <a class="text-link" href="/">Back to Customer 360</a>
+            <a id="maintenance-back-link" class="text-link" href="/">Back</a>
             <span class="eyebrow">Annual Maintenance</span>
             <h1 id="maintenance-page-title">Project Maintenance Records</h1>
             <p id="maintenance-page-description">Track project-by-project annual maintenance contracts, coverage years, and renewal windows.</p>
@@ -52,13 +52,14 @@
                     <span class="panel-subtitle">Each project can include Year 1, Year 2, Year 3 and uses the final end date for status.</span>
                 </div>
             </div>
+            <div id="maintenance-overview" class="maintenance-overview"></div>
             <div id="maintenance-list" class="records-list"></div>
             <p id="maintenance-message" class="status-text status-inline"></p>
         </section>
 
         <aside class="insight-panel">
             <div class="insight-header">
-                <span class="eyebrow">Project Detail</span>
+                <span class="eyebrow">Maintenance Timeline</span>
                 <h2 id="maintenance-detail-title">Select a project</h2>
             </div>
             <div id="maintenance-detail-content" class="insight-content"></div>
@@ -101,6 +102,6 @@
 
 <datalist id="annual-maintenance-market-options"></datalist>
 
-<script src="/annual-maintenance.js"></script>
+<script src="/annual-maintenance.js?v=20260327-maintenance-priority"></script>
 </body>
 </html>

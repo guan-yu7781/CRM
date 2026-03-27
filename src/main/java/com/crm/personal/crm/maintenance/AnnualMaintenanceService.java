@@ -81,7 +81,7 @@ public class AnnualMaintenanceService {
         CustomerRecord customer = customerService.findCustomerRecord(request.getCustomerId());
         ProjectRecord project = resolveProject(request.getProjectId(), customer.getId());
         validateDates(request);
-        validateUniqueYear(request, id);
+        validateUniqueYearForUpdate(record, request, customer.getId());
 
         applyRequest(record, request, customer, project);
         record.setUpdatedAt(LocalDateTime.now());
@@ -132,6 +132,28 @@ public class AnnualMaintenanceService {
         }
     }
 
+    private void validateUniqueYearForUpdate(AnnualMaintenanceRecord record,
+                                             AnnualMaintenanceRequest request,
+                                             Long customerId) {
+        boolean sameProject = record.getProjectId() != null && record.getProjectId().equals(request.getProjectId());
+        boolean sameYear = record.getMaintenanceYear() != null && record.getMaintenanceYear().equals(request.getMaintenanceYear());
+        if (sameProject && sameYear) {
+            return;
+        }
+
+        int conflicts = annualMaintenanceMapper.countConflictsExcludingId(
+                customerId,
+                request.getProjectId(),
+                request.getMaintenanceYear(),
+                record.getId()
+        );
+        if (conflicts > 0) {
+            throw new IllegalArgumentException(
+                    "Maintenance year " + request.getMaintenanceYear() + " already exists for the selected project"
+            );
+        }
+    }
+
     private ProjectRecord resolveProject(Long projectId, Long customerId) {
         ProjectRecord project = projectService.findProjectRecord(projectId);
         if (!project.getCustomerId().equals(customerId)) {
@@ -152,6 +174,7 @@ public class AnnualMaintenanceService {
         record.setStartDate(request.getStartDate());
         record.setEndDate(request.getEndDate());
         record.setPaymentStatus(request.getPaymentStatus());
+        record.setRenewStatus(request.getRenewStatus());
         record.setCustomerId(customer.getId());
         record.setCustomerName(customer.getName());
     }

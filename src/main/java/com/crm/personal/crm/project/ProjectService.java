@@ -2,6 +2,7 @@ package com.crm.personal.crm.project;
 
 import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
+import com.crm.personal.crm.deal.DealMapper;
 import com.crm.personal.crm.shared.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,10 +16,12 @@ public class ProjectService {
 
     private final ProjectMapper projectMapper;
     private final CustomerService customerService;
+    private final DealMapper dealMapper;
 
-    public ProjectService(ProjectMapper projectMapper, CustomerService customerService) {
+    public ProjectService(ProjectMapper projectMapper, CustomerService customerService, DealMapper dealMapper) {
         this.projectMapper = projectMapper;
         this.customerService = customerService;
+        this.dealMapper = dealMapper;
     }
 
     public List<ProjectResponse> getProjects(Long customerId) {
@@ -68,6 +71,9 @@ public class ProjectService {
     @Transactional
     public void deleteProject(Long id) {
         findProjectRecord(id);
+        if (dealMapper.countByConvertedProjectId(id) > 0) {
+            throw new IllegalArgumentException("This project was created from a won opportunity and cannot be deleted while the conversion link is active.");
+        }
         projectMapper.deleteById(id);
     }
 
@@ -89,9 +95,11 @@ public class ProjectService {
         ProjectRecord project = new ProjectRecord();
         project.setProjectName(projectName);
         project.setMarket(market);
-        project.setAmount(java.math.BigDecimal.ZERO);
+        project.setLicenseAmount(java.math.BigDecimal.ZERO);
+        project.setImplementationAmount(java.math.BigDecimal.ZERO);
         project.setTaxRate(java.math.BigDecimal.ZERO);
-        project.setStatus(ProjectStatus.IN_PROGRESS);
+        project.setStatus(ProjectStatus.UNSIGNED_CONTRACT);
+        project.setSourceDealId(null);
         project.setCustomerId(customerId);
         project.setCustomerName(customer.getName());
         LocalDateTime now = LocalDateTime.now();
@@ -104,9 +112,10 @@ public class ProjectService {
     private void applyRequest(ProjectRecord project, ProjectRequest request, CustomerRecord customer) {
         project.setProjectName(request.getProjectName());
         project.setMarket(request.getMarket());
-        project.setAmount(request.getAmount());
+        project.setLicenseAmount(request.getLicenseAmount());
+        project.setImplementationAmount(request.getImplementationAmount());
         project.setTaxRate(request.getTaxRate());
-        project.setStatus(request.getStatus() == null ? ProjectStatus.IN_PROGRESS : request.getStatus());
+        project.setStatus(request.getStatus() == null ? ProjectStatus.UNSIGNED_CONTRACT : request.getStatus());
         project.setCustomerId(customer.getId());
         project.setCustomerName(customer.getName());
     }

@@ -47,6 +47,10 @@ public class AnnualMaintenance {
     @Column(nullable = false)
     private PaymentStatus paymentStatus;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private RenewStatus renewStatus;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id", nullable = false)
     private Customer customer;
@@ -119,6 +123,14 @@ public class AnnualMaintenance {
 
     public void setPaymentStatus(PaymentStatus paymentStatus) {
         this.paymentStatus = paymentStatus;
+    }
+
+    public RenewStatus getRenewStatus() {
+        return renewStatus;
+    }
+
+    public void setRenewStatus(RenewStatus renewStatus) {
+        this.renewStatus = renewStatus;
     }
 
     public Customer getCustomer() {

@@ -30,15 +30,18 @@ public class Project {
     @Column(nullable = false)
     private String market;
 
-    @Column(nullable = false, precision = 14, scale = 2)
-    private BigDecimal amount;
+    @Column(name = "amount", nullable = false, precision = 14, scale = 2)
+    private BigDecimal licenseAmount;
+
+    @Column(name = "implementation_amount", nullable = false, precision = 14, scale = 2)
+    private BigDecimal implementationAmount;
 
     @Column(nullable = false, precision = 5, scale = 2)
     private BigDecimal taxRate;
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private ProjectStatus status = ProjectStatus.IN_PROGRESS;
+    private ProjectStatus status = ProjectStatus.UNSIGNED_CONTRACT;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id")
@@ -74,12 +77,20 @@ public class Project {
         this.market = market;
     }
 
-    public BigDecimal getAmount() {
-        return amount;
+    public BigDecimal getLicenseAmount() {
+        return licenseAmount;
     }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+    public void setLicenseAmount(BigDecimal licenseAmount) {
+        this.licenseAmount = licenseAmount;
+    }
+
+    public BigDecimal getImplementationAmount() {
+        return implementationAmount;
+    }
+
+    public void setImplementationAmount(BigDecimal implementationAmount) {
+        this.implementationAmount = implementationAmount;
     }
 
     public BigDecimal getTaxRate() {

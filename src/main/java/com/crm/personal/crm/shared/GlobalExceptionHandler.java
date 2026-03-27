@@ -51,6 +51,12 @@ public class GlobalExceptionHandler {
         if (message != null && message.contains("CustomerType")) {
             message = "Invalid customerType. Use COMMERCIAL_BANK, PAYMENT_INSTITUTION, CENTRAL_BANK, MICROFINANCE_BANK, or SACCO.";
         }
+        if (message != null && message.contains("RenewStatus")) {
+            message = "Invalid renewStatus. Use RENEWED or NOT_RENEWED.";
+        }
+        if (message != null && message.contains("ProjectStatus")) {
+            message = "Invalid project status. Use SIGNED_CONTRACT or UNSIGNED_CONTRACT.";
+        }
 
         return buildResponse(HttpStatus.BAD_REQUEST, message == null ? "Request body could not be parsed" : message);
     }

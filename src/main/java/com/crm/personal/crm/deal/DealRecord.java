@@ -14,6 +14,8 @@ public class DealRecord {
     private String notes;
     private Long customerId;
     private String customerName;
+    private Long convertedProjectId;
+    private LocalDateTime convertedAt;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -79,6 +81,22 @@ public class DealRecord {
 
     public void setCustomerName(String customerName) {
         this.customerName = customerName;
+    }
+
+    public Long getConvertedProjectId() {
+        return convertedProjectId;
+    }
+
+    public void setConvertedProjectId(Long convertedProjectId) {
+        this.convertedProjectId = convertedProjectId;
+    }
+
+    public LocalDateTime getConvertedAt() {
+        return convertedAt;
+    }
+
+    public void setConvertedAt(LocalDateTime convertedAt) {
+        this.convertedAt = convertedAt;
     }
 
     public LocalDateTime getCreatedAt() {

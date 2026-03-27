@@ -1339,6 +1339,80 @@ textarea {
     gap: 18px;
 }
 
+.maintenance-overview {
+    display: grid;
+    gap: 16px;
+    margin-bottom: 18px;
+}
+
+.maintenance-overview:empty {
+    display: none;
+}
+
+.maintenance-featured-project .record-row {
+    margin: 0;
+    border-width: 1px;
+    box-shadow: 0 18px 40px rgba(21, 41, 53, 0.08);
+}
+
+.maintenance-featured-project .record-row.selected {
+    outline: none;
+}
+
+.maintenance-priority {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px;
+    align-items: center;
+    padding: 18px 20px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: linear-gradient(180deg, #f7fbfd 0%, #ffffff 100%);
+}
+
+.maintenance-priority-copy h3 {
+    margin: 6px 0 8px;
+}
+
+.maintenance-priority-copy p {
+    margin: 0;
+    color: var(--muted);
+    line-height: 1.6;
+}
+
+.maintenance-priority-badge {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+}
+
+.timeline-status-cluster {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.maintenance-priority.status-active {
+    border-color: rgba(33, 133, 99, 0.14);
+    background: linear-gradient(180deg, #eff9f4 0%, #ffffff 100%);
+}
+
+.maintenance-priority.status-yellow {
+    border-color: #e6d18b;
+    background: linear-gradient(180deg, #fff9e8 0%, #ffffff 100%);
+}
+
+.maintenance-priority.status-orange {
+    border-color: #efc097;
+    background: linear-gradient(180deg, #fff3e8 0%, #ffffff 100%);
+}
+
+.maintenance-priority.status-expired {
+    border-color: #efb7b1;
+    background: linear-gradient(180deg, #fff1ef 0%, #ffffff 100%);
+}
+
 .status-pill {
     border-radius: 999px;
     padding: 6px 10px;
@@ -1449,6 +1523,10 @@ textarea {
 .detail-group h4 {
     margin: 0 0 12px;
     font-size: 0.96rem;
+}
+
+.detail-group-compact {
+    margin-bottom: 16px;
 }
 
 .detail-list {
@@ -1848,6 +1926,14 @@ textarea {
     .records-toolbar,
     .detail-item {
         display: grid;
+    }
+
+    .maintenance-priority {
+        grid-template-columns: 1fr;
+    }
+
+    .maintenance-priority-badge {
+        justify-content: flex-start;
     }
 
     .contact-directory-table td {

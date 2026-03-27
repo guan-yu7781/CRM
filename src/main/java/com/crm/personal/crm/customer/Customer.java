@@ -34,9 +34,6 @@ public class Customer {
     @Column(nullable = false, unique = true)
     private String cifNumber;
 
-    @Column(nullable = false, unique = true)
-    private String email;
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CustomerSegment segment = CustomerSegment.RETAIL;
@@ -44,10 +41,6 @@ public class Customer {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private CustomerStatus status = CustomerStatus.LEAD;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private KycStatus kycStatus = KycStatus.PENDING;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
@@ -97,14 +90,6 @@ public class Customer {
         this.cifNumber = cifNumber;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public CustomerSegment getSegment() {
         return segment;
     }
@@ -119,14 +104,6 @@ public class Customer {
 
     public void setStatus(CustomerStatus status) {
         this.status = status;
-    }
-
-    public KycStatus getKycStatus() {
-        return kycStatus;
-    }
-
-    public void setKycStatus(KycStatus kycStatus) {
-        this.kycStatus = kycStatus;
     }
 
     public RiskLevel getRiskLevel() {

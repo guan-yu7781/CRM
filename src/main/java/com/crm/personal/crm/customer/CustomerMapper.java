@@ -15,39 +15,32 @@ import java.util.List;
 @Mapper
 public interface CustomerMapper {
 
-    @Select("select id, name, customer_type, cif_number, email, segment, status, " +
-            "kyc_status, risk_level, notes, created_at, updated_at " +
+    @Select("select id, name, customer_type, cif_number, segment, status, " +
+            "risk_level, notes, created_at, updated_at " +
             "from customers order by updated_at desc, id desc")
     @Results(id = "customerRecordMap", value = {
             @Result(property = "customerType", column = "customer_type"),
             @Result(property = "cifNumber", column = "cif_number"),
-            @Result(property = "kycStatus", column = "kyc_status"),
             @Result(property = "riskLevel", column = "risk_level"),
             @Result(property = "createdAt", column = "created_at"),
             @Result(property = "updatedAt", column = "updated_at")
     })
     List<CustomerRecord> findAll();
 
-    @Select("select id, name, customer_type, cif_number, email, segment, status, " +
-            "kyc_status, risk_level, notes, created_at, updated_at " +
+    @Select("select id, name, customer_type, cif_number, segment, status, " +
+            "risk_level, notes, created_at, updated_at " +
             "from customers where id = #{id}")
     @org.apache.ibatis.annotations.ResultMap("customerRecordMap")
     CustomerRecord findById(Long id);
 
-    @Select("select id, name, customer_type, cif_number, email, segment, status, " +
-            "kyc_status, risk_level, notes, created_at, updated_at " +
-            "from customers where lower(email) = lower(#{email}) limit 1")
-    @org.apache.ibatis.annotations.ResultMap("customerRecordMap")
-    CustomerRecord findByEmail(String email);
-
-    @Select("select id, name, customer_type, cif_number, email, segment, status, " +
-            "kyc_status, risk_level, notes, created_at, updated_at " +
+    @Select("select id, name, customer_type, cif_number, segment, status, " +
+            "risk_level, notes, created_at, updated_at " +
             "from customers where lower(cif_number) = lower(#{cifNumber}) limit 1")
     @org.apache.ibatis.annotations.ResultMap("customerRecordMap")
     CustomerRecord findByCifNumberIgnoreCase(String cifNumber);
 
-    @Select("select id, name, customer_type, cif_number, email, segment, status, " +
-            "kyc_status, risk_level, notes, created_at, updated_at " +
+    @Select("select id, name, customer_type, cif_number, segment, status, " +
+            "risk_level, notes, created_at, updated_at " +
             "from customers order by id asc limit 1")
     @org.apache.ibatis.annotations.ResultMap("customerRecordMap")
     CustomerRecord findFirst();
@@ -56,11 +49,11 @@ public interface CustomerMapper {
     int countById(Long id);
 
     @Insert("insert into customers " +
-            "(name, customer_type, cif_number, email, segment, status, kyc_status, " +
+            "(name, customer_type, cif_number, segment, status, " +
             "risk_level, notes, created_at, updated_at) " +
             "values " +
-            "(#{name}, #{customerType}, #{cifNumber}, #{email}, #{segment}, #{status}, " +
-            "#{kycStatus}, #{riskLevel}, #{notes}, #{createdAt}, #{updatedAt})")
+            "(#{name}, #{customerType}, #{cifNumber}, #{segment}, #{status}, " +
+            "#{riskLevel}, #{notes}, #{createdAt}, #{updatedAt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(CustomerRecord record);
 
@@ -68,10 +61,8 @@ public interface CustomerMapper {
             "name = #{name}, " +
             "customer_type = #{customerType}, " +
             "cif_number = #{cifNumber}, " +
-            "email = #{email}, " +
             "segment = #{segment}, " +
             "status = #{status}, " +
-            "kyc_status = #{kycStatus}, " +
             "risk_level = #{riskLevel}, " +
             "notes = #{notes}, " +
             "updated_at = #{updatedAt} " +

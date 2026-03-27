@@ -1,6 +1,5 @@
 package com.crm.personal.crm.customer;
 
-import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Size;
 
@@ -14,15 +13,9 @@ public class CustomerRequest {
     @NotBlank(message = "CIF number is required")
     private String cifNumber;
 
-    @NotBlank(message = "Email is required")
-    @Email(message = "Email should be valid")
-    private String email;
-
     private CustomerSegment segment = CustomerSegment.RETAIL;
 
     private CustomerStatus status = CustomerStatus.LEAD;
-
-    private KycStatus kycStatus = KycStatus.PENDING;
 
     private RiskLevel riskLevel = RiskLevel.LOW;
 
@@ -53,14 +46,6 @@ public class CustomerRequest {
         this.cifNumber = cifNumber;
     }
 
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
     public CustomerSegment getSegment() {
         return segment;
     }
@@ -75,14 +60,6 @@ public class CustomerRequest {
 
     public void setStatus(CustomerStatus status) {
         this.status = status;
-    }
-
-    public KycStatus getKycStatus() {
-        return kycStatus;
-    }
-
-    public void setKycStatus(KycStatus kycStatus) {
-        this.kycStatus = kycStatus;
     }
 
     public RiskLevel getRiskLevel() {
