@@ -1,5 +1,6 @@
 package com.crm.personal.crm.maintenance;
 
+import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Options;
@@ -146,4 +147,7 @@ public interface AnnualMaintenanceMapper {
             "updated_at = #{updatedAt} " +
             "where id = #{id}")
     int update(AnnualMaintenanceRecord record);
+
+    @Delete("delete from annual_maintenance where id = #{id}")
+    int deleteById(Long id);
 }

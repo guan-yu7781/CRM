@@ -149,6 +149,14 @@ The application follows a layered architecture:
 - Renew statuses:
   - `RENEWED`
   - `NOT_RENEWED`
+- Expired end dates are highlighted in red in the UI
+- API:
+  - `GET /api/annual-maintenance?customerId=1`
+  - `GET /api/annual-maintenance/{id}`
+  - `POST /api/annual-maintenance`
+  - `POST /api/annual-maintenance/batch`
+  - `PUT /api/annual-maintenance/{id}`
+  - `DELETE /api/annual-maintenance/{id}` (ADMIN only)
 
 ### 8. Service Tasks
 
@@ -390,6 +398,28 @@ Additional expiry warnings are applied from the currently effective coverage win
 - `POST /api/annual-maintenance`
 - `PUT /api/annual-maintenance/{id}`
 
+## Security
+
+- JWT authentication required for all API endpoints except login and static pages
+- DELETE operations require `ADMIN` role; all other operations require any authenticated user
+- JWT secret must be set via environment variable `JWT_SECRET` in production:
+  ```bash
+  JWT_SECRET=your-strong-secret-here mvn spring-boot:run
+  ```
+- H2 console (`/h2-console`) is only enabled in the `h2` profile (development)
+- MySQL and PostgreSQL profiles use `ddl-auto=validate` — schema must be in place before starting
+
+## Pagination
+
+All list endpoints support optional pagination parameters:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `page` | `0` | Zero-based page index |
+| `size` | `500` | Number of records per page |
+
+Example: `GET /api/customers?page=1&size=100`
+
 ## Profiles And Run Commands
 
 Use the included open-source Maven settings if your machine has a private Nexus configured globally:
@@ -432,8 +462,56 @@ See:
 ## Seed Data
 
 - Default login user: `admin / admin123`
+- Demo data is seeded only on a fresh install (no existing contacts). It attaches to the first customer in the database.
 - Banking customer seed data and relationship seed data are loaded on startup
-- Annual maintenance sample records are seeded for the primary demo customer
+- Annual Maintenance sample records are auto-seeded for the first available customer:
+  - Project: `NCBA Kenya MSL`, market: `Kenya`
+  - Three maintenance years seeded with relative dates (current year ± offset)
+  - Payment statuses: `PAID`, `NOT_PAID`
+
+## Quick API Examples
+
+Login:
+
+```bash
+curl -X POST http://localhost:8080/api/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"admin","password":"admin123"}'
+```
+
+Create a customer:
+
+```bash
+curl -X POST http://localhost:8080/api/customers \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "name": "NCBA Kenya",
+    "customerType": "COMMERCIAL_BANK",
+    "cifNumber": "CIF-100001",
+    "segment": "CORPORATE",
+    "status": "ACTIVE",
+    "riskLevel": "LOW"
+  }'
+```
+
+Create annual maintenance:
+
+```bash
+curl -X POST http://localhost:8080/api/annual-maintenance \
+  -H "Authorization: Bearer <token>" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "projectName": "NCBA Kenya MSL",
+    "market": "Kenya",
+    "maintenanceYear": 4,
+    "amount": 25000,
+    "paymentStatus": "PAID",
+    "startDate": "2027-03-01",
+    "endDate": "2028-02-29",
+    "customerId": 1
+  }'
+```
 
 ## Notes
 

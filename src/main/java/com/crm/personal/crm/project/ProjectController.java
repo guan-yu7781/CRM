@@ -1,6 +1,7 @@
 package com.crm.personal.crm.project;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +27,11 @@ public class ProjectController {
     }
 
     @GetMapping
-    public List<ProjectResponse> getProjects(@RequestParam(required = false) Long customerId) {
-        return projectService.getProjects(customerId);
+    public List<ProjectResponse> getProjects(
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "500") int size) {
+        return projectService.getProjects(customerId, page, size);
     }
 
     @GetMapping("/{id}")
@@ -48,6 +52,7 @@ public class ProjectController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
     }

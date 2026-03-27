@@ -40,9 +40,18 @@ public class AnnualMaintenanceSeedRunner implements ApplicationRunner {
             return;
         }
         ProjectRecord project = projectService.findOrCreateProjectForMaintenance(customer.getId(), "NCBA Kenya MSL", "Kenya");
-        seedRecord(customer, project, 1, LocalDate.of(2024, 1, 15), LocalDate.of(2025, 1, 14), PaymentStatus.PAID, new BigDecimal("18500.00"));
-        seedRecord(customer, project, 2, LocalDate.of(2025, 2, 1), LocalDate.of(2026, 1, 31), PaymentStatus.NOT_PAID, new BigDecimal("21000.00"));
-        seedRecord(customer, project, 3, LocalDate.of(2026, 3, 1), LocalDate.of(2027, 2, 28), PaymentStatus.PAID, new BigDecimal("23000.00"));
+        // Use dates relative to the current year so demo data always looks current.
+        LocalDate today = LocalDate.now();
+        int currentYear = today.getYear();
+        seedRecord(customer, project, 1,
+                LocalDate.of(currentYear - 2, 1, 15), LocalDate.of(currentYear - 1, 1, 14),
+                PaymentStatus.PAID, new BigDecimal("18500.00"));
+        seedRecord(customer, project, 2,
+                LocalDate.of(currentYear - 1, 2, 1), LocalDate.of(currentYear, 1, 31),
+                PaymentStatus.NOT_PAID, new BigDecimal("21000.00"));
+        seedRecord(customer, project, 3,
+                LocalDate.of(currentYear, 3, 1), LocalDate.of(currentYear + 1, 2, 28),
+                PaymentStatus.PAID, new BigDecimal("23000.00"));
     }
 
     private void seedRecord(CustomerRecord customer,
@@ -76,13 +85,17 @@ public class AnnualMaintenanceSeedRunner implements ApplicationRunner {
     }
 
     private void ensureProjectIdColumn() {
-        Integer count = jdbcTemplate.queryForObject(
-                "select count(1) from information_schema.columns " +
-                        "where table_schema = database() and table_name = 'annual_maintenance' and column_name = 'project_id'",
-                Integer.class
-        );
-        if (count != null && count == 0) {
-            jdbcTemplate.execute("alter table annual_maintenance add column project_id bigint");
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "select count(1) from information_schema.columns " +
+                            "where upper(table_name) = 'ANNUAL_MAINTENANCE' and upper(column_name) = 'PROJECT_ID'",
+                    Integer.class
+            );
+            if (count != null && count == 0) {
+                jdbcTemplate.execute("alter table annual_maintenance add column project_id bigint");
+            }
+        } catch (Exception ignored) {
+            // column already present or DB does not support this DDL — safe to skip
         }
     }
 

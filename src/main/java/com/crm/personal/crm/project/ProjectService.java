@@ -24,9 +24,9 @@ public class ProjectService {
         this.dealMapper = dealMapper;
     }
 
-    public List<ProjectResponse> getProjects(Long customerId) {
+    public List<ProjectResponse> getProjects(Long customerId, int page, int size) {
         List<ProjectRecord> projects = customerId == null
-                ? projectMapper.findAll()
+                ? projectMapper.findPaged(size, page * size)
                 : projectMapper.findByCustomerId(customerId);
 
         if (customerId != null) {

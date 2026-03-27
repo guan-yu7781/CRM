@@ -1,6 +1,7 @@
 package com.crm.personal.crm.deal;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,11 +29,14 @@ public class DealController {
     }
 
     @GetMapping
-    public List<DealResponse> getDeals(@RequestParam(required = false) Long customerId) {
+    public List<DealResponse> getDeals(
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "500") int size) {
         if (customerId != null) {
             return dealService.getDealsForCustomer(customerId);
         }
-        return dealService.getAllDeals();
+        return dealService.getAllDeals(page, size);
     }
 
     @GetMapping("/{id}")
@@ -59,6 +63,7 @@ public class DealController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteDeal(@PathVariable Long id) {
         dealService.deleteDeal(id);
     }

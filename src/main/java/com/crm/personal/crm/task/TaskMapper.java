@@ -37,6 +37,16 @@ public interface TaskMapper {
             "from crm_tasks t " +
             "join customers c on c.id = t.customer_id " +
             "left join deals d on d.id = t.deal_id " +
+            "order by t.updated_at desc, t.id desc " +
+            "limit #{size} offset #{offset}")
+    @org.apache.ibatis.annotations.ResultMap("taskRecordMap")
+    List<TaskRecord> findPaged(@Param("size") int size, @Param("offset") int offset);
+
+    @Select("select t.id, t.title, t.description, t.status, t.priority, t.due_date, t.customer_id, " +
+            "c.name as customer_name, t.deal_id, d.title as deal_title, t.created_at, t.updated_at " +
+            "from crm_tasks t " +
+            "join customers c on c.id = t.customer_id " +
+            "left join deals d on d.id = t.deal_id " +
             "where t.customer_id = #{customerId} " +
             "order by t.updated_at desc, t.id desc")
     @org.apache.ibatis.annotations.ResultMap("taskRecordMap")

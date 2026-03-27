@@ -33,6 +33,14 @@ public interface DealMapper {
     @Select("select d.id, d.title, d.amount, d.stage, d.expected_close_date, d.notes, d.customer_id, " +
             "c.name as customer_name, d.converted_project_id, d.converted_at, d.created_at, d.updated_at " +
             "from deals d join customers c on c.id = d.customer_id " +
+            "order by d.updated_at desc, d.id desc " +
+            "limit #{size} offset #{offset}")
+    @org.apache.ibatis.annotations.ResultMap("dealRecordMap")
+    List<DealRecord> findPaged(@Param("size") int size, @Param("offset") int offset);
+
+    @Select("select d.id, d.title, d.amount, d.stage, d.expected_close_date, d.notes, d.customer_id, " +
+            "c.name as customer_name, d.created_at, d.updated_at " +
+            "from deals d join customers c on c.id = d.customer_id " +
             "where d.customer_id = #{customerId} " +
             "order by d.updated_at desc, d.id desc")
     @org.apache.ibatis.annotations.ResultMap("dealRecordMap")

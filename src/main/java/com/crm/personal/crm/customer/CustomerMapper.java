@@ -29,6 +29,13 @@ public interface CustomerMapper {
 
     @Select("select id, name, customer_type, cif_number, segment, status, " +
             "risk_level, notes, created_at, updated_at " +
+            "from customers order by updated_at desc, id desc " +
+            "limit #{size} offset #{offset}")
+    @org.apache.ibatis.annotations.ResultMap("customerRecordMap")
+    List<CustomerRecord> findPaged(@Param("size") int size, @Param("offset") int offset);
+
+    @Select("select id, name, customer_type, cif_number, segment, status, " +
+            "risk_level, notes, created_at, updated_at " +
             "from customers where id = #{id}")
     @org.apache.ibatis.annotations.ResultMap("customerRecordMap")
     CustomerRecord findById(Long id);

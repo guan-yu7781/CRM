@@ -33,6 +33,14 @@ public interface ContactMapper {
     @Select("select ct.id, ct.first_name, ct.last_name, ct.email, ct.phone, ct.job_title, ct.notes, " +
             "ct.customer_id, c.name as customer_name, ct.created_at, ct.updated_at " +
             "from contacts ct join customers c on c.id = ct.customer_id " +
+            "order by ct.updated_at desc, ct.id desc " +
+            "limit #{size} offset #{offset}")
+    @org.apache.ibatis.annotations.ResultMap("contactRecordMap")
+    List<ContactRecord> findPaged(@Param("size") int size, @Param("offset") int offset);
+
+    @Select("select ct.id, ct.first_name, ct.last_name, ct.email, ct.phone, ct.job_title, ct.notes, " +
+            "ct.customer_id, c.name as customer_name, ct.created_at, ct.updated_at " +
+            "from contacts ct join customers c on c.id = ct.customer_id " +
             "where ct.customer_id = #{customerId} " +
             "order by ct.updated_at desc, ct.id desc")
     @org.apache.ibatis.annotations.ResultMap("contactRecordMap")

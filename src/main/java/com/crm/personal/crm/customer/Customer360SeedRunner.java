@@ -64,11 +64,13 @@ public class Customer360SeedRunner implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        CustomerRecord customer = customerMapper.findAll().stream()
-                .filter(item -> "Gary".equalsIgnoreCase(item.getName()))
-                .findFirst()
-                .orElseGet(customerMapper::findFirst);
+        CustomerRecord customer = customerMapper.findFirst();
         if (customer == null) {
+            return;
+        }
+        // Only seed demo data when no contacts exist anywhere in the system.
+        // This prevents accidentally polluting real customer records on non-fresh installs.
+        if (!contactMapper.findByCustomerId(customer.getId()).isEmpty()) {
             return;
         }
 

@@ -27,14 +27,18 @@ public class CustomerSchemaMigrationRunner implements ApplicationRunner {
     }
 
     private void dropColumnIfExists(String columnName) {
-        Integer count = jdbcTemplate.queryForObject(
-                "select count(1) from information_schema.columns " +
-                        "where table_schema = database() and table_name = 'customers' and column_name = ?",
-                Integer.class,
-                columnName
-        );
-        if (count != null && count > 0) {
-            jdbcTemplate.execute("alter table customers drop column " + columnName);
+        try {
+            Integer count = jdbcTemplate.queryForObject(
+                    "select count(1) from information_schema.columns " +
+                            "where upper(table_name) = 'CUSTOMERS' and upper(column_name) = upper(?)",
+                    Integer.class,
+                    columnName
+            );
+            if (count != null && count > 0) {
+                jdbcTemplate.execute("alter table customers drop column " + columnName);
+            }
+        } catch (Exception ignored) {
+            // column already absent or DB does not support this DDL — safe to skip
         }
     }
 }

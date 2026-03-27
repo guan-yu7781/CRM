@@ -19,8 +19,8 @@ public class CustomerService {
         this.customerRepository = customerRepository;
     }
 
-    public List<CustomerResponse> getAllCustomers() {
-        return customerMapper.findAll()
+    public List<CustomerResponse> getAllCustomers(int page, int size) {
+        return customerMapper.findPaged(size, page * size)
                 .stream()
                 .map(CustomerResponse::from)
                 .collect(Collectors.toList());
