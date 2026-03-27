@@ -289,7 +289,7 @@ onMounted(async () => {
           </div>
 
           <!-- ── Right column ────────────────────────────────────────── -->
-          <div class="dashboard-right">
+          <div class="dashboard-right dashboard-right-sticky">
 
             <!-- Recent Interactions -->
             <section v-if="auth.hasPermission('ACTIVITY_VIEW')" class="insight-panel vue-insight-panel dashboard-panel">
@@ -309,81 +309,6 @@ onMounted(async () => {
               <p v-else class="dashboard-empty">No interactions logged yet.</p>
               <div class="dashboard-panel-footer">
                 <button class="ghost-button" type="button" @click="goToModule('activities')">View All Interactions</button>
-              </div>
-            </section>
-
-            <!-- Admin: Risk & User Stats -->
-            <section v-if="auth.hasPermission('ACCESS_CONTROL_VIEW')" class="insight-panel vue-insight-panel dashboard-panel">
-              <div class="insight-header">
-                <span class="eyebrow">System Health</span>
-                <h2>Admin Overview</h2>
-              </div>
-              <div class="detail-group">
-                <h4>Customer Risk Distribution</h4>
-                <div class="detail-list">
-                  <div class="detail-item dashboard-risk-row">
-                    <span>High Risk</span>
-                    <span class="status-pill status-orange">{{ highRisk }} customers</span>
-                  </div>
-                  <div class="detail-item dashboard-risk-row">
-                    <span>Medium Risk</span>
-                    <span class="status-pill status-yellow">{{ mediumRisk }} customers</span>
-                  </div>
-                  <div class="detail-item dashboard-risk-row">
-                    <span>Low Risk</span>
-                    <span class="status-pill status-active">{{ lowRisk }} customers</span>
-                  </div>
-                </div>
-              </div>
-              <div class="detail-group" style="margin-top: 16px">
-                <h4>User Management</h4>
-                <div class="detail-list">
-                  <div class="detail-item dashboard-risk-row">
-                    <span>Configured Users</span>
-                    <strong>{{ totalUsers }}</strong>
-                  </div>
-                  <div class="detail-item dashboard-risk-row">
-                    <span>Business Roles</span>
-                    <strong>{{ crm.accessRoles.length }}</strong>
-                  </div>
-                </div>
-                <div class="dashboard-panel-footer" style="margin-top: 12px">
-                  <button class="ghost-button" type="button" @click="goToModule('accessControl')">Manage Access</button>
-                </div>
-              </div>
-            </section>
-
-            <!-- Quick Navigation -->
-            <section class="insight-panel vue-insight-panel dashboard-panel">
-              <div class="insight-header">
-                <span class="eyebrow">Workspace</span>
-                <h2>Quick Navigation</h2>
-              </div>
-              <div class="dashboard-quicknav">
-                <button v-if="auth.hasPermission('CUSTOMER_VIEW')" class="ghost-button dashboard-nav-btn" @click="goToModule('customers')">
-                  <span class="menu-item-icon">CM</span>
-                  <span>Customers</span>
-                </button>
-                <button v-if="auth.hasPermission('DEAL_VIEW')" class="ghost-button dashboard-nav-btn" @click="goToModule('deals')">
-                  <span class="menu-item-icon">OP</span>
-                  <span>Opportunities</span>
-                </button>
-                <button v-if="auth.hasPermission('PROJECT_VIEW')" class="ghost-button dashboard-nav-btn" @click="goToModule('projects')">
-                  <span class="menu-item-icon">PJ</span>
-                  <span>Projects</span>
-                </button>
-                <button v-if="auth.hasPermission('TASK_VIEW')" class="ghost-button dashboard-nav-btn" @click="goToModule('tasks')">
-                  <span class="menu-item-icon">TS</span>
-                  <span>Tasks</span>
-                </button>
-                <button v-if="auth.hasPermission('CONTACT_VIEW')" class="ghost-button dashboard-nav-btn" @click="goToModule('contacts')">
-                  <span class="menu-item-icon">CT</span>
-                  <span>Contacts</span>
-                </button>
-                <button v-if="auth.hasPermission('ACTIVITY_VIEW')" class="ghost-button dashboard-nav-btn" @click="goToModule('activities')">
-                  <span class="menu-item-icon">IN</span>
-                  <span>Interactions</span>
-                </button>
               </div>
             </section>
 

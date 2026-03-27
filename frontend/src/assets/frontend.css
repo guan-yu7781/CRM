@@ -1495,6 +1495,12 @@ textarea {
   gap: 18px;
 }
 
+.dashboard-right-sticky {
+  position: sticky;
+  top: 28px;
+  align-self: start;
+}
+
 .dashboard-stage-list {
   display: flex;
   flex-direction: column;
