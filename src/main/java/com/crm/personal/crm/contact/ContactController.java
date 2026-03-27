@@ -27,6 +27,7 @@ public class ContactController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('CONTACT_VIEW')")
     public List<ContactResponse> getContacts(
             @RequestParam(required = false) Long customerId,
             @RequestParam(defaultValue = "0") int page,
@@ -35,24 +36,27 @@ public class ContactController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('CONTACT_VIEW')")
     public ContactResponse getContact(@PathVariable Long id) {
         return contactService.getContact(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('CONTACT_CREATE')")
     public ContactResponse createContact(@Valid @RequestBody ContactRequest request) {
         return contactService.createContact(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('CONTACT_EDIT')")
     public ContactResponse updateContact(@PathVariable Long id, @Valid @RequestBody ContactRequest request) {
         return contactService.updateContact(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('CONTACT_DELETE')")
     public void deleteContact(@PathVariable Long id) {
         contactService.deleteContact(id);
     }

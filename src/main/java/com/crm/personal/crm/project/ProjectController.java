@@ -27,6 +27,7 @@ public class ProjectController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('PROJECT_VIEW')")
     public List<ProjectResponse> getProjects(
             @RequestParam(required = false) Long customerId,
             @RequestParam(defaultValue = "0") int page,
@@ -35,24 +36,27 @@ public class ProjectController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('PROJECT_VIEW')")
     public ProjectResponse getProject(@PathVariable Long id) {
         return projectService.getProject(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('PROJECT_CREATE')")
     public ProjectResponse createProject(@Valid @RequestBody ProjectRequest request) {
         return projectService.createProject(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('PROJECT_EDIT')")
     public ProjectResponse updateProject(@PathVariable Long id, @Valid @RequestBody ProjectRequest request) {
         return projectService.updateProject(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('PROJECT_DELETE')")
     public void deleteProject(@PathVariable Long id) {
         projectService.deleteProject(id);
     }

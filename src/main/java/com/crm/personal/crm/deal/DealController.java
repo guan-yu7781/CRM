@@ -29,6 +29,7 @@ public class DealController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('DEAL_VIEW')")
     public List<DealResponse> getDeals(
             @RequestParam(required = false) Long customerId,
             @RequestParam(defaultValue = "0") int page,
@@ -40,30 +41,34 @@ public class DealController {
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('DEAL_VIEW')")
     public DealResponse getDeal(@PathVariable Long id) {
         return dealService.getDeal(id);
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('DEAL_CREATE')")
     public DealResponse createDeal(@Valid @RequestBody DealRequest request) {
         return dealService.createDeal(request);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('DEAL_EDIT')")
     public DealResponse updateDeal(@PathVariable Long id, @Valid @RequestBody DealRequest request) {
         return dealService.updateDeal(id, request);
     }
 
     @PostMapping("/{id}/convert-to-project")
     @ResponseStatus(HttpStatus.CREATED)
+    @PreAuthorize("hasAuthority('DEAL_CONVERT_TO_PROJECT')")
     public ProjectResponse convertToProject(@PathVariable Long id, @Valid @RequestBody DealConversionRequest request) {
         return dealService.convertWonDealToProject(id, request);
     }
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAuthority('DEAL_DELETE')")
     public void deleteDeal(@PathVariable Long id) {
         dealService.deleteDeal(id);
     }

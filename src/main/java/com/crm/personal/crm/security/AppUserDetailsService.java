@@ -8,6 +8,8 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class AppUserDetailsService implements UserDetailsService {
@@ -23,10 +25,16 @@ public class AppUserDetailsService implements UserDetailsService {
         AppUser user = appUserRepository.findByUsername(username)
                 .orElseThrow(() -> new UsernameNotFoundException("User not found"));
 
+        UserRole effectiveRole = user.getRole().getEffectiveRole();
+
         return new User(
                 user.getUsername(),
                 user.getPassword(),
-                List.of(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()))
+                Stream.concat(
+                                Stream.of(new SimpleGrantedAuthority("ROLE_" + effectiveRole.name())),
+                                effectiveRole.getPermissions().stream().map(permission -> new SimpleGrantedAuthority(permission.name()))
+                        )
+                        .collect(Collectors.toList())
         );
     }
 }

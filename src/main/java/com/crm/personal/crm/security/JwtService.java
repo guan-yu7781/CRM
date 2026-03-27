@@ -22,10 +22,11 @@ public class JwtService {
     public String generateToken(AppUser user) {
         Date now = new Date();
         Date expiry = new Date(now.getTime() + jwtProperties.getExpiration());
+        UserRole effectiveRole = user.getRole().getEffectiveRole();
 
         return Jwts.builder()
                 .setSubject(user.getUsername())
-                .claim("role", user.getRole().name())
+                .claim("role", effectiveRole.name())
                 .setIssuedAt(now)
                 .setExpiration(expiry)
                 .signWith(getSigningKey(), SignatureAlgorithm.HS256)
