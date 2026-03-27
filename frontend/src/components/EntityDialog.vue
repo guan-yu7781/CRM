@@ -50,7 +50,7 @@ function submit() {
 <template>
   <div v-if="open" class="modal" aria-hidden="false">
     <div class="modal-backdrop" @click="emit('close')" />
-    <section class="modal-card">
+    <section class="modal-card" @click.stop>
       <header class="modal-header">
         <div>
           <span class="eyebrow">Record Editor</span>
