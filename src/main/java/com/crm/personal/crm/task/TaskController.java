@@ -1,6 +1,7 @@
 package com.crm.personal.crm.task;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,9 +27,12 @@ public class TaskController {
     }
 
     @GetMapping
-    public List<TaskResponse> getTasks(@RequestParam(required = false) Long customerId,
-                                       @RequestParam(required = false) TaskStatus status) {
-        return taskService.getTasks(customerId, status);
+    public List<TaskResponse> getTasks(
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(required = false) TaskStatus status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "500") int size) {
+        return taskService.getTasks(customerId, status, page, size);
     }
 
     @GetMapping("/{id}")
@@ -49,6 +53,7 @@ public class TaskController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteTask(@PathVariable Long id) {
         taskService.deleteTask(id);
     }

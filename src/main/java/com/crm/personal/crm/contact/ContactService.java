@@ -21,9 +21,9 @@ public class ContactService {
         this.customerService = customerService;
     }
 
-    public List<ContactResponse> getContacts(Long customerId) {
+    public List<ContactResponse> getContacts(Long customerId, int page, int size) {
         List<ContactRecord> contacts = customerId == null
-                ? contactMapper.findAll()
+                ? contactMapper.findPaged(size, page * size)
                 : contactMapper.findByCustomerId(customerId);
 
         if (customerId != null) {

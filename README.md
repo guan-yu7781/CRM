@@ -124,7 +124,9 @@ Spring Boot CRM for a digital bank or core banking delivery team. The system foc
   - `GET /api/annual-maintenance?customerId=1`
   - `GET /api/annual-maintenance/{id}`
   - `POST /api/annual-maintenance`
+  - `POST /api/annual-maintenance/batch`
   - `PUT /api/annual-maintenance/{id}`
+  - `DELETE /api/annual-maintenance/{id}` (ADMIN only)
 
 ## UI Pages
 
@@ -137,6 +139,28 @@ The UI is organized as:
 - right work area for records
 - add, edit, and delete actions from buttons
 - customer insight panel with deep-link entry to Annual Maintenance
+
+## Security
+
+- JWT authentication required for all API endpoints except login and static pages
+- DELETE operations require `ADMIN` role; all other operations require any authenticated user
+- JWT secret must be set via environment variable `JWT_SECRET` in production:
+  ```bash
+  JWT_SECRET=your-strong-secret-here mvn spring-boot:run
+  ```
+- H2 console (`/h2-console`) is only enabled in the `h2` profile (development)
+- MySQL and PostgreSQL profiles use `ddl-auto=validate` — schema must be in place before starting
+
+## Pagination
+
+All list endpoints support optional pagination parameters:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `page` | `0` | Zero-based page index |
+| `size` | `500` | Number of records per page |
+
+Example: `GET /api/customers?page=1&size=100`
 
 ## Profiles And Run Commands
 
@@ -180,10 +204,11 @@ See:
 ## Seed Data
 
 - Default login user: `admin / admin123`
+- Demo data is seeded only on a fresh install (no existing contacts). It attaches to the first customer in the database.
 - Annual Maintenance sample records are auto-seeded for the first available customer:
-  - `NCBA Kenya MSL`
-  - market: `Kenya`
-  - payment statuses: `PAID`, `NOT_PAID`
+  - Project: `NCBA Kenya MSL`, market: `Kenya`
+  - Three maintenance years seeded with relative dates (current year ± offset)
+  - Payment statuses: `PAID`, `NOT_PAID`
 
 ## Quick API Examples
 
@@ -206,16 +231,10 @@ curl -X POST http://localhost:8080/api/customers \
     "customerType": "COMMERCIAL_BANK",
     "cifNumber": "CIF-100001",
     "email": "ops@ncba.example.com",
-    "phone": "+254700000001",
-    "company": "NCBA Kenya",
     "segment": "CORPORATE",
     "status": "ACTIVE",
     "kycStatus": "VERIFIED",
-    "riskLevel": "LOW",
-    "preferredChannel": "RELATIONSHIP_MANAGER",
-    "onboardingStage": "ACTIVE",
-    "residencyCountry": "Kenya",
-    "relationshipManager": "Grace Njoroge"
+    "riskLevel": "LOW"
   }'
 ```
 

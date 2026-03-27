@@ -76,6 +76,12 @@ public class AnnualMaintenanceService {
     }
 
     @Transactional
+    public void deleteRecord(Long id) {
+        findRecord(id);
+        annualMaintenanceMapper.deleteById(id);
+    }
+
+    @Transactional
     public AnnualMaintenanceResponse updateRecord(Long id, AnnualMaintenanceRequest request) {
         AnnualMaintenanceRecord record = findRecord(id);
         CustomerRecord customer = customerService.findCustomerRecord(request.getCustomerId());

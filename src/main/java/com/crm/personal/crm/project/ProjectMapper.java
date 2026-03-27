@@ -32,6 +32,14 @@ public interface ProjectMapper {
     @Select("select p.id, p.project_name, p.market, p.amount, p.tax_rate, p.status, p.customer_id, " +
             "c.name as customer_name, p.created_at, p.updated_at " +
             "from projects p join customers c on c.id = p.customer_id " +
+            "order by p.updated_at desc, p.id desc " +
+            "limit #{size} offset #{offset}")
+    @org.apache.ibatis.annotations.ResultMap("projectRecordMap")
+    List<ProjectRecord> findPaged(@Param("size") int size, @Param("offset") int offset);
+
+    @Select("select p.id, p.project_name, p.market, p.amount, p.tax_rate, p.status, p.customer_id, " +
+            "c.name as customer_name, p.created_at, p.updated_at " +
+            "from projects p join customers c on c.id = p.customer_id " +
             "where p.customer_id = #{customerId} " +
             "order by p.project_name asc")
     @org.apache.ibatis.annotations.ResultMap("projectRecordMap")

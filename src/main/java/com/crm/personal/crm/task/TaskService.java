@@ -25,7 +25,7 @@ public class TaskService {
         this.dealService = dealService;
     }
 
-    public List<TaskResponse> getTasks(Long customerId, TaskStatus status) {
+    public List<TaskResponse> getTasks(Long customerId, TaskStatus status, int page, int size) {
         List<TaskRecord> tasks;
         if (customerId != null) {
             customerService.findCustomerRecord(customerId);
@@ -33,7 +33,7 @@ public class TaskService {
         } else if (status != null) {
             tasks = taskMapper.findByStatus(status);
         } else {
-            tasks = taskMapper.findAll();
+            tasks = taskMapper.findPaged(size, page * size);
         }
 
         return tasks.stream()

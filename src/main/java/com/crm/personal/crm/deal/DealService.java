@@ -21,8 +21,8 @@ public class DealService {
         this.customerService = customerService;
     }
 
-    public List<DealResponse> getAllDeals() {
-        return dealMapper.findAll()
+    public List<DealResponse> getAllDeals(int page, int size) {
+        return dealMapper.findPaged(size, page * size)
                 .stream()
                 .map(DealResponse::from)
                 .collect(Collectors.toList());

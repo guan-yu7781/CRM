@@ -1,6 +1,7 @@
 package com.crm.personal.crm.contact;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,8 +27,11 @@ public class ContactController {
     }
 
     @GetMapping
-    public List<ContactResponse> getContacts(@RequestParam(required = false) Long customerId) {
-        return contactService.getContacts(customerId);
+    public List<ContactResponse> getContacts(
+            @RequestParam(required = false) Long customerId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "500") int size) {
+        return contactService.getContacts(customerId, page, size);
     }
 
     @GetMapping("/{id}")
@@ -48,6 +52,7 @@ public class ContactController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteContact(@PathVariable Long id) {
         contactService.deleteContact(id);
     }

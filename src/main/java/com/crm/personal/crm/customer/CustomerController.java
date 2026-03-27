@@ -1,6 +1,7 @@
 package com.crm.personal.crm.customer;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -25,8 +26,10 @@ public class CustomerController {
     }
 
     @GetMapping
-    public List<CustomerResponse> getCustomers() {
-        return customerService.getAllCustomers();
+    public List<CustomerResponse> getCustomers(
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+            @org.springframework.web.bind.annotation.RequestParam(defaultValue = "500") int size) {
+        return customerService.getAllCustomers(page, size);
     }
 
     @GetMapping("/{id}")
@@ -47,6 +50,7 @@ public class CustomerController {
 
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PreAuthorize("hasRole('ADMIN')")
     public void deleteCustomer(@PathVariable Long id) {
         customerService.deleteCustomer(id);
     }
