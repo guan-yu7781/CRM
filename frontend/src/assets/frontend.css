@@ -36,6 +36,21 @@
   --shadow-card: 0 18px 36px rgba(24, 67, 55, 0.07);
 }
 
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: "IBM Plex Sans", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+a {
+  color: inherit;
+}
+
 .vue-app-shell {
   min-height: 100vh;
   grid-template-columns: 308px minmax(0, 1fr);
@@ -44,8 +59,26 @@
     linear-gradient(180deg, #fbfdfc 0%, #f2f7f5 100%);
 }
 
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 308px minmax(0, 1fr);
+}
+
 .vue-page {
   min-height: 100vh;
+}
+
+.content {
+  padding: 28px;
+}
+
+.eyebrow {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
 }
 
 .sidebar {
@@ -222,6 +255,86 @@
   background: rgba(233, 247, 241, 0.98);
 }
 
+.app-shell.sidebar-collapsed,
+.vue-app-shell.sidebar-collapsed {
+  grid-template-columns: 108px minmax(0, 1fr);
+}
+
+.app-shell.sidebar-collapsed .sidebar,
+.vue-app-shell.sidebar-collapsed .sidebar {
+  padding-left: 12px;
+  padding-right: 12px;
+  align-items: center;
+}
+
+.app-shell.sidebar-collapsed .sidebar-brand,
+.vue-app-shell.sidebar-collapsed .sidebar-brand {
+  width: 100%;
+  display: grid;
+  justify-items: center;
+  padding-top: 8px;
+}
+
+.app-shell.sidebar-collapsed .brand-logo-frame-sidebar,
+.vue-app-shell.sidebar-collapsed .brand-logo-frame-sidebar {
+  max-width: 62px;
+  min-height: 62px;
+  margin-bottom: 0;
+  padding: 8px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-brand .eyebrow,
+.app-shell.sidebar-collapsed .sidebar-brand h2,
+.app-shell.sidebar-collapsed .sidebar-brand p,
+.app-shell.sidebar-collapsed .menu-section-label,
+.app-shell.sidebar-collapsed .menu-item-label,
+.app-shell.sidebar-collapsed .user-box-copy,
+.vue-app-shell.sidebar-collapsed .sidebar-brand .eyebrow,
+.vue-app-shell.sidebar-collapsed .sidebar-brand h2,
+.vue-app-shell.sidebar-collapsed .sidebar-brand p,
+.vue-app-shell.sidebar-collapsed .menu-section-label,
+.vue-app-shell.sidebar-collapsed .menu-item-label,
+.vue-app-shell.sidebar-collapsed .user-box-copy {
+  display: none;
+}
+
+.app-shell.sidebar-collapsed .menu,
+.vue-app-shell.sidebar-collapsed .menu {
+  width: 100%;
+  justify-items: center;
+}
+
+.app-shell.sidebar-collapsed .menu-item,
+.vue-app-shell.sidebar-collapsed .menu-item {
+  width: 52px;
+  min-height: 52px;
+  padding: 0;
+  justify-content: center;
+}
+
+.app-shell.sidebar-collapsed .menu-item-icon,
+.vue-app-shell.sidebar-collapsed .menu-item-icon {
+  flex: 0 0 30px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-footer,
+.vue-app-shell.sidebar-collapsed .sidebar-footer {
+  width: 100%;
+}
+
+.app-shell.sidebar-collapsed .user-box,
+.vue-app-shell.sidebar-collapsed .user-box {
+  justify-content: center;
+  padding: 10px;
+}
+
+.app-shell.sidebar-collapsed .sidebar-logout,
+.vue-app-shell.sidebar-collapsed .sidebar-logout {
+  min-width: 40px;
+  width: 40px;
+  padding: 0;
+}
+
 .shell-content {
   display: grid;
   gap: 20px;
@@ -230,6 +343,30 @@
 .workspace-header-copy {
   display: grid;
   gap: 6px;
+}
+
+.page-header,
+.header-actions,
+.records-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-header {
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.page-header h1 {
+  margin: 6px 0 8px;
+  font-size: clamp(2rem, 4vw, 2.8rem);
+}
+
+.page-header p {
+  margin: 0;
+  color: var(--muted);
+  max-width: 780px;
 }
 
 .workspace-header-meta {
@@ -300,6 +437,32 @@
   border-radius: var(--radius-lg);
 }
 
+.summary-bar {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 18px;
+}
+
+.summary-card {
+  padding: 18px 20px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-soft);
+}
+
+.summary-card span,
+.summary-card small {
+  display: block;
+  color: var(--muted);
+}
+
+.summary-card strong {
+  display: block;
+  font-size: 1.75rem;
+  margin: 8px 0 6px;
+}
+
 .vue-summary-bar .summary-card::after {
   content: "";
   position: absolute;
@@ -326,6 +489,31 @@
 .workspace-single {
   display: grid;
   gap: 20px;
+}
+
+.records-panel,
+.insight-panel {
+  padding: 18px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  box-shadow: var(--shadow-card);
+}
+
+.records-toolbar {
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.panel-title {
+  display: block;
+  font-size: 1.05rem;
+}
+
+.panel-subtitle {
+  display: block;
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.9rem;
 }
 
 .module-table-wrap {
@@ -521,6 +709,23 @@
   justify-content: flex-end;
 }
 
+.search-input,
+input,
+select,
+textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: var(--surface-alt);
+  color: var(--text);
+  font: inherit;
+}
+
+.search-input {
+  max-width: 340px;
+}
+
 .primary-button,
 .ghost-button,
 .danger-button {
@@ -687,6 +892,22 @@
   box-shadow: inset 0 1px 0 rgba(255,255,255,0.74);
 }
 
+.modal {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+}
+
+.modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(23, 42, 36, 0.24);
+  backdrop-filter: blur(6px);
+}
+
 .status-pill {
   display: inline-flex;
   align-items: center;
@@ -752,6 +973,10 @@
   border-bottom: 1px solid rgba(155, 212, 255, 0.18);
 }
 
+.modal-header h2 {
+  margin: 6px 0 0;
+}
+
 .record-form {
   margin-top: 22px;
   display: grid;
@@ -797,6 +1022,142 @@
   justify-content: flex-end;
   gap: 10px;
   padding-top: 6px;
+}
+
+.status-text {
+  margin: 0;
+  color: var(--danger);
+  font-size: 0.92rem;
+}
+
+.detail-group {
+  display: grid;
+  gap: 14px;
+}
+
+.detail-group h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.detail-list {
+  display: grid;
+  gap: 10px;
+}
+
+.detail-item {
+  padding: 14px 16px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(247,251,249,0.98) 100%);
+}
+
+.detail-item span {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.78rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.detail-item strong {
+  display: block;
+  font-size: 0.96rem;
+}
+
+.insight-header {
+  margin-bottom: 16px;
+}
+
+.insight-header h2 {
+  margin: 6px 0 0;
+}
+
+.insight-content {
+  display: grid;
+  gap: 16px;
+}
+
+.insight-hero {
+  padding: 18px 20px;
+  border: 1px solid rgba(173, 210, 198, 0.48);
+  border-radius: var(--radius-md);
+  background: linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(244,250,247,0.98) 100%);
+}
+
+.insight-hero h3 {
+  margin: 8px 0 8px;
+}
+
+.insight-hero p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.link-button,
+.text-link {
+  text-decoration: none;
+}
+
+.text-link {
+  color: var(--accent-strong);
+  font-weight: 600;
+}
+
+.record-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.customer-360-shell {
+  display: grid;
+  grid-template-columns: minmax(240px, 0.78fr) minmax(0, 1.2fr) minmax(260px, 0.8fr);
+  gap: 20px;
+}
+
+.customer-core-hero {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.customer-core-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: grid;
+  place-items: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--accent-strong);
+  background: linear-gradient(180deg, rgba(217,242,234,0.98) 0%, rgba(255,255,255,0.98) 100%);
+  border: 1px solid rgba(173, 210, 198, 0.48);
+}
+
+.customer-core-grid,
+.customer-product-grid,
+.customer-collection {
+  display: grid;
+  gap: 12px;
+}
+
+.customer-tab {
+  min-height: 40px;
+  padding: 0 14px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  font: inherit;
+  color: var(--muted);
+}
+
+.customer-tab.active {
+  background: #ffffff;
+  border-color: rgba(173, 210, 198, 0.54);
+  color: var(--accent-strong);
+  box-shadow: var(--shadow-soft);
 }
 
 .customer-360-page-content {
@@ -1093,9 +1454,15 @@
     grid-template-columns: 1fr;
   }
 
+  .app-shell {
+    grid-template-columns: 1fr;
+  }
+
   .workspace-two-column,
   .maintenance-layout,
-  .auth-login-shell {
+  .auth-login-shell,
+  .customer-360-shell,
+  .summary-bar {
     grid-template-columns: 1fr;
   }
 
@@ -1113,5 +1480,9 @@
 
   .record-form {
     grid-template-columns: 1fr;
+  }
+
+  .content {
+    padding: 18px;
   }
 }

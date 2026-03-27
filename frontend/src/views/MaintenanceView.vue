@@ -19,6 +19,7 @@ const selectedProjectId = ref(Number(route.query.projectId) || null);
 const dialogOpen = ref(false);
 const editingRecord = ref(null);
 const dialogError = ref('');
+const fromProjects = computed(() => route.query.source === 'projects');
 
 const fields = [
   { name: 'projectId', label: 'Project', type: 'select', required: true, source: 'projects', hidden: false },
@@ -63,7 +64,14 @@ const groupedProjects = computed(() => {
   return Array.from(map.values());
 });
 
-const selectedProject = computed(() => groupedProjects.value.find(item => item.projectId === selectedProjectId.value) || groupedProjects.value[0] || null);
+const visibleProjects = computed(() => {
+  if (!fromProjects.value || !selectedProjectId.value) {
+    return groupedProjects.value;
+  }
+  return groupedProjects.value.filter(item => item.projectId === selectedProjectId.value);
+});
+
+const selectedProject = computed(() => visibleProjects.value.find(item => item.projectId === selectedProjectId.value) || visibleProjects.value[0] || null);
 
 function getAlert(project) {
   const effective = project.records.filter(item => item.startDate && new Date(item.startDate) <= new Date());
@@ -131,16 +139,21 @@ function backTarget() {
 
 async function loadPage() {
   const customerId = Number(route.query.customerId);
+  const projectId = Number(route.query.projectId) || null;
   const [customerResponse, recordResponse, projectResponse] = await Promise.all([
     api.get(`/api/customers/${customerId}`),
     api.get(`/api/annual-maintenance?customerId=${customerId}`),
     api.get(`/api/projects?customerId=${customerId}`)
   ]);
   customer.value = customerResponse.data;
-  records.value = recordResponse.data;
-  projects.value = projectResponse.data;
-  if (!selectedProjectId.value && groupedProjects.value.length) {
-    selectedProjectId.value = groupedProjects.value[0].projectId;
+  records.value = fromProjects.value && projectId
+    ? recordResponse.data.filter(item => item.projectId === projectId)
+    : recordResponse.data;
+  projects.value = fromProjects.value && projectId
+    ? projectResponse.data.filter(item => item.id === projectId)
+    : projectResponse.data;
+  if (!selectedProjectId.value && visibleProjects.value.length) {
+    selectedProjectId.value = visibleProjects.value[0].projectId;
   }
 }
 
@@ -222,8 +235,8 @@ onMounted(async () => {
       <section class="summary-bar">
         <article class="summary-card">
           <span>Total Projects</span>
-          <strong>{{ groupedProjects.length }}</strong>
-          <small>Grouped by project</small>
+          <strong>{{ visibleProjects.length }}</strong>
+          <small>{{ fromProjects ? 'Project-focused view' : 'Grouped by project' }}</small>
         </article>
         <article class="summary-card">
           <span>Customer</span>
@@ -244,6 +257,34 @@ onMounted(async () => {
 
       <section class="maintenance-layout">
         <section class="records-panel">
+          <div v-if="selectedProject" class="records-insight-stack">
+            <section class="maintenance-priority" :class="alertClass(selectedProject)">
+              <div class="maintenance-priority-copy">
+                <span class="eyebrow">Warning Status</span>
+                <h3>{{ getAlert(selectedProject).label }}</h3>
+                <p>{{ getAlert(selectedProject).message }}</p>
+              </div>
+              <div class="maintenance-priority-badge">
+                <span class="status-pill" :class="alertClass(selectedProject)">{{ getAlert(selectedProject).label }}</span>
+              </div>
+            </section>
+
+            <section v-if="warningBannerClass(selectedProject)" class="warning-banner" :class="warningBannerClass(selectedProject)">
+              <strong>{{ getAlert(selectedProject).label }}</strong>
+              <p>{{ getAlert(selectedProject).message }}</p>
+            </section>
+
+            <section class="detail-group">
+              <h4>Project Summary</h4>
+              <div class="detail-list">
+                <div class="detail-item"><span>Market</span><strong>{{ selectedProject.market }}</strong></div>
+                <div class="detail-item"><span>Customer</span><strong>{{ selectedProject.customerName }}</strong></div>
+                <div class="detail-item"><span>Status</span><strong>{{ getAlert(selectedProject).label }}</strong></div>
+                <div class="detail-item"><span>Message</span><strong>{{ getAlert(selectedProject).message }}</strong></div>
+              </div>
+            </section>
+          </div>
+
           <div class="records-toolbar">
             <div>
               <strong class="panel-title">Maintenance Projects</strong>
@@ -252,7 +293,7 @@ onMounted(async () => {
           </div>
           <div class="stack-list">
             <article
-              v-for="project in groupedProjects"
+              v-for="project in visibleProjects"
               :key="project.projectId"
               class="stack-card"
               :class="[rowAlertClass(project), { selected: selectedProject?.projectId === project.projectId }]"
@@ -276,32 +317,6 @@ onMounted(async () => {
           </div>
           <div class="insight-content">
             <template v-if="selectedProject">
-              <section class="maintenance-priority" :class="alertClass(selectedProject)">
-                <div class="maintenance-priority-copy">
-                  <span class="eyebrow">Warning Status</span>
-                  <h3>{{ getAlert(selectedProject).label }}</h3>
-                  <p>{{ getAlert(selectedProject).message }}</p>
-                </div>
-                <div class="maintenance-priority-badge">
-                  <span class="status-pill" :class="alertClass(selectedProject)">{{ getAlert(selectedProject).label }}</span>
-                </div>
-              </section>
-
-              <section v-if="warningBannerClass(selectedProject)" class="warning-banner" :class="warningBannerClass(selectedProject)">
-                <strong>{{ getAlert(selectedProject).label }}</strong>
-                <p>{{ getAlert(selectedProject).message }}</p>
-              </section>
-
-              <section class="detail-group">
-                <h4>Project Summary</h4>
-                <div class="detail-list">
-                  <div class="detail-item"><span>Market</span><strong>{{ selectedProject.market }}</strong></div>
-                  <div class="detail-item"><span>Customer</span><strong>{{ selectedProject.customerName }}</strong></div>
-                  <div class="detail-item"><span>Status</span><strong>{{ getAlert(selectedProject).label }}</strong></div>
-                  <div class="detail-item"><span>Message</span><strong>{{ getAlert(selectedProject).message }}</strong></div>
-                </div>
-              </section>
-
               <section class="detail-group detail-group-compact">
                 <h4>Maintenance Timeline</h4>
                 <div class="timeline-list">

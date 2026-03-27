@@ -5,7 +5,7 @@ import Customer360View from '../views/Customer360View.vue';
 import MaintenanceView from '../views/MaintenanceView.vue';
 
 const routes = [
-  { path: '/', redirect: '/app/customers' },
+  { path: '/', name: 'root-login', component: LoginView, meta: { public: true } },
   { path: '/login', name: 'login', component: LoginView, meta: { public: true } },
   { path: '/app/:module?', name: 'workspace', component: WorkspaceView },
   { path: '/customer-360/:customerId', name: 'customer360', component: Customer360View },
@@ -21,9 +21,6 @@ router.beforeEach(async (to) => {
   const token = localStorage.getItem('crmToken');
   if (!to.meta.public && !token) {
     return { name: 'login' };
-  }
-  if (to.meta.public && token && to.name === 'login') {
-    return { name: 'workspace', params: { module: 'customers' } };
   }
   return true;
 });
