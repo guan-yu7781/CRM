@@ -92,6 +92,7 @@ function submit() {
             @change="handleFieldInput(field.name, form[field.name])"
           >
             <option v-if="!field.required" value="">None</option>
+            <option v-if="field.required && !form[field.name]" value="" disabled>— Select —</option>
             <option v-for="option in optionsResolver(field)" :key="option.value" :value="option.value">
               {{ option.label }}
             </option>
