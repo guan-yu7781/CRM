@@ -2,10 +2,13 @@ package com.crm.personal.crm.customer;
 
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.Ordered;
+import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 
 @Component
+@Order(Ordered.HIGHEST_PRECEDENCE)
 public class CustomerSchemaMigrationRunner implements ApplicationRunner {
 
     private final JdbcTemplate jdbcTemplate;
@@ -24,6 +27,7 @@ public class CustomerSchemaMigrationRunner implements ApplicationRunner {
         dropColumnIfExists("onboarding_stage");
         dropColumnIfExists("email");
         dropColumnIfExists("kyc_status");
+        dropColumnIfExists("segment");
     }
 
     private void dropColumnIfExists(String columnName) {

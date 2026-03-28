@@ -68,11 +68,18 @@ const lowRisk = computed(() => crm.data.customers.filter(c => c.riskLevel === 'L
 
 const totalUsers = computed(() => crm.data.accessControl.length);
 
-const activeMarketNames = computed(() => {
-  const seen = new Set();
-  crm.data.projects.forEach(p => { if (p.market) seen.add(p.market); });
-  crm.data.customers.forEach(c => { if (c.market) seen.add(c.market); });
-  return Array.from(seen);
+const activeMarkets = computed(() => {
+  const counts = new Map();
+  crm.data.projects.forEach(p => { if (p.market) counts.set(p.market, (counts.get(p.market) || 0) + 1); });
+  return Array.from(counts.entries()).map(([name, count]) => ({ name, count }));
+});
+
+const dealMarkets = computed(() => {
+  const counts = new Map();
+  crm.data.deals
+    .filter(d => d.stage !== 'WON' && d.stage !== 'LOST' && d.market)
+    .forEach(d => counts.set(d.market, (counts.get(d.market) || 0) + 1));
+  return Array.from(counts.entries()).map(([name, count]) => ({ name, count }));
 });
 
 // ── Summary cards (permission-aware) ─────────────────────────────────────────
@@ -237,7 +244,7 @@ onMounted(async () => {
                 <span class="panel-subtitle">Countries with active projects or customer relationships</span>
               </div>
             </div>
-            <WorldMapPanel :active-markets="activeMarketNames" />
+            <WorldMapPanel :market-counts="activeMarkets" :deal-counts="dealMarkets" />
           </section>
 
           <!-- ── Left column ─────────────────────────────────────────── -->

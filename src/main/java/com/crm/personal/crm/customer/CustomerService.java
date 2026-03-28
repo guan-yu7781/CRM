@@ -13,10 +13,12 @@ public class CustomerService {
 
     private final CustomerMapper customerMapper;
     private final CustomerRepository customerRepository;
+    private final CifNumberGenerator cifNumberGenerator;
 
-    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository) {
+    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository, CifNumberGenerator cifNumberGenerator) {
         this.customerMapper = customerMapper;
         this.customerRepository = customerRepository;
+        this.cifNumberGenerator = cifNumberGenerator;
     }
 
     public List<CustomerResponse> getAllCustomers(int page, int size) {
@@ -30,8 +32,18 @@ public class CustomerService {
         return CustomerResponse.from(findCustomerRecord(id));
     }
 
+    public String nextCifNumber(CustomerType type) {
+        return cifNumberGenerator.next(type);
+    }
+
     @Transactional
     public CustomerResponse createCustomer(CustomerRequest request) {
+        // Auto-generate CIF if not provided
+        if (request.getCifNumber() == null || request.getCifNumber().isBlank()) {
+            CustomerType type = request.getCustomerType() == null ? CustomerType.COMMERCIAL_BANK : request.getCustomerType();
+            request.setCifNumber(cifNumberGenerator.next(type));
+        }
+
         CustomerRecord existingByCif = customerMapper.findByCifNumberIgnoreCase(request.getCifNumber());
         if (existingByCif != null) {
             throw new IllegalArgumentException("A customer with this CIF number already exists");
@@ -91,7 +103,6 @@ public class CustomerService {
         customer.setName(request.getName());
         customer.setCustomerType(request.getCustomerType() == null ? CustomerType.COMMERCIAL_BANK : request.getCustomerType());
         customer.setCifNumber(request.getCifNumber());
-        customer.setSegment(request.getSegment() == null ? CustomerSegment.RETAIL : request.getSegment());
         customer.setStatus(request.getStatus() == null ? CustomerStatus.LEAD : request.getStatus());
         customer.setRiskLevel(request.getRiskLevel() == null ? RiskLevel.LOW : request.getRiskLevel());
         customer.setNotes(request.getNotes());

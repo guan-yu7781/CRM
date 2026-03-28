@@ -36,10 +36,6 @@ public class Customer {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CustomerSegment segment = CustomerSegment.RETAIL;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
     private CustomerStatus status = CustomerStatus.LEAD;
 
     @Enumerated(EnumType.STRING)
@@ -88,14 +84,6 @@ public class Customer {
 
     public void setCifNumber(String cifNumber) {
         this.cifNumber = cifNumber;
-    }
-
-    public CustomerSegment getSegment() {
-        return segment;
-    }
-
-    public void setSegment(CustomerSegment segment) {
-        this.segment = segment;
     }
 
     public CustomerStatus getStatus() {

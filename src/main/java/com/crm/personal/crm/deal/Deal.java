@@ -35,6 +35,10 @@ public class Deal {
     @Column(nullable = false)
     private DealStage stage = DealStage.NEW;
 
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private OpportunityType opportunityType = OpportunityType.ACQUISITION;
+
     private LocalDate expectedCloseDate;
 
     @Column(length = 1000)
@@ -80,6 +84,14 @@ public class Deal {
 
     public void setStage(DealStage stage) {
         this.stage = stage;
+    }
+
+    public OpportunityType getOpportunityType() {
+        return opportunityType;
+    }
+
+    public void setOpportunityType(OpportunityType opportunityType) {
+        this.opportunityType = opportunityType;
     }
 
     public LocalDate getExpectedCloseDate() {

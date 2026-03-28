@@ -10,6 +10,8 @@ public class DealResponse {
     private String title;
     private BigDecimal amount;
     private DealStage stage;
+    private OpportunityType opportunityType;
+    private String market;
     private LocalDate expectedCloseDate;
     private String notes;
     private Long customerId;
@@ -25,6 +27,8 @@ public class DealResponse {
         response.setTitle(deal.getTitle());
         response.setAmount(deal.getAmount());
         response.setStage(deal.getStage());
+        response.setOpportunityType(deal.getOpportunityType());
+        response.setMarket(null);
         response.setExpectedCloseDate(deal.getExpectedCloseDate());
         response.setNotes(deal.getNotes());
         response.setCustomerId(deal.getCustomer().getId());
@@ -42,6 +46,8 @@ public class DealResponse {
         response.setTitle(deal.getTitle());
         response.setAmount(deal.getAmount());
         response.setStage(deal.getStage());
+        response.setOpportunityType(deal.getOpportunityType());
+        response.setMarket(deal.getMarket());
         response.setExpectedCloseDate(deal.getExpectedCloseDate());
         response.setNotes(deal.getNotes());
         response.setCustomerId(deal.getCustomerId());
@@ -83,6 +89,22 @@ public class DealResponse {
 
     public void setStage(DealStage stage) {
         this.stage = stage;
+    }
+
+    public OpportunityType getOpportunityType() {
+        return opportunityType;
+    }
+
+    public void setOpportunityType(OpportunityType opportunityType) {
+        this.opportunityType = opportunityType;
+    }
+
+    public String getMarket() {
+        return market;
+    }
+
+    public void setMarket(String market) {
+        this.market = market;
     }
 
     public LocalDate getExpectedCloseDate() {

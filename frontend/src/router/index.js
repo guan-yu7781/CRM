@@ -5,6 +5,7 @@ import WorkspaceView from '../views/WorkspaceView.vue';
 import Customer360View from '../views/Customer360View.vue';
 import MaintenanceView from '../views/MaintenanceView.vue';
 import ErrorView from '../views/ErrorView.vue';
+import { modulePermissions, moduleMenu } from '../lib/permissions';
 
 const routes = [
   { path: '/', name: 'root-login', component: LoginView, meta: { public: true } },
@@ -23,11 +24,31 @@ const router = createRouter({
   routes
 });
 
-router.beforeEach(async (to) => {
+router.beforeEach((to) => {
   const token = localStorage.getItem('crmToken');
+
   if (!to.meta.public && !token) {
     return { name: 'login' };
   }
+
+  // Check module-level permission on workspace routes
+  if (to.name === 'workspace' && token) {
+    const permissions = JSON.parse(localStorage.getItem('crmPermissions') || '[]');
+    const moduleKey = to.params.module || 'customers';
+    const viewPerm = modulePermissions[moduleKey]?.view;
+
+    if (viewPerm && !permissions.includes(viewPerm)) {
+      // Redirect to first accessible module; if none, show 403
+      const first = moduleMenu.find(m => {
+        const p = modulePermissions[m.key]?.view;
+        return p && permissions.includes(p);
+      });
+      return first
+        ? { name: 'workspace', params: { module: first.key } }
+        : { name: 'error-403' };
+    }
+  }
+
   return true;
 });
 

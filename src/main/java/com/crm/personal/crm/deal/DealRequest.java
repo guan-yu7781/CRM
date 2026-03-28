@@ -18,6 +18,11 @@ public class DealRequest {
 
     private DealStage stage = DealStage.NEW;
 
+    /** Optional — auto-derived from customer status when null. */
+    private OpportunityType opportunityType;
+
+    private String market;
+
     private LocalDate expectedCloseDate;
 
     @Size(max = 1000, message = "Notes cannot exceed 1000 characters")
@@ -50,6 +55,14 @@ public class DealRequest {
         this.stage = stage;
     }
 
+    public String getMarket() {
+        return market;
+    }
+
+    public void setMarket(String market) {
+        this.market = market;
+    }
+
     public LocalDate getExpectedCloseDate() {
         return expectedCloseDate;
     }
@@ -72,5 +85,13 @@ public class DealRequest {
 
     public void setCustomerId(Long customerId) {
         this.customerId = customerId;
+    }
+
+    public OpportunityType getOpportunityType() {
+        return opportunityType;
+    }
+
+    public void setOpportunityType(OpportunityType opportunityType) {
+        this.opportunityType = opportunityType;
     }
 }

@@ -8,6 +8,8 @@ public class SpaForwardController {
 
     @GetMapping({
             "/login",
+            "/dashboard",
+            "/403", "/500",
             "/app",
             "/app/{path:[^\\.]*}",
             "/app/{path:^(?!api$).*$}/**",
