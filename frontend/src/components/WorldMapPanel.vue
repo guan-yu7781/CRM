@@ -10,7 +10,8 @@ import { CanvasRenderer } from 'echarts/renderers';
 echarts.use([EffectScatterChart, GeoComponent, TooltipComponent, CanvasRenderer]);
 
 const props = defineProps({
-  marketCounts: { type: Array, default: () => [] } // [{ name, count }]
+  marketCounts: { type: Array, default: () => [] }, // projects: [{ name, count }]
+  dealCounts:   { type: Array, default: () => [] }  // deals:    [{ name, count }]
 });
 
 const chartEl = ref(null);
@@ -74,14 +75,16 @@ const COORDS = {
 };
 
 function buildOption() {
-  const maxCount = Math.max(...props.marketCounts.map(m => m.count), 1);
+  const maxProj = Math.max(...props.marketCounts.map(m => m.count), 1);
+  const maxDeal = Math.max(...props.dealCounts.map(m => m.count), 1);
 
-  const data = props.marketCounts
+  const projectData = props.marketCounts
     .filter(({ name }) => COORDS[name])
-    .map(({ name, count }) => ({
-      name,
-      value: [...COORDS[name], count]
-    }));
+    .map(({ name, count }) => ({ name, value: [...COORDS[name], count], seriesType: 'project' }));
+
+  const dealData = props.dealCounts
+    .filter(({ name }) => COORDS[name])
+    .map(({ name, count }) => ({ name, value: [...COORDS[name], count], seriesType: 'deal' }));
 
   return {
     backgroundColor: '#f5f8f7',
@@ -90,51 +93,49 @@ function buildOption() {
       backgroundColor: '#fff',
       borderColor: '#d0e8e0',
       textStyle: { color: '#1a3830', fontSize: 12 },
-      formatter: p => p.data
-        ? `<strong style="color:#2f9e87">${p.data.name}</strong><br/>${p.data.value[2]} record${p.data.value[2] !== 1 ? 's' : ''}`
-        : ''
+      formatter: p => {
+        if (!p.data) return '';
+        const isProject = p.data.seriesType === 'project';
+        const color = isProject ? '#2f9e87' : '#e08c2a';
+        const type = isProject ? 'project' : 'opportunity';
+        return `<strong style="color:${color}">${p.data.name}</strong><br/>${p.data.value[2]} ${type}${p.data.value[2] !== 1 ? 's' : ''}`;
+      }
     },
     geo: {
       map: 'world',
-      roam: true,     // pan + zoom enabled; scroll-wheel blocked via JS
+      roam: true,
       zoom: 2.0,
       center: [22, 5],
-      itemStyle: {
-        areaColor: '#ddeee8',
-        borderColor: '#b8d8cc',
-        borderWidth: 0.6
-      },
-      emphasis: {
-        itemStyle: { areaColor: '#c2ddd4' },
-        label: { show: false }
-      },
+      itemStyle: { areaColor: '#ddeee8', borderColor: '#b8d8cc', borderWidth: 0.6 },
+      emphasis: { itemStyle: { areaColor: '#c2ddd4' }, label: { show: false } },
       label: { show: false }
     },
     series: [
       {
+        name: 'Projects',
         type: 'effectScatter',
         coordinateSystem: 'geo',
-        data,
-        symbolSize: d => {
-          const base = Math.sqrt(d[2] / maxCount) * 28;
-          return Math.max(8, base);
-        },
+        data: projectData,
+        symbolSize: d => Math.max(8, Math.sqrt(d[2] / maxProj) * 28),
         itemStyle: { color: '#2f9e87', opacity: 0.9 },
-        rippleEffect: {
-          brushType: 'stroke',
-          color: '#2f9e87',
-          scale: 3.5,
-          period: 4
-        },
+        rippleEffect: { brushType: 'stroke', color: '#2f9e87', scale: 3.5, period: 4 },
         emphasis: {
           itemStyle: { color: '#1d7a65' },
-          label: {
-            show: true,
-            formatter: p => p.data.name,
-            color: '#1a3830',
-            fontSize: 11,
-            position: 'top'
-          }
+          label: { show: true, formatter: p => p.data.name, color: '#1a3830', fontSize: 11, position: 'top' }
+        }
+      },
+      {
+        name: 'Opportunities',
+        type: 'effectScatter',
+        coordinateSystem: 'geo',
+        data: dealData,
+        symbolSize: d => Math.max(7, Math.sqrt(d[2] / maxDeal) * 22),
+        symbol: 'diamond',
+        itemStyle: { color: '#e08c2a', opacity: 0.85 },
+        rippleEffect: { brushType: 'fill', color: '#e08c2a', scale: 2.5, period: 3 },
+        emphasis: {
+          itemStyle: { color: '#c4721a' },
+          label: { show: true, formatter: p => p.data.name, color: '#1a3830', fontSize: 11, position: 'top' }
         }
       }
     ]
@@ -200,7 +201,7 @@ onUnmounted(() => {
   chart = null;
 });
 
-watch(() => props.marketCounts, () => {
+watch([() => props.marketCounts, () => props.dealCounts], () => {
   chart?.setOption(buildOption());
 }, { deep: true });
 </script>
@@ -217,13 +218,20 @@ watch(() => props.marketCounts, () => {
     <div class="world-map-legend">
       <div class="world-map-legend-items">
         <span class="world-map-legend-dot world-map-legend-dot--active" />
-        <span>Active markets ({{ marketCounts.length }})</span>
+        <span>Projects ({{ marketCounts.length }} markets)</span>
+        <span class="world-map-legend-dot world-map-legend-dot--deal" style="margin-left:14px" />
+        <span>Opportunities ({{ dealCounts.length }} markets)</span>
       </div>
-      <div v-if="marketCounts.length" class="world-map-tags">
+      <div v-if="marketCounts.length || dealCounts.length" class="world-map-tags">
         <span
           v-for="m in [...marketCounts].sort((a,b) => b.count - a.count)"
-          :key="m.name"
+          :key="'p-' + m.name"
           class="world-map-tag"
+        >{{ m.name }} <em>{{ m.count }}</em></span>
+        <span
+          v-for="m in [...dealCounts].sort((a,b) => b.count - a.count)"
+          :key="'d-' + m.name"
+          class="world-map-tag world-map-tag--deal"
         >{{ m.name }} <em>{{ m.count }}</em></span>
       </div>
       <p v-else class="world-map-empty">No market presence data available.</p>
@@ -276,5 +284,15 @@ watch(() => props.marketCounts, () => {
 
 .map-zoom-btn:active {
   background: #d4ede7;
+}
+
+.world-map-legend-dot--deal {
+  background: #e08c2a;
+}
+
+.world-map-tag--deal {
+  background: #fff4e6;
+  color: #9a5a0a;
+  border-color: #f5c88a;
 }
 </style>

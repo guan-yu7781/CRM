@@ -15,7 +15,7 @@ import java.util.List;
 @Mapper
 public interface DealMapper {
 
-    @Select("select d.id, d.title, d.amount, d.stage, d.opportunity_type, d.expected_close_date, d.notes, d.customer_id, " +
+    @Select("select d.id, d.title, d.amount, d.stage, d.opportunity_type, d.market, d.expected_close_date, d.notes, d.customer_id, " +
             "c.name as customer_name, d.converted_project_id, d.converted_at, d.created_at, d.updated_at " +
             "from deals d join customers c on c.id = d.customer_id " +
             "order by d.updated_at desc, d.id desc")
@@ -31,7 +31,7 @@ public interface DealMapper {
     })
     List<DealRecord> findAll();
 
-    @Select("select d.id, d.title, d.amount, d.stage, d.opportunity_type, d.expected_close_date, d.notes, d.customer_id, " +
+    @Select("select d.id, d.title, d.amount, d.stage, d.opportunity_type, d.market, d.expected_close_date, d.notes, d.customer_id, " +
             "c.name as customer_name, d.converted_project_id, d.converted_at, d.created_at, d.updated_at " +
             "from deals d join customers c on c.id = d.customer_id " +
             "order by d.updated_at desc, d.id desc " +
@@ -39,7 +39,7 @@ public interface DealMapper {
     @org.apache.ibatis.annotations.ResultMap("dealRecordMap")
     List<DealRecord> findPaged(@Param("size") int size, @Param("offset") int offset);
 
-    @Select("select d.id, d.title, d.amount, d.stage, d.opportunity_type, d.expected_close_date, d.notes, d.customer_id, " +
+    @Select("select d.id, d.title, d.amount, d.stage, d.opportunity_type, d.market, d.expected_close_date, d.notes, d.customer_id, " +
             "c.name as customer_name, d.created_at, d.updated_at " +
             "from deals d join customers c on c.id = d.customer_id " +
             "where d.customer_id = #{customerId} " +
@@ -47,7 +47,7 @@ public interface DealMapper {
     @org.apache.ibatis.annotations.ResultMap("dealRecordMap")
     List<DealRecord> findByCustomerId(Long customerId);
 
-    @Select("select d.id, d.title, d.amount, d.stage, d.opportunity_type, d.expected_close_date, d.notes, d.customer_id, " +
+    @Select("select d.id, d.title, d.amount, d.stage, d.opportunity_type, d.market, d.expected_close_date, d.notes, d.customer_id, " +
             "c.name as customer_name, d.converted_project_id, d.converted_at, d.created_at, d.updated_at " +
             "from deals d join customers c on c.id = d.customer_id " +
             "where d.id = #{id}")
@@ -58,9 +58,9 @@ public interface DealMapper {
     int countByConvertedProjectId(@Param("projectId") Long projectId);
 
     @Insert("insert into deals " +
-            "(title, amount, stage, opportunity_type, expected_close_date, notes, customer_id, converted_project_id, converted_at, created_at, updated_at) " +
+            "(title, amount, stage, opportunity_type, market, expected_close_date, notes, customer_id, converted_project_id, converted_at, created_at, updated_at) " +
             "values " +
-            "(#{title}, #{amount}, #{stage}, #{opportunityType}, #{expectedCloseDate}, #{notes}, #{customerId}, #{convertedProjectId}, #{convertedAt}, #{createdAt}, #{updatedAt})")
+            "(#{title}, #{amount}, #{stage}, #{opportunityType}, #{market}, #{expectedCloseDate}, #{notes}, #{customerId}, #{convertedProjectId}, #{convertedAt}, #{createdAt}, #{updatedAt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(DealRecord record);
 
@@ -69,6 +69,7 @@ public interface DealMapper {
             "amount = #{amount}, " +
             "stage = #{stage}, " +
             "opportunity_type = #{opportunityType}, " +
+            "market = #{market}, " +
             "expected_close_date = #{expectedCloseDate}, " +
             "notes = #{notes}, " +
             "customer_id = #{customerId}, " +

@@ -11,6 +11,7 @@ public class DealRecord {
     private BigDecimal amount;
     private DealStage stage;
     private OpportunityType opportunityType;
+    private String market;
     private LocalDate expectedCloseDate;
     private String notes;
     private Long customerId;
@@ -58,6 +59,14 @@ public class DealRecord {
 
     public void setOpportunityType(OpportunityType opportunityType) {
         this.opportunityType = opportunityType;
+    }
+
+    public String getMarket() {
+        return market;
+    }
+
+    public void setMarket(String market) {
+        this.market = market;
     }
 
     public LocalDate getExpectedCloseDate() {

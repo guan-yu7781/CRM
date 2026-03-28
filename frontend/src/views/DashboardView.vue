@@ -71,7 +71,14 @@ const totalUsers = computed(() => crm.data.accessControl.length);
 const activeMarkets = computed(() => {
   const counts = new Map();
   crm.data.projects.forEach(p => { if (p.market) counts.set(p.market, (counts.get(p.market) || 0) + 1); });
-  crm.data.customers.forEach(c => { if (c.market) counts.set(c.market, (counts.get(c.market) || 0) + 1); });
+  return Array.from(counts.entries()).map(([name, count]) => ({ name, count }));
+});
+
+const dealMarkets = computed(() => {
+  const counts = new Map();
+  crm.data.deals
+    .filter(d => d.stage !== 'WON' && d.stage !== 'LOST' && d.market)
+    .forEach(d => counts.set(d.market, (counts.get(d.market) || 0) + 1));
   return Array.from(counts.entries()).map(([name, count]) => ({ name, count }));
 });
 
@@ -237,7 +244,7 @@ onMounted(async () => {
                 <span class="panel-subtitle">Countries with active projects or customer relationships</span>
               </div>
             </div>
-            <WorldMapPanel :market-counts="activeMarkets" />
+            <WorldMapPanel :market-counts="activeMarkets" :deal-counts="dealMarkets" />
           </section>
 
           <!-- ── Left column ─────────────────────────────────────────── -->

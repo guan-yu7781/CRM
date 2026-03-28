@@ -141,6 +141,7 @@ public class DealService {
                     : OpportunityType.ACQUISITION
             );
         }
+        deal.setMarket(request.getMarket());
         deal.setExpectedCloseDate(request.getExpectedCloseDate());
         deal.setNotes(request.getNotes());
         deal.setCustomerId(customer.getId());

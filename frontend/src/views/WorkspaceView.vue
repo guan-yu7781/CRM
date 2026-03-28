@@ -77,6 +77,7 @@ const configs = {
       { name: 'customerId', label: 'Customer', type: 'select', source: 'customers', required: true },
       { name: 'opportunityType', label: 'Opportunity Type', type: 'select', required: true, options: ['EXPANSION', 'ACQUISITION'] },
       { name: 'title', label: 'Opportunity Name', type: 'text', required: true },
+      { name: 'market', label: 'Market', type: 'market-search', required: true },
       { name: 'amount', label: 'Expected Value', type: 'number', required: true },
       { name: 'stage', label: 'Stage', type: 'select', required: true, options: ['NEW', 'QUALIFIED', 'PROPOSAL_SENT', 'NEGOTIATION', 'WON', 'LOST'] },
       { name: 'expectedCloseDate', label: 'Expected Close', type: 'date' },
@@ -139,13 +140,22 @@ const items = computed(() => crm.data[currentModule.value] || []);
 
 // Deals: opportunity-type filter tab  ('ALL' | 'EXPANSION' | 'ACQUISITION')
 const dealTypeFilter = ref('ALL');
-watch(currentModule, () => { dealTypeFilter.value = 'ALL'; });
+// Contacts / Projects: per-customer filter ('' = all)
+const customerFilter = ref('');
+watch(currentModule, () => {
+  dealTypeFilter.value = 'ALL';
+  customerFilter.value = '';
+});
 
 const filteredItems = computed(() => {
   let list = items.value;
   // Apply opportunity-type tab filter for deals
   if (currentModule.value === 'deals' && dealTypeFilter.value !== 'ALL') {
     list = list.filter(item => item.opportunityType === dealTypeFilter.value);
+  }
+  // Apply customer filter for contacts / projects
+  if ((currentModule.value === 'contacts' || currentModule.value === 'projects') && customerFilter.value) {
+    list = list.filter(item => String(item.customerId) === String(customerFilter.value));
   }
   const keyword = search.value.trim().toLowerCase();
   if (!keyword) return list;
@@ -159,9 +169,9 @@ const summaryCards = computed(() => {
   if (module === 'customers') {
     return [
       { label: 'Customers', value: String(crm.data.customers.length), note: 'Total master records' },
-      { label: 'Corporate', value: String(crm.data.customers.filter(item => item.segment === 'CORPORATE').length), note: 'Corporate segment' },
+      { label: 'Active', value: String(crm.data.customers.filter(item => item.status === 'ACTIVE').length), note: 'Active relationships' },
       { label: 'High Risk', value: String(crm.data.customers.filter(item => item.riskLevel === 'HIGH').length), note: 'Priority monitoring' },
-      { label: 'Active', value: String(crm.data.customers.filter(item => item.status === 'ACTIVE').length), note: 'Live relationships' }
+      { label: 'Lead', value: String(crm.data.customers.filter(item => item.status === 'LEAD').length), note: 'In pipeline' }
     ];
   }
   if (module === 'projects') {
@@ -220,7 +230,7 @@ function canDelete() {
 function tableStatusLabel(item) {
   if (currentModule.value === 'contacts') return item.jobTitle || 'Primary Contact';
   if (currentModule.value === 'projects') return beautify(item.status);
-  if (currentModule.value === 'deals') return beautify(item.stage);
+  if (currentModule.value === 'deals') return STAGE_LABELS[item.stage] || beautify(item.stage);
   if (currentModule.value === 'tasks') return beautify(item.status);
   if (currentModule.value === 'activities') return beautify(item.type);
   return item.roleLabel;
@@ -255,10 +265,14 @@ function tableContextLabel(item) {
   return item.customerName || item.createdBy;
 }
 
+const STAGE_LABELS = {
+  NEW: 'New', QUALIFIED: 'Qualified', PROPOSAL_SENT: 'Proposal', NEGOTIATION: 'Negotiation', WON: 'Won', LOST: 'Lost'
+};
+
 function tableMetaLabel(item) {
   if (currentModule.value === 'contacts') return item.phone || 'No direct line';
   if (currentModule.value === 'projects') return item.market || 'Market pending';
-  if (currentModule.value === 'deals') return item.expectedCloseDate ? `Expected ${formatDate(item.expectedCloseDate)}` : 'Close date pending';
+  if (currentModule.value === 'deals') return item.market || (item.expectedCloseDate ? `Close ${formatDate(item.expectedCloseDate)}` : 'Market pending');
   if (currentModule.value === 'tasks') return item.dueDate ? `Due ${formatDate(item.dueDate)}` : 'No due date';
   if (currentModule.value === 'activities') return formatDateTime(item.activityDate);
   return `${item.dataScope || auth.dataScope || 'Scoped'} access`;
@@ -297,7 +311,10 @@ function optionLabel(field, value) {
 function resolveFieldOptions(field) {
   if (field.type !== 'select') return [];
   if (field.source === 'customers') {
-    return crm.data.customers.map(item => ({ value: item.id, label: `${item.name} • ${item.cifNumber}` }));
+    const pool = currentModule.value === 'projects'
+      ? crm.data.customers.filter(c => c.status === 'ACTIVE')
+      : crm.data.customers;
+    return pool.map(item => ({ value: item.id, label: `${item.name} • ${item.cifNumber}` }));
   }
   if (field.source === 'deals') {
     return crm.data.deals.map(item => ({ value: item.id, label: `${item.title} • ${item.customerName}` }));
@@ -554,6 +571,16 @@ watch(filteredItems, (next) => {
           </div>
 
           <div v-else class="module-table-wrap" :class="`module-table-wrap-${currentModule}`">
+
+            <!-- Contacts / Projects: customer filter -->
+            <div v-if="currentModule === 'contacts' || currentModule === 'projects'" class="customer-filter-bar">
+              <label class="customer-filter-label">Filter by Customer</label>
+              <select v-model="customerFilter" class="customer-filter-select">
+                <option value="">All Customers</option>
+                <option v-for="c in crm.data.customers" :key="c.id" :value="c.id">{{ c.name }}</option>
+              </select>
+              <span v-if="customerFilter" class="customer-filter-count">{{ filteredItems.length }} records</span>
+            </div>
 
             <!-- Deals: opportunity-type filter tabs -->
             <div v-if="currentModule === 'deals'" class="deal-type-tabs">

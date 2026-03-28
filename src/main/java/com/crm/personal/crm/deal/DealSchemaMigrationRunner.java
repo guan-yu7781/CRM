@@ -22,6 +22,7 @@ public class DealSchemaMigrationRunner implements ApplicationRunner {
         ensureColumn("converted_project_id", "alter table deals add column converted_project_id bigint");
         ensureColumn("converted_at", "alter table deals add column converted_at datetime");
         ensureColumn("opportunity_type", "alter table deals add column opportunity_type varchar(32) not null default 'ACQUISITION'");
+        ensureColumn("market", "alter table deals add column market varchar(255)");
         // Backfill any rows that were inserted before the column existed (null or empty string)
         try {
             jdbcTemplate.execute(
