@@ -1,5 +1,7 @@
 package com.crm.personal.crm.task;
 
+import com.crm.personal.crm.audit.AuditAction;
+import com.crm.personal.crm.audit.AuditService;
 import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
 import com.crm.personal.crm.deal.DealRecord;
@@ -18,11 +20,14 @@ public class TaskService {
     private final TaskMapper taskMapper;
     private final CustomerService customerService;
     private final DealService dealService;
+    private final AuditService auditService;
 
-    public TaskService(TaskMapper taskMapper, CustomerService customerService, DealService dealService) {
+    public TaskService(TaskMapper taskMapper, CustomerService customerService, DealService dealService,
+                       AuditService auditService) {
         this.taskMapper = taskMapper;
         this.customerService = customerService;
         this.dealService = dealService;
+        this.auditService = auditService;
     }
 
     public List<TaskResponse> getTasks(Long customerId, TaskStatus status, int page, int size) {
@@ -58,7 +63,10 @@ public class TaskService {
         task.setUpdatedAt(now);
 
         taskMapper.insert(task);
-        return TaskResponse.from(findTask(task.getId()));
+        TaskResponse result = TaskResponse.from(findTask(task.getId()));
+        auditService.log("TASK", result.getId(), result.getTitle(), AuditAction.CREATE,
+                "Created task '" + result.getTitle() + "' for customer '" + result.getCustomerName() + "'");
+        return result;
     }
 
     @Transactional
@@ -71,13 +79,19 @@ public class TaskService {
         task.setUpdatedAt(LocalDateTime.now());
 
         taskMapper.update(task);
-        return TaskResponse.from(findTask(id));
+        TaskResponse result = TaskResponse.from(findTask(id));
+        auditService.log("TASK", id, result.getTitle(), AuditAction.UPDATE,
+                "Updated task '" + result.getTitle() + "' (status: " + result.getStatus() + ")");
+        return result;
     }
 
     @Transactional
     public void deleteTask(Long id) {
-        findTask(id);
+        TaskRecord task = findTask(id);
+        String title = task.getTitle();
         taskMapper.deleteById(id);
+        auditService.log("TASK", id, title, AuditAction.DELETE,
+                "Deleted task '" + title + "'");
     }
 
     private TaskRecord findTask(Long id) {

@@ -1,5 +1,7 @@
 package com.crm.personal.crm.deal;
 
+import com.crm.personal.crm.audit.AuditAction;
+import com.crm.personal.crm.audit.AuditService;
 import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
 import com.crm.personal.crm.customer.CustomerStatus;
@@ -22,11 +24,14 @@ public class DealService {
     private final DealMapper dealMapper;
     private final CustomerService customerService;
     private final ProjectMapper projectMapper;
+    private final AuditService auditService;
 
-    public DealService(DealMapper dealMapper, CustomerService customerService, ProjectMapper projectMapper) {
+    public DealService(DealMapper dealMapper, CustomerService customerService, ProjectMapper projectMapper,
+                       AuditService auditService) {
         this.dealMapper = dealMapper;
         this.customerService = customerService;
         this.projectMapper = projectMapper;
+        this.auditService = auditService;
     }
 
     public List<DealResponse> getAllDeals(int page, int size) {
@@ -60,7 +65,10 @@ public class DealService {
         deal.setUpdatedAt(now);
 
         dealMapper.insert(deal);
-        return DealResponse.from(findDeal(deal.getId()));
+        DealResponse result = DealResponse.from(findDeal(deal.getId()));
+        auditService.log("DEAL", result.getId(), result.getTitle(), AuditAction.CREATE,
+                "Created deal '" + result.getTitle() + "' for customer '" + result.getCustomerName() + "' (stage: " + result.getStage() + ")");
+        return result;
     }
 
     @Transactional
@@ -72,13 +80,19 @@ public class DealService {
         deal.setUpdatedAt(LocalDateTime.now());
 
         dealMapper.update(deal);
-        return DealResponse.from(findDeal(id));
+        DealResponse result = DealResponse.from(findDeal(id));
+        auditService.log("DEAL", id, result.getTitle(), AuditAction.UPDATE,
+                "Updated deal '" + result.getTitle() + "' (stage: " + result.getStage() + ")");
+        return result;
     }
 
     @Transactional
     public void deleteDeal(Long id) {
-        findDeal(id);
+        DealRecord deal = findDeal(id);
+        String title = deal.getTitle();
         dealMapper.deleteById(id);
+        auditService.log("DEAL", id, title, AuditAction.DELETE,
+                "Deleted deal '" + title + "'");
     }
 
     @Transactional

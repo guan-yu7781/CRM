@@ -26,7 +26,8 @@ public enum UserRole {
                     UserPermission.MAINTENANCE_UPDATE_PAYMENT, UserPermission.MAINTENANCE_UPDATE_RENEW,
                     UserPermission.TASK_VIEW, UserPermission.TASK_CREATE, UserPermission.TASK_EDIT, UserPermission.TASK_DELETE,
                     UserPermission.ACTIVITY_VIEW, UserPermission.ACTIVITY_CREATE, UserPermission.ACTIVITY_EDIT, UserPermission.ACTIVITY_DELETE,
-                    UserPermission.ACCESS_CONTROL_VIEW
+                    UserPermission.ACCESS_CONTROL_VIEW,
+                    UserPermission.AUDIT_LOG_VIEW
             )
     ),
     SALES_MANAGER(
@@ -41,7 +42,8 @@ public enum UserRole {
                     UserPermission.PROJECT_VIEW, UserPermission.PROJECT_CREATE, UserPermission.PROJECT_EDIT, UserPermission.PROJECT_VIEW_FINANCIALS,
                     UserPermission.MAINTENANCE_VIEW,
                     UserPermission.TASK_VIEW, UserPermission.TASK_CREATE, UserPermission.TASK_EDIT,
-                    UserPermission.ACTIVITY_VIEW, UserPermission.ACTIVITY_CREATE, UserPermission.ACTIVITY_EDIT
+                    UserPermission.ACTIVITY_VIEW, UserPermission.ACTIVITY_CREATE, UserPermission.ACTIVITY_EDIT,
+                    UserPermission.AUDIT_LOG_VIEW
             )
     ),
     RELATIONSHIP_MANAGER(
@@ -56,7 +58,8 @@ public enum UserRole {
                     UserPermission.PROJECT_VIEW, UserPermission.PROJECT_CREATE, UserPermission.PROJECT_EDIT,
                     UserPermission.MAINTENANCE_VIEW, UserPermission.MAINTENANCE_CREATE, UserPermission.MAINTENANCE_EDIT,
                     UserPermission.TASK_VIEW, UserPermission.TASK_CREATE, UserPermission.TASK_EDIT,
-                    UserPermission.ACTIVITY_VIEW, UserPermission.ACTIVITY_CREATE, UserPermission.ACTIVITY_EDIT
+                    UserPermission.ACTIVITY_VIEW, UserPermission.ACTIVITY_CREATE, UserPermission.ACTIVITY_EDIT,
+                    UserPermission.AUDIT_LOG_VIEW
             )
     ),
     FINANCE_OFFICER(
@@ -71,7 +74,8 @@ public enum UserRole {
                     UserPermission.PROJECT_VIEW, UserPermission.PROJECT_VIEW_FINANCIALS,
                     UserPermission.MAINTENANCE_VIEW, UserPermission.MAINTENANCE_UPDATE_PAYMENT, UserPermission.MAINTENANCE_UPDATE_RENEW,
                     UserPermission.TASK_VIEW,
-                    UserPermission.ACTIVITY_VIEW
+                    UserPermission.ACTIVITY_VIEW,
+                    UserPermission.AUDIT_LOG_VIEW
             )
     ),
     ADMIN(
@@ -93,7 +97,8 @@ public enum UserRole {
                     UserPermission.PROJECT_VIEW, UserPermission.PROJECT_CREATE, UserPermission.PROJECT_EDIT,
                     UserPermission.MAINTENANCE_VIEW, UserPermission.MAINTENANCE_CREATE, UserPermission.MAINTENANCE_EDIT,
                     UserPermission.TASK_VIEW, UserPermission.TASK_CREATE, UserPermission.TASK_EDIT,
-                    UserPermission.ACTIVITY_VIEW, UserPermission.ACTIVITY_CREATE, UserPermission.ACTIVITY_EDIT
+                    UserPermission.ACTIVITY_VIEW, UserPermission.ACTIVITY_CREATE, UserPermission.ACTIVITY_EDIT,
+                    UserPermission.AUDIT_LOG_VIEW
             )
     );
 

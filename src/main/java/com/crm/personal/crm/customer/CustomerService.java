@@ -1,5 +1,7 @@
 package com.crm.personal.crm.customer;
 
+import com.crm.personal.crm.audit.AuditAction;
+import com.crm.personal.crm.audit.AuditService;
 import com.crm.personal.crm.shared.ResourceNotFoundException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -14,11 +16,14 @@ public class CustomerService {
     private final CustomerMapper customerMapper;
     private final CustomerRepository customerRepository;
     private final CifNumberGenerator cifNumberGenerator;
+    private final AuditService auditService;
 
-    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository, CifNumberGenerator cifNumberGenerator) {
+    public CustomerService(CustomerMapper customerMapper, CustomerRepository customerRepository,
+                           CifNumberGenerator cifNumberGenerator, AuditService auditService) {
         this.customerMapper = customerMapper;
         this.customerRepository = customerRepository;
         this.cifNumberGenerator = cifNumberGenerator;
+        this.auditService = auditService;
     }
 
     public List<CustomerResponse> getAllCustomers(int page, int size) {
@@ -57,7 +62,10 @@ public class CustomerService {
         customer.setUpdatedAt(now);
 
         customerMapper.insert(customer);
-        return CustomerResponse.from(findCustomerRecord(customer.getId()));
+        CustomerResponse result = CustomerResponse.from(findCustomerRecord(customer.getId()));
+        auditService.log("CUSTOMER", result.getId(), result.getName(), AuditAction.CREATE,
+                "Created customer '" + result.getName() + "' (" + result.getCustomerType() + ")");
+        return result;
     }
 
     @Transactional
@@ -73,13 +81,19 @@ public class CustomerService {
         customer.setUpdatedAt(LocalDateTime.now());
 
         customerMapper.update(customer);
-        return CustomerResponse.from(findCustomerRecord(id));
+        CustomerResponse result = CustomerResponse.from(findCustomerRecord(id));
+        auditService.log("CUSTOMER", id, result.getName(), AuditAction.UPDATE,
+                "Updated customer '" + result.getName() + "'");
+        return result;
     }
 
     @Transactional
     public void deleteCustomer(Long id) {
-        findCustomerRecord(id);
+        CustomerRecord customer = findCustomerRecord(id);
+        String name = customer.getName();
         customerMapper.deleteById(id);
+        auditService.log("CUSTOMER", id, name, AuditAction.DELETE,
+                "Deleted customer '" + name + "'");
     }
 
     public CustomerRecord findCustomerRecord(Long id) {

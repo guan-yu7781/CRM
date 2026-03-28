@@ -1,5 +1,7 @@
 package com.crm.personal.crm.contact;
 
+import com.crm.personal.crm.audit.AuditAction;
+import com.crm.personal.crm.audit.AuditService;
 import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
 import com.crm.personal.crm.shared.ResourceNotFoundException;
@@ -15,10 +17,12 @@ public class ContactService {
 
     private final ContactMapper contactMapper;
     private final CustomerService customerService;
+    private final AuditService auditService;
 
-    public ContactService(ContactMapper contactMapper, CustomerService customerService) {
+    public ContactService(ContactMapper contactMapper, CustomerService customerService, AuditService auditService) {
         this.contactMapper = contactMapper;
         this.customerService = customerService;
+        this.auditService = auditService;
     }
 
     public List<ContactResponse> getContacts(Long customerId, int page, int size) {
@@ -50,7 +54,11 @@ public class ContactService {
         contact.setUpdatedAt(now);
 
         contactMapper.insert(contact);
-        return ContactResponse.from(findContact(contact.getId()));
+        ContactResponse result = ContactResponse.from(findContact(contact.getId()));
+        String contactName = result.getFirstName() + " " + result.getLastName();
+        auditService.log("CONTACT", result.getId(), contactName, AuditAction.CREATE,
+                "Created contact '" + contactName + "' for customer '" + result.getCustomerName() + "'");
+        return result;
     }
 
     @Transactional
@@ -62,13 +70,20 @@ public class ContactService {
         contact.setUpdatedAt(LocalDateTime.now());
 
         contactMapper.update(contact);
-        return ContactResponse.from(findContact(id));
+        ContactResponse result = ContactResponse.from(findContact(id));
+        String contactName = result.getFirstName() + " " + result.getLastName();
+        auditService.log("CONTACT", id, contactName, AuditAction.UPDATE,
+                "Updated contact '" + contactName + "'");
+        return result;
     }
 
     @Transactional
     public void deleteContact(Long id) {
-        findContact(id);
+        ContactRecord contact = findContact(id);
+        String contactName = contact.getFirstName() + " " + contact.getLastName();
         contactMapper.deleteById(id);
+        auditService.log("CONTACT", id, contactName, AuditAction.DELETE,
+                "Deleted contact '" + contactName + "'");
     }
 
     private ContactRecord findContact(Long id) {
