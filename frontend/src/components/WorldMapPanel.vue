@@ -1,141 +1,202 @@
 <script setup>
-import { computed } from 'vue';
+import { ref, onMounted, onUnmounted, watch } from 'vue';
+import * as echarts from 'echarts/core';
+import { EffectScatterChart } from 'echarts/charts';
+import { GeoComponent, TooltipComponent } from 'echarts/components';
+import { CanvasRenderer } from 'echarts/renderers';
+
+echarts.use([EffectScatterChart, GeoComponent, TooltipComponent, CanvasRenderer]);
 
 const props = defineProps({
-  activeMarkets: { type: Array, default: () => [] }
+  marketCounts: { type: Array, default: () => [] } // [{ name, count }]
 });
 
-// Country centroids [lat, lon]
+const chartEl = ref(null);
+let chart = null;
+let mapRegistered = false;
+
+// Country name → [longitude, latitude]
 const COORDS = {
-  'Algeria': [28, 3], 'Angola': [-12, 18], 'Benin': [9, 2], 'Botswana': [-22, 24],
-  'Burkina Faso': [12, -1], 'Burundi': [-3.5, 30], 'Cabo Verde': [16, -24],
-  'Cameroon': [5.7, 12], 'Central African Republic': [6.6, 21], 'Chad': [15, 19],
-  'Comoros': [-12, 44], 'Congo': [-0.2, 16], "Cote d'Ivoire": [6.5, -5.5],
-  'Democratic Republic of the Congo': [-2.9, 24], 'Djibouti': [12, 43],
-  'Egypt': [27, 30], 'Equatorial Guinea': [2, 10], 'Eritrea': [15, 40],
-  'Eswatini': [-26.5, 31.5], 'Ethiopia': [9, 40], 'Gabon': [-0.8, 12],
-  'Gambia': [13.5, -15], 'Ghana': [7.9, -1], 'Guinea': [11, -11],
-  'Guinea-Bissau': [12, -15], 'Kenya': [0.5, 38], 'Lesotho': [-29.6, 28],
-  'Liberia': [6.4, -9], 'Libya': [27, 17], 'Madagascar': [-20, 47],
-  'Malawi': [-13, 34], 'Mali': [17, -2], 'Mauritania': [20, -11],
-  'Mauritius': [-20, 57.5], 'Morocco': [32, -7], 'Mozambique': [-19, 35],
-  'Namibia': [-22, 18.5], 'Niger': [16, 8], 'Nigeria': [9, 8],
-  'Rwanda': [-2, 30], 'Sao Tome and Principe': [0.2, 6.6], 'Senegal': [14.5, -14.5],
-  'Seychelles': [-5, 55.5], 'Sierra Leone': [8.4, -12], 'Somalia': [5, 46],
-  'South Africa': [-29, 25], 'South Sudan': [7.9, 31], 'Sudan': [15, 30],
-  'Tanzania': [-6, 35], 'Togo': [8, 1], 'Tunisia': [34, 9],
-  'Uganda': [1.4, 32], 'Zambia': [-13, 28], 'Zimbabwe': [-20, 30],
-  'Afghanistan': [34, 68], 'Armenia': [40, 45], 'Azerbaijan': [40.5, 47.5],
-  'Bahrain': [26, 50.5], 'Bangladesh': [24, 90], 'Bhutan': [27.5, 90],
-  'Brunei Darussalam': [4.5, 115], 'Cambodia': [12.5, 105], 'China': [36, 104],
-  'Cyprus': [35, 33], 'Georgia': [42, 43.5], 'India': [22, 79],
-  'Indonesia': [-1, 114], 'Iran': [32, 54], 'Iraq': [33, 44],
-  'Israel': [31.5, 35], 'Japan': [37, 138], 'Jordan': [31, 37],
-  'Kazakhstan': [48, 68], 'Kuwait': [29.5, 47.5], 'Kyrgyzstan': [41, 75],
-  "Lao People's Democratic Republic": [18, 104], 'Lebanon': [34, 36],
-  'Malaysia': [4, 109.5], 'Maldives': [3, 73], 'Mongolia': [46.5, 103],
-  'Myanmar': [19, 96], 'Nepal': [28, 84], "Democratic People's Republic of Korea": [40, 127],
-  'Oman': [21.5, 57], 'Pakistan': [30, 69], 'Philippines': [13, 122],
-  'Qatar': [25, 51], 'Republic of Korea': [37, 128], 'Saudi Arabia': [24, 45],
-  'Singapore': [1.3, 104], 'Sri Lanka': [8, 81], 'State of Palestine': [32, 35],
-  'Syrian Arab Republic': [35, 38], 'Tajikistan': [38.5, 71], 'Thailand': [16, 101],
-  'Timor-Leste': [-8.9, 126], 'Turkiye': [39, 35], 'Turkmenistan': [39, 59],
-  'United Arab Emirates': [24, 54], 'Uzbekistan': [41.5, 64.5],
-  'Viet Nam': [14, 108], 'Yemen': [16, 48]
+  'Algeria': [3, 28], 'Angola': [18, -12], 'Benin': [2, 9], 'Botswana': [24, -22],
+  'Burkina Faso': [-1, 12], 'Burundi': [30, -3.5], 'Cabo Verde': [-24, 16],
+  'Cameroon': [12, 5.7], 'Central African Republic': [21, 6.6], 'Chad': [19, 15],
+  'Comoros': [44, -12], 'Congo': [16, -0.2], "Cote d'Ivoire": [-5.5, 6.5],
+  'Democratic Republic of the Congo': [24, -2.9], 'Djibouti': [43, 12],
+  'Egypt': [30, 27], 'Equatorial Guinea': [10, 2], 'Eritrea': [40, 15],
+  'Eswatini': [31.5, -26.5], 'Ethiopia': [40, 9], 'Gabon': [12, -0.8],
+  'Gambia': [-15, 13.5], 'Ghana': [-1, 7.9], 'Guinea': [-11, 11],
+  'Guinea-Bissau': [-15, 12], 'Kenya': [38, 0.5], 'Lesotho': [28, -29.6],
+  'Liberia': [-9, 6.4], 'Libya': [17, 27], 'Madagascar': [47, -20],
+  'Malawi': [34, -13], 'Mali': [-2, 17], 'Mauritania': [-11, 20],
+  'Mauritius': [57.5, -20], 'Morocco': [-7, 32], 'Mozambique': [35, -19],
+  'Namibia': [18.5, -22], 'Niger': [8, 16], 'Nigeria': [8, 9],
+  'Rwanda': [30, -2], 'Sao Tome and Principe': [6.6, 0.2], 'Senegal': [-14.5, 14.5],
+  'Seychelles': [55.5, -5], 'Sierra Leone': [-12, 8.4], 'Somalia': [46, 5],
+  'South Africa': [25, -29], 'South Sudan': [31, 7.9], 'Sudan': [30, 15],
+  'Tanzania': [35, -6], 'Togo': [1, 8], 'Tunisia': [9, 34],
+  'Uganda': [32, 1.4], 'Zambia': [28, -13], 'Zimbabwe': [30, -20],
+  'Afghanistan': [68, 34], 'Armenia': [45, 40], 'Azerbaijan': [47.5, 40.5],
+  'Bahrain': [50.5, 26], 'Bangladesh': [90, 24], 'Bhutan': [90, 27.5],
+  'Brunei Darussalam': [115, 4.5], 'Cambodia': [105, 12.5], 'China': [104, 36],
+  'Cyprus': [33, 35], 'Georgia': [43.5, 42], 'India': [79, 22],
+  'Indonesia': [114, -1], 'Iran': [54, 32], 'Iraq': [44, 33],
+  'Israel': [35, 31.5], 'Japan': [138, 37], 'Jordan': [37, 31],
+  'Kazakhstan': [68, 48], 'Kuwait': [47.5, 29.5], 'Kyrgyzstan': [75, 41],
+  "Lao People's Democratic Republic": [104, 18], 'Lebanon': [36, 34],
+  'Malaysia': [109.5, 4], 'Maldives': [73, 3], 'Mongolia': [103, 46.5],
+  'Myanmar': [96, 19], 'Nepal': [84, 28], "Democratic People's Republic of Korea": [127, 40],
+  'Oman': [57, 21.5], 'Pakistan': [69, 30], 'Philippines': [122, 13],
+  'Qatar': [51, 25], 'Republic of Korea': [128, 37], 'Saudi Arabia': [45, 24],
+  'Singapore': [104, 1.3], 'Sri Lanka': [81, 8], 'State of Palestine': [35, 32],
+  'Syrian Arab Republic': [38, 35], 'Tajikistan': [71, 38.5], 'Thailand': [101, 16],
+  'Timor-Leste': [126, -8.9], 'Turkiye': [35, 39], 'Turkmenistan': [59, 39],
+  'United Arab Emirates': [54, 24], 'Uzbekistan': [64.5, 41.5],
+  'Viet Nam': [108, 14], 'Yemen': [48, 16],
+  'Albania': [20, 41], 'Austria': [14, 47.5], 'Belarus': [28, 53.5],
+  'Belgium': [4.5, 50.8], 'Bosnia and Herzegovina': [17.5, 44], 'Bulgaria': [25, 43],
+  'Croatia': [16, 45.5], 'Czech Republic': [15.5, 50], 'Denmark': [10, 56],
+  'Estonia': [25, 59], 'Finland': [26, 64], 'France': [2, 46],
+  'Germany': [10, 51], 'Greece': [22, 39], 'Hungary': [19, 47],
+  'Ireland': [-8, 53], 'Italy': [12, 42.8], 'Latvia': [25, 57],
+  'Lithuania': [24, 56], 'Luxembourg': [6.1, 49.8], 'Malta': [14.4, 35.9],
+  'Moldova': [29, 47], 'Montenegro': [19, 42.5], 'Netherlands': [5.3, 52.3],
+  'North Macedonia': [21.7, 41.6], 'Norway': [10, 62], 'Poland': [20, 52],
+  'Portugal': [-8, 39.5], 'Romania': [25, 46], 'Russia': [100, 60],
+  'Serbia': [21, 44], 'Slovakia': [19.5, 48.7], 'Slovenia': [15, 46.1],
+  'Spain': [-4, 40], 'Sweden': [15, 62], 'Switzerland': [8, 47],
+  'Ukraine': [32, 49], 'United Kingdom': [-3, 54],
+  'Canada': [-96, 56], 'United States of America': [-98, 38], 'Mexico': [-102, 24],
+  'Brazil': [-53, -10], 'Argentina': [-64, -34], 'Colombia': [-74, 4],
+  'Chile': [-71, -30], 'Peru': [-76, -10], 'Venezuela': [-66, 8],
+  'Ecuador': [-77.5, -1.8], 'Bolivia': [-65, -17], 'Paraguay': [-58, -23],
+  'Uruguay': [-56, -33], 'Australia': [133, -27], 'New Zealand': [174, -41]
 };
 
-const W = 900, H = 450;
+function buildOption() {
+  const maxCount = Math.max(...props.marketCounts.map(m => m.count), 1);
 
-function xy(lat, lon) {
-  return [(lon + 180) * W / 360, (90 - lat) * H / 180];
+  const data = props.marketCounts
+    .filter(({ name }) => COORDS[name])
+    .map(({ name, count }) => ({
+      name,
+      value: [...COORDS[name], count]
+    }));
+
+  return {
+    backgroundColor: '#0d1f1a',
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: '#0d1f1a',
+      borderColor: '#1e3d30',
+      textStyle: { color: '#b0c8c0', fontSize: 12 },
+      formatter: p => p.data
+        ? `<strong style="color:#2f9e87">${p.data.name}</strong><br/>${p.data.value[2]} record${p.data.value[2] !== 1 ? 's' : ''}`
+        : ''
+    },
+    geo: {
+      map: 'world',
+      roam: true,
+      zoom: 1.2,
+      center: [20, 5],
+      itemStyle: {
+        areaColor: '#162b24',
+        borderColor: '#1e3d30',
+        borderWidth: 0.6
+      },
+      emphasis: {
+        itemStyle: { areaColor: '#1a3830' },
+        label: { show: false }
+      },
+      label: { show: false }
+    },
+    series: [
+      {
+        type: 'effectScatter',
+        coordinateSystem: 'geo',
+        data,
+        symbolSize: d => {
+          const base = Math.sqrt(d[2] / maxCount) * 28;
+          return Math.max(8, base);
+        },
+        itemStyle: { color: '#2f9e87', opacity: 0.9 },
+        rippleEffect: {
+          brushType: 'stroke',
+          color: '#2f9e87',
+          scale: 3.5,
+          period: 4
+        },
+        emphasis: {
+          itemStyle: { color: '#4ec9ad' },
+          label: {
+            show: true,
+            formatter: p => p.data.name,
+            color: '#fff',
+            fontSize: 11,
+            position: 'top'
+          }
+        }
+      }
+    ]
+  };
 }
 
-const activeSet = computed(() => new Set(props.activeMarkets));
+async function initChart() {
+  if (!mapRegistered) {
+    const res = await fetch('https://cdn.jsdelivr.net/npm/echarts@5/map/json/world.json');
+    const worldJson = await res.json();
+    echarts.registerMap('world', worldJson);
+    mapRegistered = true;
+  }
 
-const markers = computed(() =>
-  Object.entries(COORDS).map(([name, [lat, lon]]) => {
-    const [x, y] = xy(lat, lon);
-    return { name, x, y, active: activeSet.value.has(name) };
-  })
-);
+  if (!chart && chartEl.value) {
+    chart = echarts.init(chartEl.value, null, { renderer: 'canvas' });
+  }
+  chart?.setOption(buildOption());
+}
 
-const activeMarkerList = computed(() =>
-  markers.value.filter(m => m.active).map(m => m.name).sort()
-);
+function onResize() {
+  chart?.resize();
+}
+
+onMounted(async () => {
+  await initChart();
+  window.addEventListener('resize', onResize);
+});
+
+onUnmounted(() => {
+  window.removeEventListener('resize', onResize);
+  chart?.dispose();
+  chart = null;
+});
+
+watch(() => props.marketCounts, () => {
+  chart?.setOption(buildOption());
+}, { deep: true });
 </script>
 
 <template>
   <div class="world-map-panel">
-    <svg class="world-map-svg" viewBox="0 0 900 450" xmlns="http://www.w3.org/2000/svg" aria-label="Business presence world map">
-      <!-- Ocean -->
-      <rect width="900" height="450" fill="#0d1f1a"/>
-
-      <!-- North America -->
-      <polygon points="30,75 85,55 140,45 175,50 210,60 245,80 262,105 270,132 265,158 252,178 242,200 228,218 215,222 200,215 182,200 162,180 145,162 125,148 100,135 75,122 50,108" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-      <!-- Greenland -->
-      <ellipse cx="378" cy="50" rx="22" ry="28" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-      <!-- Central America -->
-      <polygon points="242,200 232,215 222,230 230,238 240,230 248,218" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-      <!-- South America -->
-      <polygon points="248,240 268,228 295,228 318,238 335,255 345,278 342,310 330,338 315,358 295,368 272,362 255,345 244,320 238,295 242,268" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-
-      <!-- Africa -->
-      <polygon points="435,135 478,128 510,128 533,138 543,153 552,180 558,195 578,198 558,225 552,235 550,243 538,253 538,292 532,296 495,313 490,305 480,295 480,270 480,240 472,235 472,218 465,215 452,213 438,215 422,213 413,208 410,195 408,178 418,155 430,148" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-      <!-- Madagascar -->
-      <ellipse cx="568" cy="280" rx="7" ry="17" fill="#162b24" stroke="#1e3d30" stroke-width="0.8" transform="rotate(-10 568 280)"/>
-
-      <!-- Europe (simplified as part of Eurasia) -->
-      <polygon points="428,133 445,118 462,108 478,100 492,95 505,100 512,110 505,120 488,125 472,120 455,120 440,122" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-
-      <!-- Main Asia body -->
-      <polygon points="440,122 462,108 492,95 530,82 580,72 635,65 685,62 730,65 778,72 815,82 840,100 838,118 820,132 802,145 780,162 760,178 745,198 730,215 715,235 700,255 685,258 662,248 642,225 622,212 600,205 582,200 568,188 555,170 545,155 535,140 520,130 505,120 488,125 472,120" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-
-      <!-- Arabian Peninsula -->
-      <polygon points="540,152 558,150 572,162 580,180 578,200 562,218 548,213 538,200 535,178 538,160" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-
-      <!-- Indian subcontinent -->
-      <polygon points="600,158 628,148 660,155 672,170 655,198 648,208 633,212 615,208 600,200 595,185 598,168" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-
-      <!-- SE Asia / Malay Peninsula -->
-      <polygon points="712,175 730,170 748,178 752,195 742,215 728,225 712,220 700,215 698,198 705,185" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-
-      <!-- Indonesia (simplified) -->
-      <ellipse cx="722" cy="248" rx="35" ry="8" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-      <ellipse cx="775" cy="252" rx="15" ry="6" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-
-      <!-- Japan -->
-      <ellipse cx="803" cy="130" rx="7" ry="20" fill="#162b24" stroke="#1e3d30" stroke-width="0.8" transform="rotate(-25 803 130)"/>
-
-      <!-- Australia -->
-      <polygon points="730,272 762,258 800,262 825,278 830,308 812,322 790,325 762,318 738,310 728,295" fill="#162b24" stroke="#1e3d30" stroke-width="0.8"/>
-
-      <!-- Inactive country dots -->
-      <circle
-        v-for="m in markers.filter(m => !m.active)"
-        :key="m.name"
-        :cx="m.x" :cy="m.y" r="2.5"
-        fill="#2a4a3c" opacity="0.7"
-      />
-
-      <!-- Active country dots (glowing teal) -->
-      <g v-for="m in markers.filter(m => m.active)" :key="`active-${m.name}`">
-        <circle :cx="m.x" :cy="m.y" r="8" fill="#2f9e87" opacity="0.18"/>
-        <circle :cx="m.x" :cy="m.y" r="4.5" fill="#2f9e87" opacity="0.85"/>
-        <title>{{ m.name }}</title>
-      </g>
-    </svg>
-
+    <div ref="chartEl" class="world-map-echarts" />
     <div class="world-map-legend">
       <div class="world-map-legend-items">
-        <span class="world-map-legend-dot world-map-legend-dot--active"/>
-        <span>Active markets ({{ activeMarkerList.length }})</span>
-        <span class="world-map-legend-dot world-map-legend-dot--inactive" style="margin-left:16px"/>
-        <span>Known regions</span>
+        <span class="world-map-legend-dot world-map-legend-dot--active" />
+        <span>Active markets ({{ marketCounts.length }})</span>
       </div>
-      <div v-if="activeMarkerList.length" class="world-map-tags">
-        <span v-for="name in activeMarkerList" :key="name" class="world-map-tag">{{ name }}</span>
+      <div v-if="marketCounts.length" class="world-map-tags">
+        <span
+          v-for="m in [...marketCounts].sort((a,b) => b.count - a.count)"
+          :key="m.name"
+          class="world-map-tag"
+        >{{ m.name }} <em>{{ m.count }}</em></span>
       </div>
       <p v-else class="world-map-empty">No market presence data available.</p>
     </div>
   </div>
 </template>
+
+<style scoped>
+.world-map-echarts {
+  width: 100%;
+  height: 420px;
+}
+</style>
