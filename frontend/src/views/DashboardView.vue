@@ -6,6 +6,7 @@ import { useAuthStore } from '../stores/auth';
 import { useCrmStore } from '../stores/crm';
 import { formatMoney, formatDate, formatDateTime, beautify } from '../lib/formatters';
 import { modulePermissions } from '../lib/permissions';
+import WorldMapPanel from '../components/WorldMapPanel.vue';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -66,6 +67,13 @@ const mediumRisk = computed(() => crm.data.customers.filter(c => c.riskLevel ===
 const lowRisk = computed(() => crm.data.customers.filter(c => c.riskLevel === 'LOW').length);
 
 const totalUsers = computed(() => crm.data.accessControl.length);
+
+const activeMarketNames = computed(() => {
+  const seen = new Set();
+  crm.data.projects.forEach(p => { if (p.market) seen.add(p.market); });
+  crm.data.customers.forEach(c => { if (c.market) seen.add(c.market); });
+  return Array.from(seen);
+});
 
 // ── Summary cards (permission-aware) ─────────────────────────────────────────
 
@@ -220,6 +228,17 @@ onMounted(async () => {
 
         <!-- ── Main Content ────────────────────────────────────────────── -->
         <section class="shell-content dashboard-grid">
+
+          <!-- ── Market Presence Map ─────────────────────────────────── -->
+          <section v-if="auth.hasPermission('PROJECT_VIEW')" class="records-panel vue-records-panel dashboard-panel dashboard-map-panel">
+            <div class="records-toolbar">
+              <div>
+                <strong class="panel-title">Global Market Presence</strong>
+                <span class="panel-subtitle">Countries with active projects or customer relationships</span>
+              </div>
+            </div>
+            <WorldMapPanel :active-markets="activeMarketNames" />
+          </section>
 
           <!-- ── Left column ─────────────────────────────────────────── -->
           <div class="dashboard-left">

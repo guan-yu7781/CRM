@@ -211,17 +211,19 @@ onMounted(async () => {
               </template>
 
               <template v-else>
-                <div class="customer-product-grid">
-                  <article class="customer-product-card">
-                    <span>Open Pipeline</span>
-                    <strong>{{ formatMoney(totalPipeline) }}</strong>
-                    <p>Open commercial opportunities</p>
-                  </article>
-                  <article class="customer-product-card">
-                    <span>Project Book</span>
-                    <strong>{{ formatMoney(totalProjectValue) }}</strong>
-                    <p>Combined license and implementation value</p>
-                  </article>
+                <div class="tab-table-wrap">
+                  <table class="tab-table">
+                    <thead><tr><th>Title</th><th>Amount</th><th>Stage</th><th>Expected Close</th></tr></thead>
+                    <tbody>
+                      <tr v-for="item in deals" :key="item.id" @click="openDetail(item, 'deal')">
+                        <td><strong>{{ item.title }}</strong></td>
+                        <td>{{ formatMoney(item.amount) }}</td>
+                        <td>{{ beautify(item.stage) }}</td>
+                        <td>{{ item.expectedCloseDate || '—' }}</td>
+                      </tr>
+                      <tr v-if="!deals.length"><td colspan="4" class="tab-table-empty">No deal records.</td></tr>
+                    </tbody>
+                  </table>
                 </div>
               </template>
             </section>
@@ -277,39 +279,47 @@ onMounted(async () => {
   <teleport to="body">
     <div v-if="selectedDetail" class="detail-overlay" @click.self="closeDetail">
       <div class="detail-overlay-panel">
-        <div class="detail-overlay-header">
+        <div class="insight-header detail-overlay-header">
           <div>
-            <span class="eyebrow">{{ selectedDetailType === 'contact' ? 'Contact Detail' : selectedDetailType === 'deal' ? 'Opportunity Detail' : 'Project Detail' }}</span>
-            <h3>{{ selectedDetailType === 'contact' ? `${selectedDetail.firstName} ${selectedDetail.lastName}` : selectedDetailType === 'deal' ? selectedDetail.title : selectedDetail.projectName }}</h3>
+            <span class="eyebrow">{{ selectedDetailType === 'contact' ? 'Contact' : selectedDetailType === 'deal' ? 'Opportunity' : 'Project' }}</span>
+            <h2>{{ selectedDetailType === 'contact' ? `${selectedDetail.firstName} ${selectedDetail.lastName}` : selectedDetailType === 'deal' ? selectedDetail.title : selectedDetail.projectName }}</h2>
           </div>
           <button class="ghost-button" type="button" @click="closeDetail">✕</button>
         </div>
-        <template v-if="selectedDetailType === 'contact'">
-          <div class="detail-list" style="margin-top:16px">
-            <div class="detail-item"><span>Job Title</span><strong>{{ selectedDetail.jobTitle || '—' }}</strong></div>
-            <div class="detail-item"><span>Email</span><strong>{{ selectedDetail.email || '—' }}</strong></div>
-            <div class="detail-item"><span>Phone</span><strong>{{ selectedDetail.phone || '—' }}</strong></div>
-            <div class="detail-item"><span>Department</span><strong>{{ selectedDetail.department || '—' }}</strong></div>
+        <div class="insight-content">
+          <div class="insight-hero">
+            <span class="eyebrow">{{ selectedDetail.customerName || (selectedDetailType === 'contact' ? 'Contact Record' : selectedDetailType === 'deal' ? 'Opportunity Record' : 'Project Record') }}</span>
+            <h3>{{ selectedDetailType === 'contact' ? `${selectedDetail.firstName} ${selectedDetail.lastName}` : selectedDetailType === 'deal' ? selectedDetail.title : selectedDetail.projectName }}</h3>
+            <p>{{ selectedDetailType === 'contact' ? (selectedDetail.jobTitle || selectedDetail.email || 'Contact') : selectedDetailType === 'deal' ? `${formatMoney(selectedDetail.amount)} · ${beautify(selectedDetail.stage)}` : `${selectedDetail.market || '—'} · ${beautify(selectedDetail.status)}` }}</p>
           </div>
-        </template>
-        <template v-else-if="selectedDetailType === 'deal'">
-          <div class="detail-list" style="margin-top:16px">
-            <div class="detail-item"><span>Amount</span><strong>{{ formatMoney(selectedDetail.amount) }}</strong></div>
-            <div class="detail-item"><span>Stage</span><strong>{{ beautify(selectedDetail.stage) }}</strong></div>
-            <div class="detail-item"><span>Close Date</span><strong>{{ selectedDetail.closeDate || '—' }}</strong></div>
-            <div class="detail-item"><span>Owner</span><strong>{{ selectedDetail.ownerName || '—' }}</strong></div>
+          <div class="detail-group">
+            <h4>Record Detail</h4>
+            <div class="detail-list">
+              <template v-if="selectedDetailType === 'contact'">
+                <div class="detail-item"><span>Job Title</span><strong>{{ selectedDetail.jobTitle || '—' }}</strong></div>
+                <div class="detail-item"><span>Email</span><strong>{{ selectedDetail.email || '—' }}</strong></div>
+                <div class="detail-item"><span>Phone</span><strong>{{ selectedDetail.phone || '—' }}</strong></div>
+                <div class="detail-item"><span>Department</span><strong>{{ selectedDetail.department || '—' }}</strong></div>
+                <div v-if="selectedDetail.notes" class="detail-item"><span>Notes</span><strong>{{ selectedDetail.notes }}</strong></div>
+              </template>
+              <template v-else-if="selectedDetailType === 'deal'">
+                <div class="detail-item"><span>Expected Value</span><strong>{{ formatMoney(selectedDetail.amount) }}</strong></div>
+                <div class="detail-item"><span>Stage</span><strong>{{ beautify(selectedDetail.stage) }}</strong></div>
+                <div class="detail-item"><span>Expected Close</span><strong>{{ selectedDetail.expectedCloseDate || '—' }}</strong></div>
+                <div class="detail-item"><span>Customer</span><strong>{{ selectedDetail.customerName || '—' }}</strong></div>
+                <div v-if="selectedDetail.notes" class="detail-item"><span>Notes</span><strong>{{ selectedDetail.notes }}</strong></div>
+              </template>
+              <template v-else-if="selectedDetailType === 'project'">
+                <div class="detail-item"><span>Contract Status</span><strong>{{ beautify(selectedDetail.status) }}</strong></div>
+                <div class="detail-item"><span>Market</span><strong>{{ selectedDetail.market || '—' }}</strong></div>
+                <div class="detail-item"><span>License Amount</span><strong>{{ formatMoney(selectedDetail.licenseAmount) }}</strong></div>
+                <div class="detail-item"><span>Implementation</span><strong>{{ formatMoney(selectedDetail.implementationAmount) }}</strong></div>
+                <div class="detail-item"><span>Tax Rate</span><strong>{{ Number(selectedDetail.taxRate || 0) }}%</strong></div>
+                <div class="detail-item"><span>Account Manager</span><strong>{{ selectedDetail.accountManagerName || 'Not assigned' }}</strong></div>
+              </template>
+            </div>
           </div>
-        </template>
-        <template v-else-if="selectedDetailType === 'project'">
-          <div class="detail-list" style="margin-top:16px">
-            <div class="detail-item"><span>Market</span><strong>{{ selectedDetail.market || '—' }}</strong></div>
-            <div class="detail-item"><span>Status</span><strong>{{ beautify(selectedDetail.status) }}</strong></div>
-            <div class="detail-item"><span>License Amount</span><strong>{{ formatMoney(selectedDetail.licenseAmount) }}</strong></div>
-            <div class="detail-item"><span>Implementation</span><strong>{{ formatMoney(selectedDetail.implementationAmount) }}</strong></div>
-            <div class="detail-item"><span>Start Date</span><strong>{{ selectedDetail.startDate || '—' }}</strong></div>
-            <div class="detail-item"><span>End Date</span><strong>{{ selectedDetail.endDate || '—' }}</strong></div>
-          </div>
-        </template>
+        </div>
       </div>
     </div>
   </teleport>

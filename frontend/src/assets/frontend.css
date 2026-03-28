@@ -1958,6 +1958,157 @@ textarea:focus {
   color: var(--text);
 }
 
+/* ── Error pages ─────────────────────────────────────────────────────────── */
+
+.error-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f7faf8;
+  padding: 40px 24px;
+}
+
+.error-layout {
+  display: flex;
+  align-items: center;
+  gap: 60px;
+  max-width: 820px;
+  width: 100%;
+}
+
+.error-illustration {
+  flex-shrink: 0;
+  width: 160px;
+  height: 160px;
+}
+
+.error-illustration svg {
+  width: 100%;
+  height: 100%;
+}
+
+.error-body {
+  flex: 1;
+}
+
+.error-code-badge {
+  display: block;
+  font-size: 4.5rem;
+  font-weight: 700;
+  line-height: 1;
+  color: #2a3d38;
+  letter-spacing: -0.04em;
+  margin-bottom: 12px;
+}
+
+.error-title {
+  margin: 0 0 10px;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1a2e26;
+}
+
+.error-description {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  color: #4a6358;
+}
+
+.error-hint {
+  margin: 0 0 24px;
+  font-size: 0.88rem;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.error-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* ── World Map Panel ─────────────────────────────────────────────────────── */
+
+.world-map-panel {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.world-map-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 6px;
+}
+
+.world-map-legend {
+  padding: 12px 4px 0;
+}
+
+.world-map-legend-items {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.82rem;
+  color: var(--muted);
+  margin-bottom: 10px;
+}
+
+.world-map-legend-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.world-map-legend-dot--active {
+  background: #2f9e87;
+  box-shadow: 0 0 0 2px rgba(47, 158, 135, 0.2);
+}
+
+.world-map-legend-dot--inactive {
+  background: #2a4a3c;
+}
+
+.world-map-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.world-map-tag {
+  display: inline-block;
+  padding: 3px 9px;
+  border: 1px solid #d4e8df;
+  border-radius: 20px;
+  background: #f0faf6;
+  font-size: 0.76rem;
+  color: #2a4a3a;
+}
+
+.world-map-empty {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--muted);
+}
+
+/* ── Dashboard map panel full-width ─────────────────────────────────────── */
+
+.dashboard-map-panel {
+  grid-column: 1 / -1;
+}
+
+/* ── Detail overlay - insight style ─────────────────────────────────────── */
+
+.detail-overlay-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 @media (max-width: 1100px) {
   .vue-app-shell {
     grid-template-columns: 1fr;
