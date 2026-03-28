@@ -8,7 +8,6 @@ public class CustomerRecord {
     private String name;
     private CustomerType customerType;
     private String cifNumber;
-    private CustomerSegment segment;
     private CustomerStatus status;
     private RiskLevel riskLevel;
     private String notes;
@@ -45,14 +44,6 @@ public class CustomerRecord {
 
     public void setCifNumber(String cifNumber) {
         this.cifNumber = cifNumber;
-    }
-
-    public CustomerSegment getSegment() {
-        return segment;
-    }
-
-    public void setSegment(CustomerSegment segment) {
-        this.segment = segment;
     }
 
     public CustomerStatus getStatus() {

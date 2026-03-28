@@ -12,8 +12,6 @@ public class CustomerRequest {
 
     private String cifNumber;
 
-    private CustomerSegment segment = CustomerSegment.COMMERCIAL_BANK;
-
     private CustomerStatus status = CustomerStatus.LEAD;
 
     private RiskLevel riskLevel = RiskLevel.LOW;
@@ -43,14 +41,6 @@ public class CustomerRequest {
 
     public void setCifNumber(String cifNumber) {
         this.cifNumber = cifNumber;
-    }
-
-    public CustomerSegment getSegment() {
-        return segment;
-    }
-
-    public void setSegment(CustomerSegment segment) {
-        this.segment = segment;
     }
 
     public CustomerStatus getStatus() {

@@ -103,7 +103,6 @@ public class CustomerService {
         customer.setName(request.getName());
         customer.setCustomerType(request.getCustomerType() == null ? CustomerType.COMMERCIAL_BANK : request.getCustomerType());
         customer.setCifNumber(request.getCifNumber());
-        customer.setSegment(request.getSegment() == null ? CustomerSegment.COMMERCIAL_BANK : request.getSegment());
         customer.setStatus(request.getStatus() == null ? CustomerStatus.LEAD : request.getStatus());
         customer.setRiskLevel(request.getRiskLevel() == null ? RiskLevel.LOW : request.getRiskLevel());
         customer.setNotes(request.getNotes());

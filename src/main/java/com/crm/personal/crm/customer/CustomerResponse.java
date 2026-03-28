@@ -8,7 +8,6 @@ public class CustomerResponse {
     private String name;
     private CustomerType customerType;
     private String cifNumber;
-    private CustomerSegment segment;
     private CustomerStatus status;
     private RiskLevel riskLevel;
     private String notes;
@@ -21,7 +20,6 @@ public class CustomerResponse {
         response.setName(customer.getName());
         response.setCustomerType(customer.getCustomerType());
         response.setCifNumber(customer.getCifNumber());
-        response.setSegment(customer.getSegment());
         response.setStatus(customer.getStatus());
         response.setRiskLevel(customer.getRiskLevel());
         response.setNotes(customer.getNotes());
@@ -36,7 +34,6 @@ public class CustomerResponse {
         response.setName(customer.getName());
         response.setCustomerType(customer.getCustomerType());
         response.setCifNumber(customer.getCifNumber());
-        response.setSegment(customer.getSegment());
         response.setStatus(customer.getStatus());
         response.setRiskLevel(customer.getRiskLevel());
         response.setNotes(customer.getNotes());
@@ -75,14 +72,6 @@ public class CustomerResponse {
 
     public void setCifNumber(String cifNumber) {
         this.cifNumber = cifNumber;
-    }
-
-    public CustomerSegment getSegment() {
-        return segment;
-    }
-
-    public void setSegment(CustomerSegment segment) {
-        this.segment = segment;
     }
 
     public CustomerStatus getStatus() {

@@ -27,16 +27,7 @@ public class CustomerSchemaMigrationRunner implements ApplicationRunner {
         dropColumnIfExists("onboarding_stage");
         dropColumnIfExists("email");
         dropColumnIfExists("kyc_status");
-        migrateSegmentValues();
-    }
-
-    /** Map legacy generic segments to the new industry-aligned values. */
-    private void migrateSegmentValues() {
-        try {
-            jdbcTemplate.execute("update customers set segment = 'COMMERCIAL_BANK'    where segment in ('CORPORATE','WEALTH')");
-            jdbcTemplate.execute("update customers set segment = 'PAYMENT_INSTITUTION' where segment = 'SME'");
-            jdbcTemplate.execute("update customers set segment = 'COMMERCIAL_BANK'    where segment = 'RETAIL'");
-        } catch (Exception ignored) {}
+        dropColumnIfExists("segment");
     }
 
     private void dropColumnIfExists(String columnName) {
