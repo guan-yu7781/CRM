@@ -10,7 +10,6 @@ public class CustomerRequest {
 
     private CustomerType customerType = CustomerType.COMMERCIAL_BANK;
 
-    @NotBlank(message = "CIF number is required")
     private String cifNumber;
 
     private CustomerSegment segment = CustomerSegment.RETAIL;

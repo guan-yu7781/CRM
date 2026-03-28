@@ -46,9 +46,9 @@ watch(
   { immediate: true }
 );
 
-function handleFieldInput(fieldName, value) {
+async function handleFieldInput(fieldName, value) {
   if (!props.onFieldChange) return;
-  const overrides = props.onFieldChange(fieldName, value, { ...form });
+  const overrides = await Promise.resolve(props.onFieldChange(fieldName, value, { ...form }));
   if (overrides && typeof overrides === 'object') {
     Object.assign(form, overrides);
   }

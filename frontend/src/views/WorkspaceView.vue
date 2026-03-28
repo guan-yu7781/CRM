@@ -8,6 +8,7 @@ import { useCrmStore } from '../stores/crm';
 import { beautify, formatDate, formatDateTime, formatMoney } from '../lib/formatters';
 import { moduleMenu, modulePermissions } from '../lib/permissions';
 import { MARKET_OPTIONS } from '../lib/markets';
+import api from '../lib/api';
 
 const route = useRoute();
 const router = useRouter();
@@ -29,8 +30,8 @@ const configs = {
     singular: 'Customer',
     fields: [
       { name: 'name', label: 'Customer Name', type: 'text', required: true },
-      { name: 'customerType', label: 'Customer Type', type: 'select', required: true, options: ['COMMERCIAL_BANK', 'PAYMENT_INSTITUTION', 'CENTRAL_BANK', 'MICROFINANCE_BANK', 'SACCO'] },
-      { name: 'cifNumber', label: 'CIF Number', type: 'text', required: true },
+      { name: 'customerType', label: 'Customer Type', type: 'select', required: true, options: ['COMMERCIAL_BANK', 'PAYMENT_INSTITUTION', 'CENTRAL_BANK', 'MICROFINANCE_BANK', 'SACCO', 'INDIVIDUAL', 'BUSINESS'] },
+      { name: 'cifNumber', label: 'CIF Number', type: 'text', required: false },
       { name: 'segment', label: 'Segment', type: 'select', required: true, options: ['RETAIL', 'SME', 'CORPORATE', 'WEALTH'] },
       { name: 'status', label: 'Lifecycle Status', type: 'select', required: true, options: ['LEAD', 'ACTIVE', 'INACTIVE'] },
       { name: 'riskLevel', label: 'Risk Level', type: 'select', required: true, options: ['LOW', 'MEDIUM', 'HIGH'] },
@@ -344,9 +345,31 @@ function dealFieldChange(fieldName, value) {
   return { opportunityType: customer.status === 'ACTIVE' ? 'EXPANSION' : 'ACQUISITION' };
 }
 
-function openCreate() {
+// Auto-generate CIF number when customerType changes in the customer create form
+async function customerFieldChange(fieldName, value, form) {
+  if (fieldName !== 'customerType' || editingItem.value) return {};
+  if (!value) return {};
+  try {
+    const res = await api.get('/api/customers/next-cif', { params: { type: value } });
+    return { cifNumber: res.data.cifNumber };
+  } catch {
+    return {};
+  }
+}
+
+async function openCreate() {
   editingItem.value = null;
   dialogError.value = '';
+  // Pre-generate a CIF for new customers based on the default type
+  if (currentModule.value === 'customers') {
+    const defaultType = configs.customers.fields.find(f => f.name === 'customerType')?.options?.[0] || 'COMMERCIAL_BANK';
+    try {
+      const res = await api.get('/api/customers/next-cif', { params: { type: defaultType } });
+      editingItem.value = { customerType: defaultType, cifNumber: res.data.cifNumber };
+    } catch {
+      // leave editingItem null; service will auto-generate on save
+    }
+  }
   dialogOpen.value = true;
 }
 
@@ -743,7 +766,7 @@ watch(filteredItems, (next) => {
         :model-value="editingItem"
         :submit-label="editingItem ? 'Update' : 'Save'"
         :options-resolver="resolveFieldOptions"
-        :on-field-change="currentModule === 'deals' ? dealFieldChange : null"
+        :on-field-change="currentModule === 'deals' ? dealFieldChange : currentModule === 'customers' ? customerFieldChange : null"
         :error="dialogError"
         @close="dialogOpen = false"
         @submit="saveModal"
