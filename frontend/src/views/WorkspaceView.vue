@@ -64,6 +64,7 @@ const configs = {
       { name: 'implementationAmount', label: 'Implementation Amount', type: 'number', required: true },
       { name: 'taxRate', label: 'Tax Rate', type: 'number', required: true },
       { name: 'status', label: 'Contract Status', type: 'select', required: true, options: ['SIGNED_CONTRACT', 'UNSIGNED_CONTRACT'] },
+      { name: 'accountManagerId', label: 'Account Manager', type: 'select', source: 'accountManagers' },
       { name: 'customerId', label: 'Customer', type: 'select', source: 'customers', required: true }
     ]
   },
@@ -119,6 +120,7 @@ const configs = {
     fields: [
       { name: 'fullName', label: 'Full Name', type: 'text', required: true },
       { name: 'username', label: 'Username', type: 'text', required: true },
+      { name: 'email', label: 'Email', type: 'email' },
       { name: 'password', label: 'Password', type: 'password' },
       { name: 'role', label: 'Business Role', type: 'select', required: true, source: 'roles' }
     ]
@@ -273,6 +275,7 @@ function optionLabel(field, value) {
   if (field.name === 'customerId') return crm.data.customers.find(item => item.id === Number(value))?.name || value;
   if (field.name === 'dealId') return crm.data.deals.find(item => item.id === Number(value))?.title || value;
   if (field.name === 'contactId') return crm.data.contacts.find(item => item.id === Number(value))?.firstName || value;
+  if (field.name === 'accountManagerId') return crm.accountManagers.find(item => item.id === Number(value))?.fullName || value;
   if (field.name === 'role') return crm.accessRoles.find(item => item.role === value)?.label || value;
   return beautify(value);
 }
@@ -287,6 +290,9 @@ function resolveFieldOptions(field) {
   }
   if (field.source === 'contacts') {
     return crm.data.contacts.map(item => ({ value: item.id, label: `${item.firstName} ${item.lastName} • ${item.customerName}` }));
+  }
+  if (field.source === 'accountManagers') {
+    return crm.accountManagers.map(item => ({ value: item.id, label: `${item.fullName} · ${item.roleLabel}` }));
   }
   if (field.source === 'roles') {
     return crm.accessRoles.map(item => ({ value: item.role, label: item.label }));
@@ -305,7 +311,7 @@ function normalizePayload(fields, payload, editing) {
       if (field.name === 'password' && editing) return;
       return;
     }
-    if (['customerId', 'dealId', 'contactId'].includes(field.name)) {
+    if (['customerId', 'dealId', 'contactId', 'accountManagerId'].includes(field.name)) {
       output[field.name] = Number(raw);
     } else if (['licenseAmount', 'implementationAmount', 'taxRate', 'amount'].includes(field.name)) {
       output[field.name] = Number(raw);
@@ -375,6 +381,7 @@ function projectInsight(item) {
   return [
     ['Contract Status', beautify(item.status)],
     ['Market', item.market],
+    ['Account Manager', item.accountManagerName || 'Not assigned'],
     ...(auth.hasPermission('PROJECT_VIEW_FINANCIALS')
       ? [
           ['License Amount', formatMoney(item.licenseAmount)],

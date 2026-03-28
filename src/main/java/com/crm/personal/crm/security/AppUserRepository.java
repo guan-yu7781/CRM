@@ -10,4 +10,8 @@ public interface AppUserRepository extends JpaRepository<AppUser, Long> {
     Optional<AppUser> findByUsername(String username);
 
     List<AppUser> findAllByOrderByCreatedAtAscUsernameAsc();
+
+    List<AppUser> findByRoleInOrderByFullNameAsc(List<UserRole> roles);
+
+    List<AppUser> findByEmailIsNotNullAndEmailIsNotOrderByFullNameAsc(String empty);
 }

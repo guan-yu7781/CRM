@@ -13,6 +13,8 @@ public class ProjectRecord {
     private BigDecimal taxRate;
     private ProjectStatus status;
     private Long sourceDealId;
+    private Long accountManagerId;
+    private String accountManagerName;
     private Long customerId;
     private String customerName;
     private LocalDateTime createdAt;
@@ -80,6 +82,22 @@ public class ProjectRecord {
 
     public void setSourceDealId(Long sourceDealId) {
         this.sourceDealId = sourceDealId;
+    }
+
+    public Long getAccountManagerId() {
+        return accountManagerId;
+    }
+
+    public void setAccountManagerId(Long accountManagerId) {
+        this.accountManagerId = accountManagerId;
+    }
+
+    public String getAccountManagerName() {
+        return accountManagerName;
+    }
+
+    public void setAccountManagerName(String accountManagerName) {
+        this.accountManagerName = accountManagerName;
     }
 
     public Long getCustomerId() {

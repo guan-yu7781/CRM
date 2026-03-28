@@ -31,6 +31,9 @@ public class AppUser {
     @Column(nullable = false)
     private UserRole role;
 
+    @Column
+    private String email;
+
     @Column(nullable = false)
     private LocalDateTime createdAt;
 
@@ -72,6 +75,14 @@ public class AppUser {
 
     public void setRole(UserRole role) {
         this.role = role;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
     }
 
     public LocalDateTime getCreatedAt() {

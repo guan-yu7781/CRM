@@ -1,5 +1,6 @@
 package com.crm.personal.crm.reminder;
 
+import com.crm.personal.crm.security.AppUserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,19 +23,23 @@ public class MaintenanceReminderService {
     private final MaintenanceExpiryMapper expiryMapper;
     private final EmailReminderLogRepository logRepository;
     private final EmailService emailService;
+    private final AppUserRepository appUserRepository;
 
     @Value("${app.reminder.enabled:true}")
     private boolean enabled;
 
-    @Value("${app.reminder.recipients}")
-    private String recipientsConfig;
+    /** Fallback recipients if no CRM user has an email configured. */
+    @Value("${app.reminder.recipients:}")
+    private String recipientsFallback;
 
     public MaintenanceReminderService(MaintenanceExpiryMapper expiryMapper,
                                       EmailReminderLogRepository logRepository,
-                                      EmailService emailService) {
+                                      EmailService emailService,
+                                      AppUserRepository appUserRepository) {
         this.expiryMapper = expiryMapper;
         this.logRepository = logRepository;
         this.emailService = emailService;
+        this.appUserRepository = appUserRepository;
     }
 
     @Transactional
@@ -47,19 +52,9 @@ public class MaintenanceReminderService {
         LocalDate today = LocalDate.now();
         log.info("Running maintenance expiry reminder scan for date: {}", today);
 
-        // 30-day advance notice
-        processForDate(today.plusDays(30), ReminderType.THIRTY_DAYS,
-                "【提前30天提醒】维护合同即将到期", 30);
-
-        // 7-day advance notice
-        processForDate(today.plusDays(7), ReminderType.SEVEN_DAYS,
-                "【提前7天提醒】维护合同即将到期", 7);
-
-        // 1-day advance notice
-        processForDate(today.plusDays(1), ReminderType.ONE_DAY,
-                "【提前1天提醒】维护合同明日到期", 1);
-
-        // Expired: today or 1 day overdue (catches scheduler downtime)
+        processForDate(today.plusDays(30), ReminderType.THIRTY_DAYS, "【提前30天提醒】维护合同即将到期", 30);
+        processForDate(today.plusDays(7),  ReminderType.SEVEN_DAYS,  "【提前7天提醒】维护合同即将到期", 7);
+        processForDate(today.plusDays(1),  ReminderType.ONE_DAY,     "【提前1天提醒】维护合同明日到期", 1);
         processExpired(today);
     }
 
@@ -71,34 +66,32 @@ public class MaintenanceReminderService {
                 continue;
             }
             String subject = subjectPrefix + " — " + record.getCustomerName() + " / " + record.getProjectName();
-            String body = buildBody(record, daysLeft, false);
-            sendToAllRecipients(record, type, subject, body);
+            sendToAllRecipients(record, type, subject, buildBody(record, daysLeft, false));
         }
     }
 
     private void processExpired(LocalDate today) {
-        // Cover today AND yesterday to handle missed scheduler runs
-        List<MaintenanceExpiryRecord> records =
-                expiryMapper.findByEndDateBetween(today.minusDays(1), today);
-
+        List<MaintenanceExpiryRecord> records = expiryMapper.findByEndDateBetween(today.minusDays(1), today);
         for (MaintenanceExpiryRecord record : records) {
             if (logRepository.countByMaintenanceIdAndReminderType(record.getId(), ReminderType.EXPIRED.name()) > 0) {
                 log.debug("EXPIRED reminder already sent for maintenance #{}, skipping.", record.getId());
                 continue;
             }
             boolean isToday = !record.getEndDate().isBefore(today);
-            String subjectPrefix = isToday
-                    ? "【到期当天提醒】维护合同今日到期"
-                    : "【已过期提醒】维护合同已过期1天";
-            String subject = subjectPrefix + " — " + record.getCustomerName() + " / " + record.getProjectName();
-            String body = buildBody(record, 0, true);
-            sendToAllRecipients(record, ReminderType.EXPIRED, subject, body);
+            String subjectPrefix = isToday ? "【到期当天提醒】维护合同今日到期" : "【已过期提醒】维护合同已过期1天";
+            sendToAllRecipients(record, ReminderType.EXPIRED,
+                    subjectPrefix + " — " + record.getCustomerName() + " / " + record.getProjectName(),
+                    buildBody(record, 0, true));
         }
     }
 
     private void sendToAllRecipients(MaintenanceExpiryRecord record, ReminderType type,
                                      String subject, String body) {
-        List<String> recipients = parseRecipients();
+        List<String> recipients = resolveRecipients();
+        if (recipients.isEmpty()) {
+            log.warn("No recipients configured for reminder type {}. Skipping maintenance #{}.", type, record.getId());
+            return;
+        }
         for (String recipient : recipients) {
             EmailReminderLog entry = new EmailReminderLog();
             entry.setMaintenanceId(record.getId());
@@ -116,6 +109,34 @@ public class MaintenanceReminderService {
             }
             logRepository.insert(entry);
         }
+    }
+
+    /**
+     * Resolves recipient list in priority order:
+     * 1. All CRM users who have a non-empty email address
+     * 2. Fallback: app.reminder.recipients property (comma-separated)
+     */
+    private List<String> resolveRecipients() {
+        List<String> userEmails = appUserRepository
+                .findByEmailIsNotNullAndEmailIsNotOrderByFullNameAsc("")
+                .stream()
+                .map(u -> u.getEmail().trim())
+                .filter(e -> !e.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+
+        if (!userEmails.isEmpty()) {
+            return userEmails;
+        }
+
+        // Fallback to configured list
+        if (recipientsFallback != null && !recipientsFallback.isBlank()) {
+            return Arrays.stream(recipientsFallback.split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .collect(Collectors.toList());
+        }
+        return List.of();
     }
 
     private String buildBody(MaintenanceExpiryRecord record, int daysLeft, boolean isExpired) {
@@ -138,12 +159,5 @@ public class MaintenanceReminderService {
 
         sb.append("\n此邮件由 CRM 系统自动发送，请勿回复。\n");
         return sb.toString();
-    }
-
-    private List<String> parseRecipients() {
-        return Arrays.stream(recipientsConfig.split(","))
-                .map(String::trim)
-                .filter(s -> !s.isEmpty())
-                .collect(Collectors.toList());
     }
 }

@@ -27,6 +27,8 @@ public class ProjectRequest {
 
     private ProjectStatus status = ProjectStatus.UNSIGNED_CONTRACT;
 
+    private Long accountManagerId;
+
     @NotNull(message = "Customer id is required")
     private Long customerId;
 
@@ -76,6 +78,14 @@ public class ProjectRequest {
 
     public void setStatus(ProjectStatus status) {
         this.status = status;
+    }
+
+    public Long getAccountManagerId() {
+        return accountManagerId;
+    }
+
+    public void setAccountManagerId(Long accountManagerId) {
+        this.accountManagerId = accountManagerId;
     }
 
     public Long getCustomerId() {
