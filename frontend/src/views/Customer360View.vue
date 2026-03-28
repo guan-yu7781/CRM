@@ -11,6 +11,18 @@ const auth = useAuthStore();
 const crm = useCrmStore();
 
 const customerTab = ref('overview');
+const selectedDetail = ref(null);
+const selectedDetailType = ref('');
+
+function openDetail(item, type) {
+  selectedDetail.value = item;
+  selectedDetailType.value = type;
+}
+
+function closeDetail() {
+  selectedDetail.value = null;
+  selectedDetailType.value = '';
+}
 
 const customerId = computed(() => Number(route.params.customerId));
 const customer = computed(() => crm.data.customers.find(item => item.id === customerId.value));
@@ -62,7 +74,7 @@ onMounted(async () => {
           <p>{{ customer ? `${customer.cifNumber || 'CIF pending'} • ${beautify(customer.customerType)} • Strategic Relationship View` : 'Detailed relationship view for the selected customer.' }}</p>
         </div>
         <div class="header-actions">
-          <router-link class="ghost-button link-button" :to="{ name: 'workspace', params: { module: 'customers' } }">Back to Customer Management</router-link>
+          <router-link class="back-nav-link" :to="{ name: 'workspace', params: { module: 'customers' } }">← Customers</router-link>
           <router-link v-if="customer" class="primary-button link-button" :to="{ name: 'maintenance', query: { customerId: customer.id, source: 'customer360' } }">Annual Maintenance</router-link>
         </div>
       </header>
@@ -148,29 +160,53 @@ onMounted(async () => {
               </template>
 
               <template v-else-if="customerTab === 'contacts'">
-                <div class="customer-collection">
-                  <article v-for="item in contacts" :key="item.id" class="customer-collection-item">
-                    <strong>{{ item.firstName }} {{ item.lastName }}</strong>
-                    <span>{{ item.jobTitle || item.email }}</span>
-                  </article>
+                <div class="tab-table-wrap">
+                  <table class="tab-table">
+                    <thead><tr><th>Name</th><th>Title</th><th>Email</th><th>Phone</th></tr></thead>
+                    <tbody>
+                      <tr v-for="item in contacts" :key="item.id" @click="openDetail(item, 'contact')">
+                        <td><strong>{{ item.firstName }} {{ item.lastName }}</strong></td>
+                        <td>{{ item.jobTitle || '—' }}</td>
+                        <td>{{ item.email || '—' }}</td>
+                        <td>{{ item.phone || '—' }}</td>
+                      </tr>
+                      <tr v-if="!contacts.length"><td colspan="4" class="tab-table-empty">No contacts found.</td></tr>
+                    </tbody>
+                  </table>
                 </div>
               </template>
 
               <template v-else-if="customerTab === 'opportunities'">
-                <div class="customer-collection">
-                  <article v-for="item in openDeals" :key="item.id" class="customer-collection-item">
-                    <strong>{{ item.title }}</strong>
-                    <span>{{ formatMoney(item.amount) }} • {{ beautify(item.stage) }}</span>
-                  </article>
+                <div class="tab-table-wrap">
+                  <table class="tab-table">
+                    <thead><tr><th>Title</th><th>Amount</th><th>Stage</th><th>Close Date</th></tr></thead>
+                    <tbody>
+                      <tr v-for="item in openDeals" :key="item.id" @click="openDetail(item, 'deal')">
+                        <td><strong>{{ item.title }}</strong></td>
+                        <td>{{ formatMoney(item.amount) }}</td>
+                        <td>{{ beautify(item.stage) }}</td>
+                        <td>{{ item.closeDate || '—' }}</td>
+                      </tr>
+                      <tr v-if="!openDeals.length"><td colspan="4" class="tab-table-empty">No open opportunities.</td></tr>
+                    </tbody>
+                  </table>
                 </div>
               </template>
 
               <template v-else-if="customerTab === 'projects'">
-                <div class="customer-collection">
-                  <article v-for="item in projects" :key="item.id" class="customer-collection-item">
-                    <strong>{{ item.projectName }}</strong>
-                    <span>{{ item.market }} • {{ beautify(item.status) }}</span>
-                  </article>
+                <div class="tab-table-wrap">
+                  <table class="tab-table">
+                    <thead><tr><th>Project</th><th>Market</th><th>Status</th><th>Value</th></tr></thead>
+                    <tbody>
+                      <tr v-for="item in projects" :key="item.id" @click="openDetail(item, 'project')">
+                        <td><strong>{{ item.projectName }}</strong></td>
+                        <td>{{ item.market || '—' }}</td>
+                        <td>{{ beautify(item.status) }}</td>
+                        <td>{{ formatMoney(Number(item.licenseAmount || 0) + Number(item.implementationAmount || 0)) }}</td>
+                      </tr>
+                      <tr v-if="!projects.length"><td colspan="4" class="tab-table-empty">No projects found.</td></tr>
+                    </tbody>
+                  </table>
                 </div>
               </template>
 
@@ -237,4 +273,44 @@ onMounted(async () => {
       </section>
     </main>
   </div>
+
+  <teleport to="body">
+    <div v-if="selectedDetail" class="detail-overlay" @click.self="closeDetail">
+      <div class="detail-overlay-panel">
+        <div class="detail-overlay-header">
+          <div>
+            <span class="eyebrow">{{ selectedDetailType === 'contact' ? 'Contact Detail' : selectedDetailType === 'deal' ? 'Opportunity Detail' : 'Project Detail' }}</span>
+            <h3>{{ selectedDetailType === 'contact' ? `${selectedDetail.firstName} ${selectedDetail.lastName}` : selectedDetailType === 'deal' ? selectedDetail.title : selectedDetail.projectName }}</h3>
+          </div>
+          <button class="ghost-button" type="button" @click="closeDetail">✕</button>
+        </div>
+        <template v-if="selectedDetailType === 'contact'">
+          <div class="detail-list" style="margin-top:16px">
+            <div class="detail-item"><span>Job Title</span><strong>{{ selectedDetail.jobTitle || '—' }}</strong></div>
+            <div class="detail-item"><span>Email</span><strong>{{ selectedDetail.email || '—' }}</strong></div>
+            <div class="detail-item"><span>Phone</span><strong>{{ selectedDetail.phone || '—' }}</strong></div>
+            <div class="detail-item"><span>Department</span><strong>{{ selectedDetail.department || '—' }}</strong></div>
+          </div>
+        </template>
+        <template v-else-if="selectedDetailType === 'deal'">
+          <div class="detail-list" style="margin-top:16px">
+            <div class="detail-item"><span>Amount</span><strong>{{ formatMoney(selectedDetail.amount) }}</strong></div>
+            <div class="detail-item"><span>Stage</span><strong>{{ beautify(selectedDetail.stage) }}</strong></div>
+            <div class="detail-item"><span>Close Date</span><strong>{{ selectedDetail.closeDate || '—' }}</strong></div>
+            <div class="detail-item"><span>Owner</span><strong>{{ selectedDetail.ownerName || '—' }}</strong></div>
+          </div>
+        </template>
+        <template v-else-if="selectedDetailType === 'project'">
+          <div class="detail-list" style="margin-top:16px">
+            <div class="detail-item"><span>Market</span><strong>{{ selectedDetail.market || '—' }}</strong></div>
+            <div class="detail-item"><span>Status</span><strong>{{ beautify(selectedDetail.status) }}</strong></div>
+            <div class="detail-item"><span>License Amount</span><strong>{{ formatMoney(selectedDetail.licenseAmount) }}</strong></div>
+            <div class="detail-item"><span>Implementation</span><strong>{{ formatMoney(selectedDetail.implementationAmount) }}</strong></div>
+            <div class="detail-item"><span>Start Date</span><strong>{{ selectedDetail.startDate || '—' }}</strong></div>
+            <div class="detail-item"><span>End Date</span><strong>{{ selectedDetail.endDate || '—' }}</strong></div>
+          </div>
+        </template>
+      </div>
+    </div>
+  </teleport>
 </template>

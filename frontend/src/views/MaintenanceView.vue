@@ -221,7 +221,7 @@ onMounted(async () => {
     <main class="maintenance-shell">
       <header class="maintenance-header">
         <div>
-          <router-link class="text-link" :to="backTarget()">Back</router-link>
+          <router-link class="back-nav-link" :to="backTarget()">← Back</router-link>
           <span class="eyebrow">Annual Maintenance</span>
           <h1>{{ selectedProject ? `${selectedProject.projectName} Maintenance` : 'Project Maintenance Records' }}</h1>
           <p>{{ customer ? `Track annual maintenance records for ${customer.name}.` : 'Track project maintenance coverage, renewal, and collection.' }}</p>
@@ -336,10 +336,10 @@ onMounted(async () => {
                           <span class="status-pill" :class="paymentClass(record.paymentStatus)">{{ record.paymentStatus === 'PAID' ? 'Paid' : 'Not Paid' }}</span>
                         </div>
                       </div>
-                      <div class="record-meta">
-                        <span class="meta-pill">{{ formatMoney(record.amount) }}</span>
-                        <span class="meta-pill">Start {{ record.startDate }}</span>
-                        <span class="meta-pill">End {{ record.endDate }}</span>
+                      <div class="record-meta-grid">
+                        <div class="record-meta-item"><span>Amount</span><strong>{{ formatMoney(record.amount) }}</strong></div>
+                        <div class="record-meta-item"><span>Start</span><strong>{{ record.startDate }}</strong></div>
+                        <div class="record-meta-item"><span>End</span><strong>{{ record.endDate }}</strong></div>
                       </div>
                       <div class="inline-actions timeline-actions">
                         <button class="ghost-button" type="button" @click="openEdit(record)">Edit</button>
