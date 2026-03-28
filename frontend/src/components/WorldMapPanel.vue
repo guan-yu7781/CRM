@@ -1,8 +1,8 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
+import * as echarts from 'echarts/core';
 
 const ZOOM_STEP = 1.5; // each button press zooms by ×1.5 or ÷1.5
-import * as echarts from 'echarts/core';
 import { EffectScatterChart } from 'echarts/charts';
 import { GeoComponent, TooltipComponent } from 'echarts/components';
 import { CanvasRenderer } from 'echarts/renderers';
@@ -96,7 +96,7 @@ function buildOption() {
     },
     geo: {
       map: 'world',
-      roam: 'move',   // pan only — scroll-wheel zoom disabled
+      roam: true,     // pan + zoom enabled; scroll-wheel blocked via JS
       zoom: 2.0,
       center: [22, 5],
       itemStyle: {
@@ -164,22 +164,29 @@ function onResize() {
 onMounted(async () => {
   await initChart();
   window.addEventListener('resize', onResize);
+  // Block scroll-wheel zoom on the chart canvas only
+  chartEl.value?.addEventListener('wheel', blockWheelZoom, { passive: false });
 });
 
 onUnmounted(() => {
+  chartEl.value?.removeEventListener('wheel', blockWheelZoom);
   window.removeEventListener('resize', onResize);
   chart?.dispose();
   chart = null;
 });
 
 function zoomIn() {
-  if (!chart) return;
-  chart.dispatchAction({ type: 'geoRoam', name: 'world', zoom: ZOOM_STEP });
+  chart?.dispatchAction({ type: 'geoRoam', geoIndex: 0, zoom: ZOOM_STEP });
 }
 
 function zoomOut() {
-  if (!chart) return;
-  chart.dispatchAction({ type: 'geoRoam', name: 'world', zoom: 1 / ZOOM_STEP });
+  chart?.dispatchAction({ type: 'geoRoam', geoIndex: 0, zoom: 1 / ZOOM_STEP });
+}
+
+// Block scroll-wheel zoom while keeping mouse-drag pan and touch gestures
+function blockWheelZoom(e) {
+  e.preventDefault();
+  e.stopPropagation();
 }
 
 watch(() => props.marketCounts, () => {
