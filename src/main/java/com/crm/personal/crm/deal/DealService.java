@@ -2,6 +2,7 @@ package com.crm.personal.crm.deal;
 
 import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
+import com.crm.personal.crm.customer.CustomerStatus;
 import com.crm.personal.crm.project.ProjectRecord;
 import com.crm.personal.crm.project.ProjectResponse;
 import com.crm.personal.crm.project.ProjectStatus;
@@ -130,6 +131,16 @@ public class DealService {
         deal.setTitle(request.getTitle());
         deal.setAmount(request.getAmount());
         deal.setStage(request.getStage() == null ? DealStage.NEW : request.getStage());
+        // Use explicit type if provided; otherwise derive from customer status
+        if (request.getOpportunityType() != null) {
+            deal.setOpportunityType(request.getOpportunityType());
+        } else {
+            deal.setOpportunityType(
+                CustomerStatus.ACTIVE.equals(customer.getStatus())
+                    ? OpportunityType.EXPANSION
+                    : OpportunityType.ACQUISITION
+            );
+        }
         deal.setExpectedCloseDate(request.getExpectedCloseDate());
         deal.setNotes(request.getNotes());
         deal.setCustomerId(customer.getId());

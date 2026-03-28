@@ -77,6 +77,7 @@ const configs = {
       { name: 'title', label: 'Opportunity Name', type: 'text', required: true },
       { name: 'amount', label: 'Expected Value', type: 'number', required: true },
       { name: 'stage', label: 'Stage', type: 'select', required: true, options: ['NEW', 'QUALIFIED', 'PROPOSAL_SENT', 'NEGOTIATION', 'WON', 'LOST'] },
+      { name: 'opportunityType', label: 'Opportunity Type', type: 'select', required: true, options: ['EXPANSION', 'ACQUISITION'] },
       { name: 'expectedCloseDate', label: 'Expected Close', type: 'date' },
       { name: 'customerId', label: 'Customer', type: 'select', source: 'customers', required: true },
       { name: 'notes', label: 'Notes', type: 'textarea', full: true }
@@ -136,10 +137,19 @@ const currentConfig = computed(() => configs[currentModule.value]);
 
 const items = computed(() => crm.data[currentModule.value] || []);
 
+// Deals: opportunity-type filter tab  ('ALL' | 'EXPANSION' | 'ACQUISITION')
+const dealTypeFilter = ref('ALL');
+watch(currentModule, () => { dealTypeFilter.value = 'ALL'; });
+
 const filteredItems = computed(() => {
+  let list = items.value;
+  // Apply opportunity-type tab filter for deals
+  if (currentModule.value === 'deals' && dealTypeFilter.value !== 'ALL') {
+    list = list.filter(item => item.opportunityType === dealTypeFilter.value);
+  }
   const keyword = search.value.trim().toLowerCase();
-  if (!keyword) return items.value;
-  return items.value.filter(item => JSON.stringify(item).toLowerCase().includes(keyword));
+  if (!keyword) return list;
+  return list.filter(item => JSON.stringify(item).toLowerCase().includes(keyword));
 });
 
 const selectedItem = computed(() => filteredItems.value.find(item => item.id === selectedId.value) || filteredItems.value[0] || null);
@@ -164,11 +174,13 @@ const summaryCards = computed(() => {
   }
   if (module === 'deals') {
     const openDeals = crm.data.deals.filter(item => item.stage !== 'WON' && item.stage !== 'LOST');
+    const expansion = openDeals.filter(item => item.opportunityType === 'EXPANSION');
+    const acquisition = openDeals.filter(item => item.opportunityType === 'ACQUISITION');
     return [
       { label: 'Pipeline', value: formatMoney(openDeals.reduce((sum, item) => sum + Number(item.amount || 0), 0)), note: 'Open pipeline value' },
-      { label: 'Open Deals', value: String(openDeals.length), note: 'Active opportunities' },
-      { label: 'Won', value: String(crm.data.deals.filter(item => item.stage === 'WON').length), note: 'Closed won' },
-      { label: 'Total', value: String(crm.data.deals.length), note: 'All opportunities' }
+      { label: 'Expansion', value: formatMoney(expansion.reduce((sum, item) => sum + Number(item.amount || 0), 0)), note: `${expansion.length} existing-customer deals` },
+      { label: 'Acquisition', value: formatMoney(acquisition.reduce((sum, item) => sum + Number(item.amount || 0), 0)), note: `${acquisition.length} new-customer deals` },
+      { label: 'Won', value: String(crm.data.deals.filter(item => item.stage === 'WON').length), note: 'Closed won' }
     ];
   }
   if (module === 'accessControl') {
@@ -512,6 +524,23 @@ watch(filteredItems, (next) => {
           </div>
 
           <div v-else class="module-table-wrap" :class="`module-table-wrap-${currentModule}`">
+
+            <!-- Deals: opportunity-type filter tabs -->
+            <div v-if="currentModule === 'deals'" class="deal-type-tabs">
+              <button
+                v-for="tab in [
+                  { key: 'ALL', label: 'All' },
+                  { key: 'EXPANSION', label: 'Expansion — Existing' },
+                  { key: 'ACQUISITION', label: 'Acquisition — New' }
+                ]"
+                :key="tab.key"
+                class="deal-type-tab"
+                :class="{ active: dealTypeFilter === tab.key }"
+                type="button"
+                @click="dealTypeFilter = tab.key"
+              >{{ tab.label }}</button>
+            </div>
+
             <table class="module-table" :class="`module-table-${currentModule}`">
               <thead>
                 <tr>
@@ -543,7 +572,13 @@ watch(filteredItems, (next) => {
                   <td v-else-if="currentModule === 'deals'">
                     <div class="table-primary">
                       <strong>{{ item.title }}</strong>
-                      <small>{{ formatMoney(item.amount) }}</small>
+                      <small>
+                        {{ formatMoney(item.amount) }}
+                        <span
+                          class="opp-type-badge"
+                          :class="item.opportunityType === 'EXPANSION' ? 'opp-type-expansion' : 'opp-type-acquisition'"
+                        >{{ item.opportunityType === 'EXPANSION' ? 'Expansion' : 'Acquisition' }}</span>
+                      </small>
                     </div>
                   </td>
                   <td v-else-if="currentModule === 'tasks'">
