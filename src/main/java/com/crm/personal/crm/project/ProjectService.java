@@ -116,6 +116,7 @@ public class ProjectService {
         project.setImplementationAmount(request.getImplementationAmount());
         project.setTaxRate(request.getTaxRate());
         project.setStatus(request.getStatus() == null ? ProjectStatus.UNSIGNED_CONTRACT : request.getStatus());
+        project.setAccountManagerId(request.getAccountManagerId());
         project.setCustomerId(customer.getId());
         project.setCustomerName(customer.getName());
     }

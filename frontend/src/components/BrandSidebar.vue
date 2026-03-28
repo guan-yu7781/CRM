@@ -4,14 +4,8 @@ import { moduleMenu } from '../lib/permissions';
 
 const props = defineProps({
   collapsed: Boolean,
-  currentModule: {
-    type: String,
-    required: true
-  },
-  canAccess: {
-    type: Function,
-    required: true
-  },
+  currentModule: { type: String, required: true },
+  canAccess: { type: Function, required: true },
   username: String,
   roleLabel: String
 });
@@ -20,63 +14,128 @@ const emit = defineEmits(['toggle', 'logout']);
 
 const visibleModules = computed(() => moduleMenu.filter(item => props.canAccess(item.key)));
 
-const menuIconMap = {
-  customers: 'CM',
-  contacts: 'CT',
-  projects: 'PJ',
-  deals: 'OP',
-  tasks: 'TS',
-  activities: 'IN',
-  accessControl: 'AC'
+// Feather-style SVG path data (viewBox 0 0 24 24, stroke-only)
+const menuIcons = {
+  dashboard:
+    '<rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/>',
+  customers:
+    '<path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  contacts:
+    '<path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>',
+  projects:
+    '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+  deals:
+    '<polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/>',
+  tasks:
+    '<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>',
+  activities:
+    '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  accessControl:
+    '<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
 };
 </script>
 
 <template>
-  <aside class="sidebar">
-    <button
-      class="ghost-button sidebar-toggle icon-button"
-      type="button"
-      :aria-expanded="String(!collapsed)"
-      :title="collapsed ? 'Show menu' : 'Collapse menu'"
-      @click="emit('toggle')"
-    >
-      {{ collapsed ? '▶' : '◀' }}
-    </button>
+  <aside class="sidebar" :class="{ 'sidebar-collapsed': collapsed }">
+
+    <!-- ── Brand ── -->
     <div class="sidebar-brand">
-      <div class="brand-logo-frame brand-logo-frame-sidebar">
-        <img v-if="!collapsed" src="/assets/murong-logo.png" alt="MuRong Technology logo" class="brand-logo brand-logo-sidebar-full" />
-        <img v-else src="/assets/murong-mark.png" alt="MuRong Technology mark" class="brand-logo brand-logo-sidebar-mark" style="display:block" />
+      <div class="brand-logo-wrap">
+        <img
+          v-if="!collapsed"
+          src="/assets/murong-logo.png"
+          alt="FinLink CRM"
+          class="brand-logo-full"
+        />
+        <img
+          v-else
+          src="/assets/murong-mark.png"
+          alt="FinLink"
+          class="brand-logo-mark"
+        />
       </div>
-      <span class="eyebrow">FinLink CRM</span>
-      <h2>Banking Workspace</h2>
-      <p>Customer, delivery, and maintenance operations in one secure console.</p>
+      <span v-if="!collapsed" class="brand-product-name">FinLink CRM</span>
     </div>
 
+    <!-- ── Navigation ── -->
     <nav class="menu">
-      <div class="menu-section-label" v-if="!collapsed">Workspace</div>
+      <div v-if="!collapsed" class="menu-section-label">Main</div>
+      <router-link
+        class="menu-item"
+        :class="{ active: currentModule === 'dashboard' }"
+        :to="{ name: 'dashboard' }"
+        :title="collapsed ? 'Dashboard' : undefined"
+      >
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+               stroke-linecap="round" stroke-linejoin="round" v-html="menuIcons.dashboard" />
+        </span>
+        <span v-if="!collapsed" class="menu-item-label">Dashboard</span>
+      </router-link>
+
+      <div v-if="!collapsed" class="menu-section-label">Workspace</div>
       <router-link
         v-for="module in visibleModules"
         :key="module.key"
         class="menu-item"
         :class="{ active: currentModule === module.key }"
         :to="{ name: 'workspace', params: { module: module.key } }"
+        :title="collapsed ? module.label : undefined"
       >
-        <span class="menu-item-icon">{{ menuIconMap[module.key] || '•' }}</span>
-        <span class="menu-item-label">{{ module.label }}</span>
+        <span class="menu-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75"
+               stroke-linecap="round" stroke-linejoin="round"
+               v-html="menuIcons[module.key] || menuIcons.tasks" />
+        </span>
+        <span v-if="!collapsed" class="menu-item-label">{{ module.label }}</span>
       </router-link>
     </nav>
 
+    <!-- ── Footer ── -->
     <div class="sidebar-footer">
-      <div class="user-box">
-        <div class="user-box-copy">
-          <span>Signed in as</span>
-          <strong>{{ username }}</strong>
-          <small>{{ roleLabel }}</small>
-        </div>
-        <button class="ghost-button sidebar-logout" type="button" @click="emit('logout')">
-          {{ collapsed ? '⎋' : 'Log Out' }}
-        </button>
+      <div class="user-box" :class="{ 'user-box-collapsed': collapsed }">
+        <template v-if="!collapsed">
+          <div class="user-box-copy">
+            <span class="user-label">Signed in</span>
+            <strong>{{ username }}</strong>
+            <small>{{ roleLabel }}</small>
+          </div>
+          <button class="sidebar-logout" type="button" title="Log Out" @click="emit('logout')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </template>
+        <template v-else>
+          <button class="sidebar-logout sidebar-logout-icon" type="button" title="Log Out" @click="emit('logout')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
+        </template>
       </div>
+
+      <button
+        class="sidebar-toggle-btn"
+        type="button"
+        :title="collapsed ? 'Expand menu' : 'Collapse menu'"
+        :aria-expanded="String(!collapsed)"
+        @click="emit('toggle')"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline v-if="!collapsed" points="15 18 9 12 15 6"/>
+          <polyline v-else points="9 18 15 12 9 6"/>
+        </svg>
+        <span v-if="!collapsed" class="toggle-label">Collapse</span>
+      </button>
     </div>
+
   </aside>
 </template>

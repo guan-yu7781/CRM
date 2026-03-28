@@ -43,6 +43,9 @@ public class Project {
     @Enumerated(EnumType.STRING)
     private ProjectStatus status = ProjectStatus.UNSIGNED_CONTRACT;
 
+    @Column(name = "account_manager_id")
+    private Long accountManagerId;
+
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "customer_id")
     private Customer customer;
@@ -107,6 +110,14 @@ public class Project {
 
     public void setStatus(ProjectStatus status) {
         this.status = status;
+    }
+
+    public Long getAccountManagerId() {
+        return accountManagerId;
+    }
+
+    public void setAccountManagerId(Long accountManagerId) {
+        this.accountManagerId = accountManagerId;
     }
 
     public Customer getCustomer() {

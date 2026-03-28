@@ -51,6 +51,7 @@ public class AccessControlService {
         user.setFullName(request.getFullName().trim());
         user.setUsername(request.getUsername().trim());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
+        user.setEmail(trimOrNull(request.getEmail()));
         user.setRole(request.getRole());
         user.setCreatedAt(LocalDateTime.now());
         return toUserResponse(appUserRepository.save(user));
@@ -70,11 +71,16 @@ public class AccessControlService {
 
         user.setFullName(request.getFullName().trim());
         user.setUsername(request.getUsername().trim());
+        user.setEmail(trimOrNull(request.getEmail()));
         user.setRole(request.getRole());
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
         return toUserResponse(appUserRepository.save(user));
+    }
+
+    private String trimOrNull(String value) {
+        return (value == null || value.isBlank()) ? null : value.trim();
     }
 
     private void validateRole(UserRole role) {
@@ -108,6 +114,7 @@ public class AccessControlService {
                 user.getId(),
                 user.getFullName(),
                 user.getUsername(),
+                user.getEmail(),
                 effectiveRole.name(),
                 effectiveRole.getLabel(),
                 effectiveRole.getDataScope().name(),

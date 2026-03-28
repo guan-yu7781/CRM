@@ -5,6 +5,7 @@ import api from '../lib/api';
 export const useCrmStore = defineStore('crm', () => {
   const loading = ref(false);
   const accessRoles = ref([]);
+  const accountManagers = ref([]);
   const data = reactive({
     customers: [],
     contacts: [],
@@ -28,6 +29,13 @@ export const useCrmStore = defineStore('crm', () => {
           data[key] = [];
         }
       };
+
+      // Account managers are available to any authenticated user
+      try {
+        accountManagers.value = (await api.get('/api/users/account-managers')).data;
+      } catch (_) {
+        accountManagers.value = [];
+      }
 
       tryLoad('customers', '/api/customers', 'CUSTOMER_VIEW');
       tryLoad('contacts', '/api/contacts', 'CONTACT_VIEW');
@@ -86,6 +94,7 @@ export const useCrmStore = defineStore('crm', () => {
     loading,
     data,
     accessRoles,
+    accountManagers,
     loadWorkspace,
     saveRecord,
     deleteRecord
