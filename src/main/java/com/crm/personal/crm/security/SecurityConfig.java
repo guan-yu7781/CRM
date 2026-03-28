@@ -35,19 +35,18 @@ public class SecurityConfig {
                 .sessionManagement().sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 .and()
                 .authorizeRequests()
+                // All SPA page routes are public — auth is enforced by the Vue Router
+                // guard on the frontend. Only /api/** endpoints require a JWT.
                 .antMatchers(
-                        "/",
-                        "/index.html",
-                        "/login",
-                        "/app/**",
-                        "/customer-360/**",
-                        "/maintenance/**",
-                        "/assets/**",
-                        "/world.json"
+                        "/", "/index.html",
+                        "/login", "/dashboard",
+                        "/app/**", "/customer-360/**", "/maintenance/**",
+                        "/403", "/500",
+                        "/assets/**", "/world.json", "/favicon.ico"
                 ).permitAll()
                 .antMatchers("/api/auth/**").permitAll()
-                .antMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
-                .anyRequest().authenticated();
+                .antMatchers("/api/**").authenticated()
+                .anyRequest().permitAll();
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
