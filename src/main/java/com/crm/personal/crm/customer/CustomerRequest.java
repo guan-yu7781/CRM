@@ -12,7 +12,7 @@ public class CustomerRequest {
 
     private String cifNumber;
 
-    private CustomerSegment segment = CustomerSegment.RETAIL;
+    private CustomerSegment segment = CustomerSegment.COMMERCIAL_BANK;
 
     private CustomerStatus status = CustomerStatus.LEAD;
 

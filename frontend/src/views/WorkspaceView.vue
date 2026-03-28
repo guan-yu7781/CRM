@@ -32,7 +32,7 @@ const configs = {
       { name: 'name', label: 'Customer Name', type: 'text', required: true },
       { name: 'customerType', label: 'Customer Type', type: 'select', required: true, options: ['COMMERCIAL_BANK', 'PAYMENT_INSTITUTION', 'CENTRAL_BANK', 'MICROFINANCE_BANK', 'SACCO', 'INDIVIDUAL', 'BUSINESS'] },
       { name: 'cifNumber', label: 'CIF Number', type: 'text', required: false },
-      { name: 'segment', label: 'Segment', type: 'select', required: true, options: ['RETAIL', 'SME', 'CORPORATE', 'WEALTH'] },
+      { name: 'segment', label: 'Segment', type: 'select', required: true, options: ['COMMERCIAL_BANK', 'PAYMENT_INSTITUTION', 'MICROFINANCE_BANK', 'SACCO', 'CENTRAL_BANK', 'TELECOM'] },
       { name: 'status', label: 'Lifecycle Status', type: 'select', required: true, options: ['LEAD', 'ACTIVE', 'INACTIVE'] },
       { name: 'riskLevel', label: 'Risk Level', type: 'select', required: true, options: ['LOW', 'MEDIUM', 'HIGH'] },
       { name: 'notes', label: 'Relationship Notes', type: 'textarea', full: true }

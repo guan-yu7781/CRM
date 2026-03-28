@@ -1,8 +1,10 @@
 package com.crm.personal.crm.customer;
 
 public enum CustomerSegment {
-    RETAIL,
-    SME,
-    CORPORATE,
-    WEALTH
+    COMMERCIAL_BANK,
+    PAYMENT_INSTITUTION,
+    MICROFINANCE_BANK,
+    SACCO,
+    CENTRAL_BANK,
+    TELECOM
 }

@@ -36,7 +36,7 @@ public class Customer {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private CustomerSegment segment = CustomerSegment.RETAIL;
+    private CustomerSegment segment = CustomerSegment.COMMERCIAL_BANK;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)

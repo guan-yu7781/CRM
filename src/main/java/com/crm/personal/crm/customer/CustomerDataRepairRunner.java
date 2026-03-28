@@ -27,7 +27,7 @@ public class CustomerDataRepairRunner implements ApplicationRunner {
         );
         jdbcTemplate.update(
                 "update customers set segment = ? where segment is null or trim(segment) = ''",
-                CustomerSegment.RETAIL.name()
+                CustomerSegment.COMMERCIAL_BANK.name()
         );
         jdbcTemplate.update(
                 "update customers set status = ? where status is null or trim(status) = ''",
