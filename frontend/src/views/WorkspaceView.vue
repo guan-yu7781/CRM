@@ -266,6 +266,8 @@ function syncAllowedModule() {
     const first = moduleMenu.find(item => canAccess(item.key));
     if (first) {
       router.replace({ name: 'workspace', params: { module: first.key } });
+    } else {
+      router.replace({ name: 'error-403' });
     }
   }
 }

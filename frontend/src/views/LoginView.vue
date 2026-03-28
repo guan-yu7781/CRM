@@ -16,7 +16,12 @@ async function submit() {
     await auth.login(form);
     router.push({ name: 'dashboard' });
   } catch (exception) {
-    error.value = exception.response?.data?.details?.[0] || exception.message || 'Unable to sign in.';
+    const status = exception.response?.status;
+    if (status === 401 || status === 403 || status === 400) {
+      error.value = '用户名或密码错误，请重试。';
+    } else {
+      error.value = exception.response?.data?.details?.[0] || exception.message || 'Unable to sign in.';
+    }
   } finally {
     loading.value = false;
   }
