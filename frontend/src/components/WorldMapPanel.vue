@@ -13,7 +13,6 @@ const props = defineProps({
 
 const chartEl = ref(null);
 let chart = null;
-let mapRegistered = false;
 
 // Country name → [longitude, latitude]
 const COORDS = {
@@ -140,12 +139,14 @@ function buildOption() {
   };
 }
 
+let mapReady = false;
+
 async function initChart() {
-  if (!mapRegistered) {
-    const res = await fetch('https://cdn.jsdelivr.net/npm/echarts@5/map/json/world.json');
+  if (!mapReady) {
+    const res = await fetch('/world.json');
     const worldJson = await res.json();
     echarts.registerMap('world', worldJson);
-    mapRegistered = true;
+    mapReady = true;
   }
 
   if (!chart && chartEl.value) {

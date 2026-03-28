@@ -42,7 +42,8 @@ public class SecurityConfig {
                         "/app/**",
                         "/customer-360/**",
                         "/maintenance/**",
-                        "/assets/**"
+                        "/assets/**",
+                        "/world.json"
                 ).permitAll()
                 .antMatchers("/api/auth/**").permitAll()
                 .antMatchers(HttpMethod.GET, "/favicon.ico").permitAll()
