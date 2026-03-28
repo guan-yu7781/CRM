@@ -143,6 +143,32 @@ function buildOption() {
 
 let mapReady = false;
 
+// Track current geo view state so zoom buttons preserve the panned position
+let geoZoom = 2.0;
+let geoCenter = [22, 5];
+
+function syncGeoState() {
+  if (!chart) return;
+  const opt = chart.getOption();
+  const g = opt?.geo?.[0];
+  if (g?.zoom != null)   geoZoom   = g.zoom;
+  if (g?.center != null) geoCenter = Array.isArray(g.center) ? g.center : geoCenter;
+}
+
+function applyZoom(newZoom) {
+  syncGeoState();
+  geoZoom = Math.max(0.5, Math.min(newZoom, 30));
+  chart?.setOption({ geo: [{ zoom: geoZoom, center: geoCenter }] }, { replaceMerge: [] });
+}
+
+function zoomIn()  { applyZoom(geoZoom * ZOOM_STEP); }
+function zoomOut() { applyZoom(geoZoom / ZOOM_STEP); }
+
+function blockWheel(e) {
+  e.preventDefault();
+  e.stopPropagation();
+}
+
 async function initChart() {
   if (!mapReady) {
     const res = await fetch('/world.json');
@@ -153,41 +179,26 @@ async function initChart() {
 
   if (!chart && chartEl.value) {
     chart = echarts.init(chartEl.value, null, { renderer: 'canvas' });
+    // Keep geoZoom/geoCenter in sync whenever user pans or zooms
+    chart.on('georoam', syncGeoState);
   }
   chart?.setOption(buildOption());
 }
 
-function onResize() {
-  chart?.resize();
-}
+function onResize() { chart?.resize(); }
 
 onMounted(async () => {
   await initChart();
   window.addEventListener('resize', onResize);
-  // Block scroll-wheel zoom on the chart canvas only
-  chartEl.value?.addEventListener('wheel', blockWheelZoom, { passive: false });
+  chartEl.value?.addEventListener('wheel', blockWheel, { passive: false });
 });
 
 onUnmounted(() => {
-  chartEl.value?.removeEventListener('wheel', blockWheelZoom);
+  chartEl.value?.removeEventListener('wheel', blockWheel);
   window.removeEventListener('resize', onResize);
   chart?.dispose();
   chart = null;
 });
-
-function zoomIn() {
-  chart?.dispatchAction({ type: 'geoRoam', geoIndex: 0, zoom: ZOOM_STEP });
-}
-
-function zoomOut() {
-  chart?.dispatchAction({ type: 'geoRoam', geoIndex: 0, zoom: 1 / ZOOM_STEP });
-}
-
-// Block scroll-wheel zoom while keeping mouse-drag pan and touch gestures
-function blockWheelZoom(e) {
-  e.preventDefault();
-  e.stopPropagation();
-}
 
 watch(() => props.marketCounts, () => {
   chart?.setOption(buildOption());
