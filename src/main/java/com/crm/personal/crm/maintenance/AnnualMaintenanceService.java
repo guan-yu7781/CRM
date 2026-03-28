@@ -177,6 +177,7 @@ public class AnnualMaintenanceService {
         record.setMarket(project.getMarket());
         record.setMaintenanceYear(request.getMaintenanceYear());
         record.setAmount(request.getAmount());
+        record.setCurrency(request.getCurrency() == null ? "USD" : request.getCurrency());
         record.setStartDate(request.getStartDate());
         record.setEndDate(request.getEndDate());
         record.setPaymentStatus(request.getPaymentStatus());

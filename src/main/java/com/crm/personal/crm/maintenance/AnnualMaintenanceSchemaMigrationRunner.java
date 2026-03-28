@@ -21,6 +21,7 @@ public class AnnualMaintenanceSchemaMigrationRunner implements ApplicationRunner
     public void run(ApplicationArguments args) {
         ensureColumn("project_id", "alter table annual_maintenance add column project_id bigint");
         ensureColumn("renew_status", "alter table annual_maintenance add column renew_status varchar(32) default 'NOT_RENEWED'");
+        ensureColumn("currency", "alter table annual_maintenance add column currency varchar(3) not null default 'USD'");
         normalizeRenewStatus();
     }
 

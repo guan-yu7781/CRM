@@ -12,6 +12,7 @@ public class AnnualMaintenanceResponse {
     private String market;
     private Integer maintenanceYear;
     private BigDecimal amount;
+    private String currency;
     private LocalDate startDate;
     private LocalDate endDate;
     private PaymentStatus paymentStatus;
@@ -31,6 +32,7 @@ public class AnnualMaintenanceResponse {
         response.setMarket(maintenance.getMarket());
         response.setMaintenanceYear(maintenance.getMaintenanceYear());
         response.setAmount(maintenance.getAmount());
+        response.setCurrency(maintenance.getCurrency());
         response.setStartDate(maintenance.getStartDate());
         response.setEndDate(maintenance.getEndDate());
         response.setPaymentStatus(maintenance.getPaymentStatus());
@@ -91,6 +93,14 @@ public class AnnualMaintenanceResponse {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public LocalDate getStartDate() {

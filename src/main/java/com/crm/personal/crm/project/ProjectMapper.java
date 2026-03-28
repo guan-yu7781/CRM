@@ -24,7 +24,7 @@ public interface ProjectMapper {
                     "else 'UNSIGNED_CONTRACT' end as status";
 
     String SELECT_COLS =
-            "p.id, p.project_name, p.market, p.amount as license_amount, p.implementation_amount, p.tax_rate, " +
+            "p.id, p.project_name, p.market, p.currency, p.amount as license_amount, p.implementation_amount, p.tax_rate, " +
             "p.source_deal_id, p.account_manager_id, u.full_name as account_manager_name, " +
             NORMALIZED_PROJECT_STATUS + ", p.customer_id, c.name as customer_name, p.created_at, p.updated_at ";
 
@@ -70,15 +70,16 @@ public interface ProjectMapper {
                                                  @Param("projectName") String projectName);
 
     @Insert("insert into projects " +
-            "(project_name, market, amount, implementation_amount, tax_rate, status, source_deal_id, account_manager_id, customer_id, created_at, updated_at) " +
+            "(project_name, market, currency, amount, implementation_amount, tax_rate, status, source_deal_id, account_manager_id, customer_id, created_at, updated_at) " +
             "values " +
-            "(#{projectName}, #{market}, #{licenseAmount}, #{implementationAmount}, #{taxRate}, #{status}, #{sourceDealId}, #{accountManagerId}, #{customerId}, #{createdAt}, #{updatedAt})")
+            "(#{projectName}, #{market}, #{currency}, #{licenseAmount}, #{implementationAmount}, #{taxRate}, #{status}, #{sourceDealId}, #{accountManagerId}, #{customerId}, #{createdAt}, #{updatedAt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(ProjectRecord record);
 
     @Update("update projects set " +
             "project_name = #{projectName}, " +
             "market = #{market}, " +
+            "currency = #{currency}, " +
             "amount = #{licenseAmount}, " +
             "implementation_amount = #{implementationAmount}, " +
             "tax_rate = #{taxRate}, " +

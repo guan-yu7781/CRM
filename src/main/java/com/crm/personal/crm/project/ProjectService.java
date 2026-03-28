@@ -1,5 +1,7 @@
 package com.crm.personal.crm.project;
 
+import com.crm.personal.crm.audit.AuditAction;
+import com.crm.personal.crm.audit.AuditService;
 import com.crm.personal.crm.customer.CustomerRecord;
 import com.crm.personal.crm.customer.CustomerService;
 import com.crm.personal.crm.deal.DealMapper;
@@ -17,11 +19,14 @@ public class ProjectService {
     private final ProjectMapper projectMapper;
     private final CustomerService customerService;
     private final DealMapper dealMapper;
+    private final AuditService auditService;
 
-    public ProjectService(ProjectMapper projectMapper, CustomerService customerService, DealMapper dealMapper) {
+    public ProjectService(ProjectMapper projectMapper, CustomerService customerService, DealMapper dealMapper,
+                          AuditService auditService) {
         this.projectMapper = projectMapper;
         this.customerService = customerService;
         this.dealMapper = dealMapper;
+        this.auditService = auditService;
     }
 
     public List<ProjectResponse> getProjects(Long customerId, int page, int size) {
@@ -53,7 +58,10 @@ public class ProjectService {
         project.setUpdatedAt(now);
 
         projectMapper.insert(project);
-        return ProjectResponse.from(findProjectRecord(project.getId()));
+        ProjectResponse result = ProjectResponse.from(findProjectRecord(project.getId()));
+        auditService.log("PROJECT", result.getId(), result.getProjectName(), AuditAction.CREATE,
+                "Created project '" + result.getProjectName() + "' for customer '" + result.getCustomerName() + "'");
+        return result;
     }
 
     @Transactional
@@ -65,16 +73,22 @@ public class ProjectService {
         project.setUpdatedAt(LocalDateTime.now());
 
         projectMapper.update(project);
-        return ProjectResponse.from(findProjectRecord(id));
+        ProjectResponse result = ProjectResponse.from(findProjectRecord(id));
+        auditService.log("PROJECT", id, result.getProjectName(), AuditAction.UPDATE,
+                "Updated project '" + result.getProjectName() + "'");
+        return result;
     }
 
     @Transactional
     public void deleteProject(Long id) {
-        findProjectRecord(id);
+        ProjectRecord project = findProjectRecord(id);
+        String name = project.getProjectName();
         if (dealMapper.countByConvertedProjectId(id) > 0) {
             throw new IllegalArgumentException("This project was created from a won opportunity and cannot be deleted while the conversion link is active.");
         }
         projectMapper.deleteById(id);
+        auditService.log("PROJECT", id, name, AuditAction.DELETE,
+                "Deleted project '" + name + "'");
     }
 
     public ProjectRecord findProjectRecord(Long id) {
@@ -112,6 +126,7 @@ public class ProjectService {
     private void applyRequest(ProjectRecord project, ProjectRequest request, CustomerRecord customer) {
         project.setProjectName(request.getProjectName());
         project.setMarket(request.getMarket());
+        project.setCurrency(request.getCurrency() == null ? "USD" : request.getCurrency());
         project.setLicenseAmount(request.getLicenseAmount());
         project.setImplementationAmount(request.getImplementationAmount());
         project.setTaxRate(request.getTaxRate());

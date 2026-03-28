@@ -1,5 +1,7 @@
 package com.crm.personal.crm.security;
 
+import com.crm.personal.crm.audit.AuditAction;
+import com.crm.personal.crm.audit.AuditService;
 import com.crm.personal.crm.shared.ResourceNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -15,10 +17,13 @@ public class AccessControlService {
 
     private final AppUserRepository appUserRepository;
     private final PasswordEncoder passwordEncoder;
+    private final AuditService auditService;
 
-    public AccessControlService(AppUserRepository appUserRepository, PasswordEncoder passwordEncoder) {
+    public AccessControlService(AppUserRepository appUserRepository, PasswordEncoder passwordEncoder,
+                                AuditService auditService) {
         this.appUserRepository = appUserRepository;
         this.passwordEncoder = passwordEncoder;
+        this.auditService = auditService;
     }
 
     @Transactional(readOnly = true)
@@ -54,7 +59,10 @@ public class AccessControlService {
         user.setEmail(trimOrNull(request.getEmail()));
         user.setRole(request.getRole());
         user.setCreatedAt(LocalDateTime.now());
-        return toUserResponse(appUserRepository.save(user));
+        AccessControlUserResponse result = toUserResponse(appUserRepository.save(user));
+        auditService.log("USER", result.getId(), result.getUsername(), AuditAction.CREATE,
+                "Created user '" + result.getUsername() + "' with role " + result.getRole());
+        return result;
     }
 
     @Transactional
@@ -76,7 +84,10 @@ public class AccessControlService {
         if (request.getPassword() != null && !request.getPassword().isBlank()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
         }
-        return toUserResponse(appUserRepository.save(user));
+        AccessControlUserResponse result = toUserResponse(appUserRepository.save(user));
+        auditService.log("USER", id, result.getUsername(), AuditAction.UPDATE,
+                "Updated user '" + result.getUsername() + "' (role: " + result.getRole() + ")");
+        return result;
     }
 
     private String trimOrNull(String value) {

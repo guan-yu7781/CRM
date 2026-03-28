@@ -60,6 +60,7 @@ const configs = {
     fields: [
       { name: 'projectName', label: 'Project Name', type: 'text', required: true },
       { name: 'market', label: 'Market', type: 'market-search', required: true },
+      { name: 'currency', label: 'Currency', type: 'select', required: true, options: ['USD', 'EUR'] },
       { name: 'licenseAmount', label: 'License Amount', type: 'number', required: true },
       { name: 'implementationAmount', label: 'Implementation Amount', type: 'number', required: true },
       { name: 'taxRate', label: 'Tax Rate', type: 'number', required: true },
@@ -79,6 +80,7 @@ const configs = {
       { name: 'title', label: 'Opportunity Name', type: 'text', required: true },
       { name: 'market', label: 'Market', type: 'market-search', required: true },
       { name: 'amount', label: 'Expected Value', type: 'number', required: true },
+      { name: 'currency', label: 'Currency', type: 'select', required: true, options: ['USD', 'EUR'] },
       { name: 'stage', label: 'Stage', type: 'select', required: true, options: ['NEW', 'QUALIFIED', 'PROPOSAL_SENT', 'NEGOTIATION', 'WON', 'LOST'] },
       { name: 'expectedCloseDate', label: 'Expected Close', type: 'date' },
       { name: 'notes', label: 'Notes', type: 'textarea', full: true }
@@ -445,8 +447,8 @@ function projectInsight(item) {
     ['Account Manager', item.accountManagerName || 'Not assigned'],
     ...(auth.hasPermission('PROJECT_VIEW_FINANCIALS')
       ? [
-          ['License Amount', formatMoney(item.licenseAmount)],
-          ['Implementation Amount', formatMoney(item.implementationAmount)],
+          ['License Amount', formatMoney(item.licenseAmount, item.currency)],
+          ['Implementation Amount', formatMoney(item.implementationAmount, item.currency)],
           ['Tax Rate', `${Number(item.taxRate || 0)}%`]
         ]
       : [])
@@ -505,19 +507,6 @@ watch(filteredItems, (next) => {
         <div class="workspace-header-copy">
           <span class="eyebrow">{{ currentConfig.label }}</span>
           <h1>{{ currentConfig.title }}</h1>
-          <p>{{ currentConfig.description }}</p>
-        </div>
-        <div class="workspace-header-meta">
-          <div class="workspace-meta-card">
-            <span>Signed In As</span>
-            <strong>{{ auth.roleLabel || 'User' }}</strong>
-            <small>{{ auth.username }}</small>
-          </div>
-          <div class="workspace-meta-card">
-            <span>Data Scope</span>
-            <strong>{{ auth.dataScope || 'Scoped' }}</strong>
-            <small>Permission-aware workspace</small>
-          </div>
         </div>
         <div class="header-actions">
           <button class="ghost-button" type="button" @click="refresh">Refresh</button>
@@ -630,7 +619,7 @@ watch(filteredItems, (next) => {
                     <div class="table-primary">
                       <strong>{{ item.title }}</strong>
                       <small>
-                        {{ formatMoney(item.amount) }}
+                        {{ formatMoney(item.amount, item.currency) }}
                         <span
                           class="opp-type-badge"
                           :class="item.opportunityType === 'EXPANSION' ? 'opp-type-expansion' : 'opp-type-acquisition'"

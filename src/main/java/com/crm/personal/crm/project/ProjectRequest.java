@@ -13,6 +13,8 @@ public class ProjectRequest {
     @NotBlank(message = "Market is required")
     private String market;
 
+    private String currency = "USD";
+
     @NotNull(message = "License amount is required")
     @DecimalMin(value = "0.0", inclusive = true, message = "License amount must be zero or greater")
     private BigDecimal licenseAmount;
@@ -46,6 +48,14 @@ public class ProjectRequest {
 
     public void setMarket(String market) {
         this.market = market;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public BigDecimal getLicenseAmount() {

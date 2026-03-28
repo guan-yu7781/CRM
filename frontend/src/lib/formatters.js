@@ -7,10 +7,13 @@ export function beautify(value) {
     .join(' ');
 }
 
-export function formatMoney(value) {
+export function formatMoney(value, currency = 'USD') {
+  const cur = (currency && ['USD', 'EUR'].includes(String(currency).toUpperCase()))
+    ? String(currency).toUpperCase()
+    : 'USD';
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
-    currency: 'USD',
+    currency: cur,
     minimumFractionDigits: 2,
     maximumFractionDigits: 2
   }).format(Number(value || 0));

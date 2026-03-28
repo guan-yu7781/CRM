@@ -27,6 +27,10 @@ public class ProjectSchemaMigrationRunner implements ApplicationRunner {
                 "source_deal_id",
                 "alter table projects add column source_deal_id bigint"
         );
+        ensureColumn(
+                "currency",
+                "alter table projects add column currency varchar(3) not null default 'USD'"
+        );
         jdbcTemplate.update("update projects set implementation_amount = 0.00 where implementation_amount is null");
         normalizeProjectStatus();
     }
