@@ -23,6 +23,12 @@ const props = defineProps({
   error: {
     type: String,
     default: ''
+  },
+  // Optional: (fieldName, value, form) => ({ fieldName: newValue, ... })
+  // Called on every field change; returned object is merged into the form.
+  onFieldChange: {
+    type: Function,
+    default: null
   }
 });
 
@@ -39,6 +45,14 @@ watch(
   },
   { immediate: true }
 );
+
+function handleFieldInput(fieldName, value) {
+  if (!props.onFieldChange) return;
+  const overrides = props.onFieldChange(fieldName, value, { ...form });
+  if (overrides && typeof overrides === 'object') {
+    Object.assign(form, overrides);
+  }
+}
 
 const visibleFields = computed(() => props.fields.filter(field => !field.hidden));
 
@@ -75,6 +89,7 @@ function submit() {
             v-else-if="field.type === 'select'"
             v-model="form[field.name]"
             :required="field.required"
+            @change="handleFieldInput(field.name, form[field.name])"
           >
             <option v-if="!field.required" value="">None</option>
             <option v-for="option in optionsResolver(field)" :key="option.value" :value="option.value">

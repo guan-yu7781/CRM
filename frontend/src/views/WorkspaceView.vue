@@ -74,12 +74,12 @@ const configs = {
     description: 'Track pipeline progression and convert won opportunities into projects.',
     singular: 'Opportunity',
     fields: [
+      { name: 'customerId', label: 'Customer', type: 'select', source: 'customers', required: true },
+      { name: 'opportunityType', label: 'Opportunity Type', type: 'select', required: true, options: ['EXPANSION', 'ACQUISITION'] },
       { name: 'title', label: 'Opportunity Name', type: 'text', required: true },
       { name: 'amount', label: 'Expected Value', type: 'number', required: true },
       { name: 'stage', label: 'Stage', type: 'select', required: true, options: ['NEW', 'QUALIFIED', 'PROPOSAL_SENT', 'NEGOTIATION', 'WON', 'LOST'] },
-      { name: 'opportunityType', label: 'Opportunity Type', type: 'select', required: true, options: ['EXPANSION', 'ACQUISITION'] },
       { name: 'expectedCloseDate', label: 'Expected Close', type: 'date' },
-      { name: 'customerId', label: 'Customer', type: 'select', source: 'customers', required: true },
       { name: 'notes', label: 'Notes', type: 'textarea', full: true }
     ]
   },
@@ -334,6 +334,14 @@ function normalizePayload(fields, payload, editing) {
     }
   });
   return output;
+}
+
+// Auto-fill opportunityType when customerId is selected in a deal form
+function dealFieldChange(fieldName, value) {
+  if (fieldName !== 'customerId') return {};
+  const customer = crm.data.customers.find(c => c.id === Number(value));
+  if (!customer) return {};
+  return { opportunityType: customer.status === 'ACTIVE' ? 'EXPANSION' : 'ACQUISITION' };
 }
 
 function openCreate() {
@@ -735,6 +743,7 @@ watch(filteredItems, (next) => {
         :model-value="editingItem"
         :submit-label="editingItem ? 'Update' : 'Save'"
         :options-resolver="resolveFieldOptions"
+        :on-field-change="currentModule === 'deals' ? dealFieldChange : null"
         :error="dialogError"
         @close="dialogOpen = false"
         @submit="saveModal"
