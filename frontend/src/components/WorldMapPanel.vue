@@ -82,12 +82,12 @@ function buildOption() {
     }));
 
   return {
-    backgroundColor: '#0d1f1a',
+    backgroundColor: '#f5f8f7',
     tooltip: {
       trigger: 'item',
-      backgroundColor: '#0d1f1a',
-      borderColor: '#1e3d30',
-      textStyle: { color: '#b0c8c0', fontSize: 12 },
+      backgroundColor: '#fff',
+      borderColor: '#d0e8e0',
+      textStyle: { color: '#1a3830', fontSize: 12 },
       formatter: p => p.data
         ? `<strong style="color:#2f9e87">${p.data.name}</strong><br/>${p.data.value[2]} record${p.data.value[2] !== 1 ? 's' : ''}`
         : ''
@@ -95,15 +95,15 @@ function buildOption() {
     geo: {
       map: 'world',
       roam: true,
-      zoom: 1.2,
-      center: [20, 5],
+      zoom: 2.0,
+      center: [22, 5],
       itemStyle: {
-        areaColor: '#162b24',
-        borderColor: '#1e3d30',
+        areaColor: '#ddeee8',
+        borderColor: '#b8d8cc',
         borderWidth: 0.6
       },
       emphasis: {
-        itemStyle: { areaColor: '#1a3830' },
+        itemStyle: { areaColor: '#c2ddd4' },
         label: { show: false }
       },
       label: { show: false }
@@ -125,11 +125,11 @@ function buildOption() {
           period: 4
         },
         emphasis: {
-          itemStyle: { color: '#4ec9ad' },
+          itemStyle: { color: '#1d7a65' },
           label: {
             show: true,
             formatter: p => p.data.name,
-            color: '#fff',
+            color: '#1a3830',
             fontSize: 11,
             position: 'top'
           }
@@ -198,6 +198,6 @@ watch(() => props.marketCounts, () => {
 <style scoped>
 .world-map-echarts {
   width: 100%;
-  height: 420px;
+  height: 560px;
 }
 </style>
