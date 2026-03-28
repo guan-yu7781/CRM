@@ -1,5 +1,7 @@
 <script setup>
 import { ref, onMounted, onUnmounted, watch } from 'vue';
+
+const ZOOM_STEP = 1.5; // each button press zooms by ×1.5 or ÷1.5
 import * as echarts from 'echarts/core';
 import { EffectScatterChart } from 'echarts/charts';
 import { GeoComponent, TooltipComponent } from 'echarts/components';
@@ -94,7 +96,7 @@ function buildOption() {
     },
     geo: {
       map: 'world',
-      roam: true,
+      roam: 'move',   // pan only — scroll-wheel zoom disabled
       zoom: 2.0,
       center: [22, 5],
       itemStyle: {
@@ -170,6 +172,16 @@ onUnmounted(() => {
   chart = null;
 });
 
+function zoomIn() {
+  if (!chart) return;
+  chart.dispatchAction({ type: 'geoRoam', name: 'world', zoom: ZOOM_STEP });
+}
+
+function zoomOut() {
+  if (!chart) return;
+  chart.dispatchAction({ type: 'geoRoam', name: 'world', zoom: 1 / ZOOM_STEP });
+}
+
 watch(() => props.marketCounts, () => {
   chart?.setOption(buildOption());
 }, { deep: true });
@@ -177,7 +189,13 @@ watch(() => props.marketCounts, () => {
 
 <template>
   <div class="world-map-panel">
-    <div ref="chartEl" class="world-map-echarts" />
+    <div class="world-map-chart-wrap">
+      <div ref="chartEl" class="world-map-echarts" />
+      <div class="map-zoom-controls">
+        <button class="map-zoom-btn" type="button" @click="zoomIn" title="Zoom in">+</button>
+        <button class="map-zoom-btn" type="button" @click="zoomOut" title="Zoom out">−</button>
+      </div>
+    </div>
     <div class="world-map-legend">
       <div class="world-map-legend-items">
         <span class="world-map-legend-dot world-map-legend-dot--active" />
@@ -196,8 +214,49 @@ watch(() => props.marketCounts, () => {
 </template>
 
 <style scoped>
+.world-map-chart-wrap {
+  position: relative;
+}
+
 .world-map-echarts {
   width: 100%;
   height: 560px;
+}
+
+.map-zoom-controls {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  z-index: 10;
+}
+
+.map-zoom-btn {
+  width: 30px;
+  height: 30px;
+  background: #fff;
+  border: 1px solid #c8ddd6;
+  border-radius: 6px;
+  font-size: 1.1rem;
+  line-height: 1;
+  color: #2f9e87;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  user-select: none;
+}
+
+.map-zoom-btn:hover {
+  background: #edf7f4;
+  border-color: #2f9e87;
+}
+
+.map-zoom-btn:active {
+  background: #d4ede7;
 }
 </style>
