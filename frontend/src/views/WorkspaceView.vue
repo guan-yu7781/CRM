@@ -507,19 +507,6 @@ watch(filteredItems, (next) => {
         <div class="workspace-header-copy">
           <span class="eyebrow">{{ currentConfig.label }}</span>
           <h1>{{ currentConfig.title }}</h1>
-          <p>{{ currentConfig.description }}</p>
-        </div>
-        <div class="workspace-header-meta">
-          <div class="workspace-meta-card">
-            <span>Signed In As</span>
-            <strong>{{ auth.roleLabel || 'User' }}</strong>
-            <small>{{ auth.username }}</small>
-          </div>
-          <div class="workspace-meta-card">
-            <span>Data Scope</span>
-            <strong>{{ auth.dataScope || 'Scoped' }}</strong>
-            <small>Permission-aware workspace</small>
-          </div>
         </div>
         <div class="header-actions">
           <button class="ghost-button" type="button" @click="refresh">Refresh</button>

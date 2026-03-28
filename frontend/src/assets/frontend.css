@@ -412,8 +412,10 @@ a {
 }
 
 .workspace-header-copy {
-  display: grid;
-  gap: 6px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  min-width: 0;
 }
 
 .page-header,
@@ -426,21 +428,22 @@ a {
 
 .page-header {
   justify-content: space-between;
-  margin-bottom: 20px;
+  margin-bottom: 16px;
 }
 
 .page-header h1 {
-  margin: 2px 0 4px;
-  font-size: clamp(1.25rem, 2.5vw, 1.6rem);
+  margin: 0;
+  font-size: 1.05rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: #262626;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .page-header p {
-  margin: 0;
-  color: var(--muted);
-  max-width: 780px;
+  display: none;
 }
 
 .workspace-header-meta {
@@ -482,10 +485,11 @@ a {
 }
 
 .vue-page-header {
-  padding: 16px 24px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  background: #ffffff;
+  padding: 0 0 14px 0;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
 }
 
