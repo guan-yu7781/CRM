@@ -112,6 +112,7 @@ public class ProjectService {
     private void applyRequest(ProjectRecord project, ProjectRequest request, CustomerRecord customer) {
         project.setProjectName(request.getProjectName());
         project.setMarket(request.getMarket());
+        project.setCurrency(request.getCurrency() == null ? "USD" : request.getCurrency());
         project.setLicenseAmount(request.getLicenseAmount());
         project.setImplementationAmount(request.getImplementationAmount());
         project.setTaxRate(request.getTaxRate());

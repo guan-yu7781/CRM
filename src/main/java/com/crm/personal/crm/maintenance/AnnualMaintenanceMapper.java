@@ -30,6 +30,7 @@ public interface AnnualMaintenanceMapper {
             "am.market, " +
             "am.maintenance_year, " +
             "am.amount, " +
+            "am.currency, " +
             "am.start_date, " +
             "am.end_date, " +
             "am.payment_status, " +
@@ -65,6 +66,7 @@ public interface AnnualMaintenanceMapper {
             "am.market, " +
             "am.maintenance_year, " +
             "am.amount, " +
+            "am.currency, " +
             "am.start_date, " +
             "am.end_date, " +
             "am.payment_status, " +
@@ -96,6 +98,7 @@ public interface AnnualMaintenanceMapper {
             "am.market, " +
             "am.maintenance_year, " +
             "am.amount, " +
+            "am.currency, " +
             "am.start_date, " +
             "am.end_date, " +
             "am.payment_status, " +
@@ -127,9 +130,9 @@ public interface AnnualMaintenanceMapper {
                                   @Param("excludedId") Long excludedId);
 
     @Insert("insert into annual_maintenance " +
-            "(project_id, project_name, market, maintenance_year, amount, start_date, end_date, payment_status, renew_status, customer_id, created_at, updated_at) " +
+            "(project_id, project_name, market, maintenance_year, amount, currency, start_date, end_date, payment_status, renew_status, customer_id, created_at, updated_at) " +
             "values " +
-            "(#{projectId}, #{projectName}, #{market}, #{maintenanceYear}, #{amount}, #{startDate}, #{endDate}, #{paymentStatus}, #{renewStatus}, #{customerId}, #{createdAt}, #{updatedAt})")
+            "(#{projectId}, #{projectName}, #{market}, #{maintenanceYear}, #{amount}, #{currency}, #{startDate}, #{endDate}, #{paymentStatus}, #{renewStatus}, #{customerId}, #{createdAt}, #{updatedAt})")
     @Options(useGeneratedKeys = true, keyProperty = "id")
     void insert(AnnualMaintenanceRecord record);
 
@@ -139,6 +142,7 @@ public interface AnnualMaintenanceMapper {
             "market = #{market}, " +
             "maintenance_year = #{maintenanceYear}, " +
             "amount = #{amount}, " +
+            "currency = #{currency}, " +
             "start_date = #{startDate}, " +
             "end_date = #{endDate}, " +
             "payment_status = #{paymentStatus}, " +

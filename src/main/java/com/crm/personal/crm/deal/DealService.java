@@ -130,6 +130,7 @@ public class DealService {
     private void applyRequest(DealRecord deal, DealRequest request, CustomerRecord customer) {
         deal.setTitle(request.getTitle());
         deal.setAmount(request.getAmount());
+        deal.setCurrency(request.getCurrency() == null ? "USD" : request.getCurrency());
         deal.setStage(request.getStage() == null ? DealStage.NEW : request.getStage());
         // Use explicit type if provided; otherwise derive from customer status
         if (request.getOpportunityType() != null) {

@@ -183,7 +183,7 @@ onMounted(async () => {
                     <tbody>
                       <tr v-for="item in openDeals" :key="item.id" @click="openDetail(item, 'deal')">
                         <td><strong>{{ item.title }}</strong></td>
-                        <td>{{ formatMoney(item.amount) }}</td>
+                        <td>{{ formatMoney(item.amount, item.currency) }}</td>
                         <td>{{ beautify(item.stage) }}</td>
                         <td>{{ item.closeDate || '—' }}</td>
                       </tr>
@@ -202,7 +202,7 @@ onMounted(async () => {
                         <td><strong>{{ item.projectName }}</strong></td>
                         <td>{{ item.market || '—' }}</td>
                         <td>{{ beautify(item.status) }}</td>
-                        <td>{{ formatMoney(Number(item.licenseAmount || 0) + Number(item.implementationAmount || 0)) }}</td>
+                        <td>{{ formatMoney(Number(item.licenseAmount || 0) + Number(item.implementationAmount || 0), item.currency) }}</td>
                       </tr>
                       <tr v-if="!projects.length"><td colspan="4" class="tab-table-empty">No projects found.</td></tr>
                     </tbody>
@@ -217,7 +217,7 @@ onMounted(async () => {
                     <tbody>
                       <tr v-for="item in deals" :key="item.id" @click="openDetail(item, 'deal')">
                         <td><strong>{{ item.title }}</strong></td>
-                        <td>{{ formatMoney(item.amount) }}</td>
+                        <td>{{ formatMoney(item.amount, item.currency) }}</td>
                         <td>{{ beautify(item.stage) }}</td>
                         <td>{{ item.expectedCloseDate || '—' }}</td>
                       </tr>
@@ -253,7 +253,7 @@ onMounted(async () => {
               <div class="detail-list">
                 <div v-for="item in openDeals.slice(0, 3)" :key="item.id" class="detail-item">
                   <span>{{ item.title }}</span>
-                  <strong>{{ formatMoney(item.amount) }} • {{ beautify(item.stage) }}</strong>
+                  <strong>{{ formatMoney(item.amount, item.currency) }} • {{ beautify(item.stage) }}</strong>
                 </div>
               </div>
             </section>
@@ -290,7 +290,7 @@ onMounted(async () => {
           <div class="insight-hero">
             <span class="eyebrow">{{ selectedDetail.customerName || (selectedDetailType === 'contact' ? 'Contact Record' : selectedDetailType === 'deal' ? 'Opportunity Record' : 'Project Record') }}</span>
             <h3>{{ selectedDetailType === 'contact' ? `${selectedDetail.firstName} ${selectedDetail.lastName}` : selectedDetailType === 'deal' ? selectedDetail.title : selectedDetail.projectName }}</h3>
-            <p>{{ selectedDetailType === 'contact' ? (selectedDetail.jobTitle || selectedDetail.email || 'Contact') : selectedDetailType === 'deal' ? `${formatMoney(selectedDetail.amount)} · ${beautify(selectedDetail.stage)}` : `${selectedDetail.market || '—'} · ${beautify(selectedDetail.status)}` }}</p>
+            <p>{{ selectedDetailType === 'contact' ? (selectedDetail.jobTitle || selectedDetail.email || 'Contact') : selectedDetailType === 'deal' ? `${formatMoney(selectedDetail.amount, selectedDetail.currency)} · ${beautify(selectedDetail.stage)}` : `${selectedDetail.market || '—'} · ${beautify(selectedDetail.status)}` }}</p>
           </div>
           <div class="detail-group">
             <h4>Record Detail</h4>
@@ -303,7 +303,7 @@ onMounted(async () => {
                 <div v-if="selectedDetail.notes" class="detail-item"><span>Notes</span><strong>{{ selectedDetail.notes }}</strong></div>
               </template>
               <template v-else-if="selectedDetailType === 'deal'">
-                <div class="detail-item"><span>Expected Value</span><strong>{{ formatMoney(selectedDetail.amount) }}</strong></div>
+                <div class="detail-item"><span>Expected Value</span><strong>{{ formatMoney(selectedDetail.amount, selectedDetail.currency) }}</strong></div>
                 <div class="detail-item"><span>Stage</span><strong>{{ beautify(selectedDetail.stage) }}</strong></div>
                 <div class="detail-item"><span>Expected Close</span><strong>{{ selectedDetail.expectedCloseDate || '—' }}</strong></div>
                 <div class="detail-item"><span>Customer</span><strong>{{ selectedDetail.customerName || '—' }}</strong></div>
@@ -312,8 +312,8 @@ onMounted(async () => {
               <template v-else-if="selectedDetailType === 'project'">
                 <div class="detail-item"><span>Contract Status</span><strong>{{ beautify(selectedDetail.status) }}</strong></div>
                 <div class="detail-item"><span>Market</span><strong>{{ selectedDetail.market || '—' }}</strong></div>
-                <div class="detail-item"><span>License Amount</span><strong>{{ formatMoney(selectedDetail.licenseAmount) }}</strong></div>
-                <div class="detail-item"><span>Implementation</span><strong>{{ formatMoney(selectedDetail.implementationAmount) }}</strong></div>
+                <div class="detail-item"><span>License Amount</span><strong>{{ formatMoney(selectedDetail.licenseAmount, selectedDetail.currency) }}</strong></div>
+                <div class="detail-item"><span>Implementation</span><strong>{{ formatMoney(selectedDetail.implementationAmount, selectedDetail.currency) }}</strong></div>
                 <div class="detail-item"><span>Tax Rate</span><strong>{{ Number(selectedDetail.taxRate || 0) }}%</strong></div>
                 <div class="detail-item"><span>Account Manager</span><strong>{{ selectedDetail.accountManagerName || 'Not assigned' }}</strong></div>
               </template>

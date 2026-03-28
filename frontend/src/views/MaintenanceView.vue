@@ -25,6 +25,7 @@ const fields = [
   { name: 'projectId', label: 'Project', type: 'select', required: true, source: 'projects', hidden: false },
   { name: 'maintenanceYear', label: 'Maintenance Year', type: 'select', required: true, options: [1, 2, 3, 4, 5, 6] },
   { name: 'amount', label: 'Amount', type: 'number', required: true },
+  { name: 'currency', label: 'Currency', type: 'select', required: true, options: ['USD', 'EUR'] },
   { name: 'startDate', label: 'Start Date', type: 'date', required: true },
   { name: 'endDate', label: 'End Date', type: 'date', required: true },
   { name: 'renewStatus', label: 'Renew Status', type: 'select', required: true, options: ['RENEWED', 'NOT_RENEWED'] },
@@ -337,7 +338,7 @@ onMounted(async () => {
                         </div>
                       </div>
                       <div class="record-meta-grid">
-                        <div class="record-meta-item"><span>Amount</span><strong>{{ formatMoney(record.amount) }}</strong></div>
+                        <div class="record-meta-item"><span>Amount</span><strong>{{ formatMoney(record.amount, record.currency) }}</strong></div>
                         <div class="record-meta-item"><span>Start</span><strong>{{ record.startDate }}</strong></div>
                         <div class="record-meta-item"><span>End</span><strong>{{ record.endDate }}</strong></div>
                       </div>

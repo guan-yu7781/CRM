@@ -55,6 +55,19 @@ const menuIcons = {
         />
       </div>
       <span v-if="!collapsed" class="brand-product-name">FinLink CRM</span>
+      <button
+        class="sidebar-toggle-btn sidebar-toggle-brand"
+        type="button"
+        :title="collapsed ? 'Expand menu' : 'Collapse menu'"
+        :aria-expanded="String(!collapsed)"
+        @click="emit('toggle')"
+      >
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline v-if="!collapsed" points="15 18 9 12 15 6"/>
+          <polyline v-else points="9 18 15 12 9 6"/>
+        </svg>
+      </button>
     </div>
 
     <!-- ── Navigation ── -->
@@ -121,20 +134,6 @@ const menuIcons = {
         </template>
       </div>
 
-      <button
-        class="sidebar-toggle-btn"
-        type="button"
-        :title="collapsed ? 'Expand menu' : 'Collapse menu'"
-        :aria-expanded="String(!collapsed)"
-        @click="emit('toggle')"
-      >
-        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-             stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline v-if="!collapsed" points="15 18 9 12 15 6"/>
-          <polyline v-else points="9 18 15 12 9 6"/>
-        </svg>
-        <span v-if="!collapsed" class="toggle-label">Collapse</span>
-      </button>
     </div>
 
   </aside>

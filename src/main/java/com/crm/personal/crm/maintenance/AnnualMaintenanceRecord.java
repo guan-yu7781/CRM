@@ -12,6 +12,7 @@ public class AnnualMaintenanceRecord {
     private String market;
     private Integer maintenanceYear;
     private BigDecimal amount;
+    private String currency = "USD";
     private LocalDate startDate;
     private LocalDate endDate;
     private PaymentStatus paymentStatus;
@@ -67,6 +68,14 @@ public class AnnualMaintenanceRecord {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency == null ? "USD" : currency;
     }
 
     public LocalDate getStartDate() {

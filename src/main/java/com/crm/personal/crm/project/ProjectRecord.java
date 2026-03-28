@@ -8,6 +8,7 @@ public class ProjectRecord {
     private Long id;
     private String projectName;
     private String market;
+    private String currency = "USD";
     private BigDecimal licenseAmount;
     private BigDecimal implementationAmount;
     private BigDecimal taxRate;
@@ -42,6 +43,14 @@ public class ProjectRecord {
 
     public void setMarket(String market) {
         this.market = market;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency == null ? "USD" : currency;
     }
 
     public BigDecimal getLicenseAmount() {

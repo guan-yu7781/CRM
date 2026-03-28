@@ -132,6 +132,32 @@ a {
   letter-spacing: -0.01em;
 }
 
+.sidebar-toggle-brand {
+  margin-left: auto;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  border: 1px solid #e8e8e8;
+  background: transparent;
+  color: #8c8c8c;
+  cursor: pointer;
+  transition: background 130ms, color 130ms;
+}
+
+.sidebar-toggle-brand:hover {
+  background: #f5f5f5;
+  color: #262626;
+}
+
+.sidebar.sidebar-collapsed .sidebar-toggle-brand {
+  margin-left: 0;
+}
+
 /* legacy frame classes — kept for compat but neutralized */
 .brand-logo-frame { background: transparent; border: none; box-shadow: none; }
 .brand-logo-frame-sidebar { min-height: unset; margin-bottom: 0; border-radius: 0; padding: 0; }
@@ -365,7 +391,7 @@ a {
 
 .sidebar.sidebar-collapsed .user-box-copy { display: none; }
 
-.sidebar.sidebar-collapsed .sidebar-toggle-btn {
+.sidebar.sidebar-collapsed .sidebar-toggle-btn:not(.sidebar-toggle-brand) {
   width: 40px;
   padding: 0;
   justify-content: center;

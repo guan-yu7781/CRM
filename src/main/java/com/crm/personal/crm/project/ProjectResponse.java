@@ -8,6 +8,7 @@ public class ProjectResponse {
     private Long id;
     private String projectName;
     private String market;
+    private String currency;
     private BigDecimal licenseAmount;
     private BigDecimal implementationAmount;
     private BigDecimal taxRate;
@@ -25,6 +26,7 @@ public class ProjectResponse {
         response.setId(project.getId());
         response.setProjectName(project.getProjectName());
         response.setMarket(project.getMarket());
+        response.setCurrency(project.getCurrency());
         response.setLicenseAmount(project.getLicenseAmount());
         response.setImplementationAmount(project.getImplementationAmount());
         response.setTaxRate(project.getTaxRate());
@@ -61,6 +63,14 @@ public class ProjectResponse {
 
     public void setMarket(String market) {
         this.market = market;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public BigDecimal getLicenseAmount() {

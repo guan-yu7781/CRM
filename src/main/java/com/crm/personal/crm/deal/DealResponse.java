@@ -9,6 +9,7 @@ public class DealResponse {
     private Long id;
     private String title;
     private BigDecimal amount;
+    private String currency;
     private DealStage stage;
     private OpportunityType opportunityType;
     private String market;
@@ -26,6 +27,7 @@ public class DealResponse {
         response.setId(deal.getId());
         response.setTitle(deal.getTitle());
         response.setAmount(deal.getAmount());
+        response.setCurrency("USD");
         response.setStage(deal.getStage());
         response.setOpportunityType(deal.getOpportunityType());
         response.setMarket(null);
@@ -45,6 +47,7 @@ public class DealResponse {
         response.setId(deal.getId());
         response.setTitle(deal.getTitle());
         response.setAmount(deal.getAmount());
+        response.setCurrency(deal.getCurrency());
         response.setStage(deal.getStage());
         response.setOpportunityType(deal.getOpportunityType());
         response.setMarket(deal.getMarket());
@@ -81,6 +84,14 @@ public class DealResponse {
 
     public void setAmount(BigDecimal amount) {
         this.amount = amount;
+    }
+
+    public String getCurrency() {
+        return currency;
+    }
+
+    public void setCurrency(String currency) {
+        this.currency = currency;
     }
 
     public DealStage getStage() {
