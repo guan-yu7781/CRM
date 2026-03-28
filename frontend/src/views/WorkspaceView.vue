@@ -394,6 +394,8 @@ function projectInsight(item) {
 
 function userInsight(item) {
   return [
+    ['Username', item.username],
+    ['Email', item.email || 'Not configured'],
     ['Business Role', item.roleLabel],
     ['Effective Scope', item.dataScope],
     ['Created', formatDateTime(item.createdAt)]
@@ -557,7 +559,7 @@ watch(filteredItems, (next) => {
                   <td v-else>
                     <div class="table-primary">
                       <strong>{{ item.fullName }}</strong>
-                      <small>{{ item.username }}</small>
+                      <small>{{ item.email || item.username }}</small>
                     </div>
                   </td>
                   <td>
