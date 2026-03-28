@@ -632,7 +632,7 @@ watch(filteredItems, (next) => {
                     <div class="table-primary">
                       <strong>{{ item.title }}</strong>
                       <small>
-                        {{ formatMoney(item.amount) }}
+                        {{ formatMoney(item.amount, item.currency) }}
                         <span
                           class="opp-type-badge"
                           :class="item.opportunityType === 'EXPANSION' ? 'opp-type-expansion' : 'opp-type-acquisition'"
